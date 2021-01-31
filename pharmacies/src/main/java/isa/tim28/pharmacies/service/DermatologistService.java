@@ -3,6 +3,10 @@ package isa.tim28.pharmacies.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import isa.tim28.pharmacies.dtos.DermatologistProfileDTO;
+import isa.tim28.pharmacies.exceptions.BadNameException;
+import isa.tim28.pharmacies.exceptions.BadNewEmailException;
+import isa.tim28.pharmacies.exceptions.BadSurnameException;
 import isa.tim28.pharmacies.exceptions.UserDoesNotExistException;
 import isa.tim28.pharmacies.model.Dermatologist;
 import isa.tim28.pharmacies.model.User;
@@ -39,6 +43,23 @@ public class DermatologistService implements IDermatologistService {
 			throw new UserDoesNotExistException("Dermatologist does not exist!");
 		else 
 			return user;
+	}
+
+	@Override
+	public User updateDermatologist(DermatologistProfileDTO newUser, long id) throws BadNameException, BadSurnameException, BadNewEmailException, UserDoesNotExistException {
+		User user;
+		user = getUserPart(id);
+		user.setName(newUser.getName());
+		user.setSurname(newUser.getSurname());
+		user.setEmail(newUser.getEmail());
+		System.out.println(newUser.getName());
+		
+		if(!user.isNameValid()) throw new BadNameException("Bad name. Try again.");
+		if(!user.isSurnameValid()) throw new BadSurnameException("Bad surname. Try again.");
+		if(!user.isEmailValid()) throw new BadNewEmailException("Bad email. Try again.");
+
+		userRepository.save(user);
+		return user;
 	}
 
 }
