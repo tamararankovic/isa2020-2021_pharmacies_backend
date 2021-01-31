@@ -78,4 +78,19 @@ public class User {
 		this.role = role;
 	}
 	
+	public boolean isNameValid() {
+		if(this.name == "" || this.name.length() < 2 || this.name.length() > 30) return false;
+		return true;
+	}
+	
+	public boolean isSurnameValid() {
+		if(this.surname == "" || this.surname.length() < 2 || this.surname.length() > 30) return false;
+		return true;
+	}
+	
+	public boolean isEmailValid() {
+		if(this.name == "" || this.name.length() < 3 || this.name.length() > 30 || !this.email.contains("@")) return false;
+		return true;
+	}
+	
 }
