@@ -7,6 +7,7 @@ import isa.tim28.pharmacies.dtos.PharmacistProfileDTO;
 import isa.tim28.pharmacies.exceptions.BadNameException;
 import isa.tim28.pharmacies.exceptions.BadNewEmailException;
 import isa.tim28.pharmacies.exceptions.BadSurnameException;
+import isa.tim28.pharmacies.exceptions.PasswordIncorrectException;
 import isa.tim28.pharmacies.exceptions.UserDoesNotExistException;
 import isa.tim28.pharmacies.model.Pharmacist;
 import isa.tim28.pharmacies.model.User;
@@ -59,5 +60,22 @@ public class PharmacistService implements IPharmacistService {
 		
 		userRepository.save(user);
 		return user;
+	}
+	
+	@Override
+	public boolean checkOldPassword(long id, String oldPassword) throws UserDoesNotExistException, PasswordIncorrectException {
+		User user = getUserPart(id);
+		
+		if(!user.getPassword().equals(oldPassword)) throw new PasswordIncorrectException("Old password is incorrect.");
+		
+		return true;
+	}
+
+	@Override
+	public void changePassword(long id, String newPassword) throws UserDoesNotExistException {
+		User user = getUserPart(id);
+		user.setPassword(newPassword);
+		
+		userRepository.save(user);
 	}
 }
