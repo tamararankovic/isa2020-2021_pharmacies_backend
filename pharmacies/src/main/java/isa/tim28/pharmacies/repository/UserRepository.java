@@ -7,4 +7,6 @@ import isa.tim28.pharmacies.model.User;
 public interface UserRepository extends JpaRepository<User, Long>{
 
 	User findOneByEmail(String email);
+	
+	User findOneById(long id);
 }
