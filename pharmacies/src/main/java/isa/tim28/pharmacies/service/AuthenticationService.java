@@ -30,4 +30,13 @@ public class AuthenticationService implements IAuthenticationService {
 		else
 			return user;
 	}
+
+	@Override
+	public User getUserByEmail(String email) {
+		User user = userRepository.findOneByEmail(email);
+		if (user == null)
+			return null;
+		else 
+			return user;
+	}
 }

@@ -28,10 +28,13 @@ public class User {
 	@Column(name = "role", nullable = false)
 	private Role role;
 	
+	@Column(name = "active", nullable = false)
+	private boolean active;
+	
 	public User() {
 		super();
 	}
-	public User(long id, String name, String surname, String email, String password, Role role) {
+	public User(long id, String name, String surname, String email, String password, Role role, boolean active) {
 		super();
 		this.id = id;
 		this.name = name;
@@ -39,6 +42,7 @@ public class User {
 		this.email = email;
 		this.password = password;
 		this.role = role;
+		this.active = active;
 	}
 	
 	public long getId() {
@@ -77,7 +81,13 @@ public class User {
 	public void setRole(Role role) {
 		this.role = role;
 	}
-	
+		
+	public boolean getActive() {
+		return active;
+	}
+	public void setActive(boolean active) {
+		this.active = active;
+	}
 	public boolean isNameValid() {
 		if(this.name == "" || this.name.length() < 2 || this.name.length() > 30) return false;
 		return true;
