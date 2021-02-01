@@ -1,5 +1,7 @@
 package isa.tim28.pharmacies.service;
 
+import java.util.HashSet;
+import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -30,11 +32,10 @@ public class PharmacistService implements IPharmacistService {
 	
 	@Override
 	public Pharmacist getPharmacistById(long id) throws UserDoesNotExistException {
-		Pharmacist pharmacist = pharmacistRepository.findOneById(id);
-		if (pharmacist == null)
+		if (pharmacistRepository.findById(id).isEmpty())
 			throw new UserDoesNotExistException("Pharmacist does not exist!");
 		else 
-			return pharmacist;
+			return pharmacistRepository.findById(id).get();
 	}
 
 	@Override
@@ -77,5 +78,15 @@ public class PharmacistService implements IPharmacistService {
 		user.setPassword(newPassword);
 		
 		userRepository.save(user);
+	}
+
+	@Override
+	public Set<Pharmacist> findAllByPharmacyId(long pharmacyId) {
+		Set<Pharmacist> ret = new HashSet<Pharmacist>();
+		for(Pharmacist p : pharmacistRepository.findAll())
+			if (p.getEngegementInPharmacy() != null 
+				&& p.getEngegementInPharmacy().getPharmacy().getId() == pharmacyId)
+				ret.add(p);
+		return ret;
 	}
 }

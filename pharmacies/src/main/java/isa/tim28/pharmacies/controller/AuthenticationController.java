@@ -15,23 +15,22 @@ import isa.tim28.pharmacies.dtos.UserLoginDTO;
 import isa.tim28.pharmacies.exceptions.PasswordIncorrectException;
 import isa.tim28.pharmacies.exceptions.UserDoesNotExistException;
 import isa.tim28.pharmacies.model.User;
-import isa.tim28.pharmacies.service.AuthenticationService;
+import isa.tim28.pharmacies.service.interfaces.IAuthenticationService;
 
 @RestController
 @RequestMapping("auth")
 public class AuthenticationController {
 	
-	private AuthenticationService authenticationService;
+	private IAuthenticationService authenticationService;
 	
 	@Autowired
-	public AuthenticationController(AuthenticationService authenticationService) {
+	public AuthenticationController(IAuthenticationService authenticationService) {
 		super();
 		this.authenticationService = authenticationService;
 	}
 
 	@PostMapping(value = "login")
 	public ResponseEntity<String> logIn(@RequestBody UserLoginDTO dto, HttpSession session){
-		
 		if (session.getAttribute("loggedInUser") != null) {
 			return new ResponseEntity<>("You are already logged in!", HttpStatus.FORBIDDEN);
 		}
@@ -48,7 +47,6 @@ public class AuthenticationController {
 	
 	@PostMapping(value = "logout")
 	public void logOut(HttpSession session){
-		
 		if (session.getAttribute("loggedInUser") == null) {
 			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No user logged in!");
 		}

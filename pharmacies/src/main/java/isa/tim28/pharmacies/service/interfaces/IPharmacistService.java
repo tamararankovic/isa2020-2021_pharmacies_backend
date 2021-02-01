@@ -1,5 +1,7 @@
 package isa.tim28.pharmacies.service.interfaces;
 
+import java.util.Set;
+
 import isa.tim28.pharmacies.dtos.PharmacistProfileDTO;
 import isa.tim28.pharmacies.exceptions.BadNameException;
 import isa.tim28.pharmacies.exceptions.BadNewEmailException;
@@ -20,4 +22,6 @@ public interface IPharmacistService {
 	boolean checkOldPassword(long id, String oldPassword) throws UserDoesNotExistException, PasswordIncorrectException;
 	
 	void changePassword(long id, String newPassword) throws UserDoesNotExistException;
+
+	Set<Pharmacist> findAllByPharmacyId(long pharmacyId);
 }
