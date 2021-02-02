@@ -2,6 +2,7 @@ package isa.tim28.pharmacies.service;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,6 +13,7 @@ import isa.tim28.pharmacies.dtos.DermatologistProfileDTO;
 import isa.tim28.pharmacies.exceptions.BadNameException;
 import isa.tim28.pharmacies.exceptions.BadNewEmailException;
 import isa.tim28.pharmacies.exceptions.BadSurnameException;
+import isa.tim28.pharmacies.exceptions.InvalidDeleteUserAttemptException;
 import isa.tim28.pharmacies.exceptions.PasswordIncorrectException;
 import isa.tim28.pharmacies.exceptions.UserDoesNotExistException;
 import isa.tim28.pharmacies.mapper.DermatologistMapper;
@@ -21,6 +23,7 @@ import isa.tim28.pharmacies.model.PharmacyAdmin;
 import isa.tim28.pharmacies.model.User;
 import isa.tim28.pharmacies.repository.DermatologistRepository;
 import isa.tim28.pharmacies.repository.UserRepository;
+import isa.tim28.pharmacies.service.interfaces.IDermatologistAppointmentService;
 import isa.tim28.pharmacies.service.interfaces.IDermatologistService;
 
 @Service
@@ -29,13 +32,15 @@ public class DermatologistService implements IDermatologistService {
 	private DermatologistRepository dermatologistRepository;
 	private UserRepository userRepository;
 	private DermatologistMapper dermatologistMapper;
+	private IDermatologistAppointmentService appointmentService;
 	
 	@Autowired
-	public DermatologistService(DermatologistRepository dermatolgistRepository, UserRepository userRepository, DermatologistMapper dermatologistMapper) {
+	public DermatologistService(DermatologistRepository dermatolgistRepository, UserRepository userRepository, DermatologistMapper dermatologistMapper, IDermatologistAppointmentService appointmentService) {
 		super();
 		this.dermatologistRepository = dermatolgistRepository;
 		this.userRepository = userRepository;
 		this.dermatologistMapper = dermatologistMapper;
+		this.appointmentService = appointmentService;
 	}
 	
 	@Override
@@ -116,6 +121,20 @@ public class DermatologistService implements IDermatologistService {
 		for(Dermatologist dermatologist : dermatologists)
 			dtos.add(dermatologistMapper.dermatologistToDermatologistDTO(dermatologist));
 		return dtos;
+	}
+
+	@Override
+	public void deleteByPharmacyAdmin(long dermatologistId, PharmacyAdmin admin)
+			throws UserDoesNotExistException, InvalidDeleteUserAttemptException {
+		Optional<Dermatologist> dermatologistOptional = dermatologistRepository.findById(dermatologistId);
+		if(dermatologistOptional.isEmpty())
+			throw new UserDoesNotExistException("You attempted to delete a pharmacist that does not exist!");
+		Dermatologist dermatologist = dermatologistOptional.get();
+		if(!dermatologist.hasEngagementInPharmacy(admin.getPharmacy()))
+			throw new InvalidDeleteUserAttemptException("It is not allowed to delete a dermatologist that does not work in your pharmacy!");
+		if(appointmentService.dermatologistHasIncomingAppointmentsInPharmacy(dermatologist, admin.getPharmacy()))
+			throw new InvalidDeleteUserAttemptException("Dermatologist has incoming appointments!");
+		dermatologistRepository.delete(dermatologist);
 	}
 
 }

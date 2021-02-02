@@ -2,6 +2,7 @@ package isa.tim28.pharmacies.service;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -13,6 +14,7 @@ import isa.tim28.pharmacies.dtos.PharmacistProfileDTO;
 import isa.tim28.pharmacies.exceptions.BadNameException;
 import isa.tim28.pharmacies.exceptions.BadNewEmailException;
 import isa.tim28.pharmacies.exceptions.BadSurnameException;
+import isa.tim28.pharmacies.exceptions.InvalidDeleteUserAttemptException;
 import isa.tim28.pharmacies.exceptions.PasswordIncorrectException;
 import isa.tim28.pharmacies.exceptions.UserDoesNotExistException;
 import isa.tim28.pharmacies.mapper.PharmacistMapper;
@@ -21,6 +23,7 @@ import isa.tim28.pharmacies.model.PharmacyAdmin;
 import isa.tim28.pharmacies.model.User;
 import isa.tim28.pharmacies.repository.PharmacistRepository;
 import isa.tim28.pharmacies.repository.UserRepository;
+import isa.tim28.pharmacies.service.interfaces.IPharmacistAppointmentService;
 import isa.tim28.pharmacies.service.interfaces.IPharmacistService;
 
 @Service
@@ -29,13 +32,15 @@ public class PharmacistService implements IPharmacistService {
 	private PharmacistRepository pharmacistRepository;
 	private UserRepository userRepository;
 	private PharmacistMapper pharmacistMapper;
+	private IPharmacistAppointmentService appointmentService;
 	
 	@Autowired
-	public PharmacistService(PharmacistRepository pharmacistRepository, UserRepository userRepository, PharmacistMapper pharmacistMapper) {
+	public PharmacistService(PharmacistRepository pharmacistRepository, UserRepository userRepository, PharmacistMapper pharmacistMapper, IPharmacistAppointmentService appointmentService) {
 		super();
 		this.pharmacistRepository = pharmacistRepository;
 		this.userRepository = userRepository;
 		this.pharmacistMapper = pharmacistMapper;
+		this.appointmentService = appointmentService;
 	}
 	
 	@Override
@@ -116,5 +121,18 @@ public class PharmacistService implements IPharmacistService {
 		for(Pharmacist pharmacist : pharmacists)
 			dtos.add(pharmacistMapper.pharmacistToPharmacistDTO(pharmacist));
 		return dtos;
+	}
+
+	@Override
+	public void deleteByPharmacyAdmin(long pharmacistId, PharmacyAdmin admin) throws UserDoesNotExistException, InvalidDeleteUserAttemptException {
+		Optional<Pharmacist> pharmacistOptional = pharmacistRepository.findById(pharmacistId);
+		if(pharmacistOptional.isEmpty())
+			throw new UserDoesNotExistException("You attempted to delete a pharmacist that does not exist!");
+		Pharmacist pharmacist = pharmacistOptional.get();
+		if(pharmacist.getEngegementInPharmacy().getPharmacy().getId() != admin.getPharmacy().getId())
+			throw new InvalidDeleteUserAttemptException("It is not allowed to delete a pharmacist from another pharmacy!");
+		if(appointmentService.pharmacistHasIncomingAppointments(pharmacist))
+			throw new InvalidDeleteUserAttemptException("Pharmacist has incoming appointments!");
+		pharmacistRepository.delete(pharmacist);
 	}
 }

@@ -7,6 +7,7 @@ import isa.tim28.pharmacies.dtos.DermatologistProfileDTO;
 import isa.tim28.pharmacies.exceptions.BadNameException;
 import isa.tim28.pharmacies.exceptions.BadNewEmailException;
 import isa.tim28.pharmacies.exceptions.BadSurnameException;
+import isa.tim28.pharmacies.exceptions.InvalidDeleteUserAttemptException;
 import isa.tim28.pharmacies.exceptions.PasswordIncorrectException;
 import isa.tim28.pharmacies.exceptions.UserDoesNotExistException;
 import isa.tim28.pharmacies.model.Dermatologist;
@@ -30,4 +31,6 @@ public interface IDermatologistService {
 	Set<DermatologistDTO> findAllByPharmacyAdmin(PharmacyAdmin admin);
 	
 	Set<DermatologistDTO> findAll();
+	
+	void deleteByPharmacyAdmin(long dermatologistId, PharmacyAdmin admin) throws UserDoesNotExistException, InvalidDeleteUserAttemptException;
 }
