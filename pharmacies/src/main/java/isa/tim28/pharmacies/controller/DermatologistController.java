@@ -1,5 +1,7 @@
 package isa.tim28.pharmacies.controller;
 
+import java.util.Set;
+
 import javax.servlet.http.HttpSession;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+import isa.tim28.pharmacies.dtos.DermatologistDTO;
 import isa.tim28.pharmacies.dtos.DermatologistProfileDTO;
 import isa.tim28.pharmacies.dtos.PasswordChangeDTO;
 import isa.tim28.pharmacies.exceptions.BadNameException;
@@ -22,18 +25,21 @@ import isa.tim28.pharmacies.exceptions.PasswordIncorrectException;
 import isa.tim28.pharmacies.exceptions.UserDoesNotExistException;
 import isa.tim28.pharmacies.model.Role;
 import isa.tim28.pharmacies.model.User;
-import isa.tim28.pharmacies.service.DermatologistService;
+import isa.tim28.pharmacies.service.interfaces.IDermatologistService;
+import isa.tim28.pharmacies.service.interfaces.IPharmacyAdminService;
 
 @RestController
 @RequestMapping(value = "derm")
 public class DermatologistController {
 	
-	private DermatologistService dermatologistService;
+	private IDermatologistService dermatologistService;
+	private IPharmacyAdminService pharmacyAdminService;
 	
 	@Autowired
-	public DermatologistController(DermatologistService dermatologistService) {
+	public DermatologistController(IDermatologistService dermatologistService, IPharmacyAdminService pharmacyAdminService) {
 		super();
 		this.dermatologistService = dermatologistService;
+		this.pharmacyAdminService = pharmacyAdminService;
 	}
 	
 	/*
@@ -127,4 +133,23 @@ public class DermatologistController {
 		
 		return new ResponseEntity<>("", HttpStatus.OK);
 	}
+	
+	@GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<Set<DermatologistDTO>> getAll(HttpSession session) {
+		User loggedInUser = (User) session.getAttribute("loggedInUser");
+		if(loggedInUser == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not logged in!");
+		}
+		if(loggedInUser.getRole() == Role.PATIENT)
+			return new ResponseEntity<>(dermatologistService.findAll(), HttpStatus.OK);
+		if(loggedInUser.getRole() == Role.PHARMACY_ADMIN) {
+			try {
+				return new ResponseEntity<>(dermatologistService.findAllByPharmacyAdmin(pharmacyAdminService.findByUser(loggedInUser)), HttpStatus.OK);
+			} catch(UserDoesNotExistException e) {
+				throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+			}
+		}
+		throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You don't have required permissions!");
+	}
+	
 }

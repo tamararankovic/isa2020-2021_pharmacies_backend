@@ -1,19 +1,23 @@
 package isa.tim28.pharmacies.service;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import isa.tim28.pharmacies.dtos.DermatologistDTO;
 import isa.tim28.pharmacies.dtos.DermatologistProfileDTO;
 import isa.tim28.pharmacies.exceptions.BadNameException;
 import isa.tim28.pharmacies.exceptions.BadNewEmailException;
 import isa.tim28.pharmacies.exceptions.BadSurnameException;
 import isa.tim28.pharmacies.exceptions.PasswordIncorrectException;
 import isa.tim28.pharmacies.exceptions.UserDoesNotExistException;
+import isa.tim28.pharmacies.mapper.DermatologistMapper;
 import isa.tim28.pharmacies.model.Dermatologist;
 import isa.tim28.pharmacies.model.EngagementInPharmacy;
+import isa.tim28.pharmacies.model.PharmacyAdmin;
 import isa.tim28.pharmacies.model.User;
 import isa.tim28.pharmacies.repository.DermatologistRepository;
 import isa.tim28.pharmacies.repository.UserRepository;
@@ -24,12 +28,14 @@ public class DermatologistService implements IDermatologistService {
 
 	private DermatologistRepository dermatologistRepository;
 	private UserRepository userRepository;
+	private DermatologistMapper dermatologistMapper;
 	
 	@Autowired
-	public DermatologistService(DermatologistRepository dermatolgistRepository, UserRepository userRepository) {
+	public DermatologistService(DermatologistRepository dermatolgistRepository, UserRepository userRepository, DermatologistMapper dermatologistMapper) {
 		super();
 		this.dermatologistRepository = dermatolgistRepository;
 		this.userRepository = userRepository;
+		this.dermatologistMapper = dermatologistMapper;
 	}
 	
 	@Override
@@ -91,6 +97,25 @@ public class DermatologistService implements IDermatologistService {
 				if (ep.getPharmacy().getId() == pharmacyId)
 					ret.add(d);
 		return ret;
+	}
+
+	@Override
+	public Set<DermatologistDTO> findAllByPharmacyAdmin(PharmacyAdmin admin) {
+		Set<DermatologistDTO> dtos = new HashSet<DermatologistDTO>();
+		List<Dermatologist> dermatologists = dermatologistRepository.findAll();
+		for(Dermatologist dermatologist : dermatologists)
+			if (dermatologist.hasEngagementInPharmacy(admin.getPharmacy()))
+				dtos.add(dermatologistMapper.dermatologistToDermatologistDTO(dermatologist));
+		return dtos;
+	}
+
+	@Override
+	public Set<DermatologistDTO> findAll() {
+		Set<DermatologistDTO> dtos = new HashSet<DermatologistDTO>();
+		List<Dermatologist> dermatologists = dermatologistRepository.findAll();
+		for(Dermatologist dermatologist : dermatologists)
+			dtos.add(dermatologistMapper.dermatologistToDermatologistDTO(dermatologist));
+		return dtos;
 	}
 
 }

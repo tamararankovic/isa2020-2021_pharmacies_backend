@@ -1,5 +1,7 @@
 package isa.tim28.pharmacies.controller;
 
+import java.util.Set;
+
 import javax.servlet.http.HttpSession;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 import isa.tim28.pharmacies.dtos.PasswordChangeDTO;
+import isa.tim28.pharmacies.dtos.PharmacistDTO;
 import isa.tim28.pharmacies.dtos.PharmacistProfileDTO;
 import isa.tim28.pharmacies.exceptions.BadNameException;
 import isa.tim28.pharmacies.exceptions.BadNewEmailException;
@@ -22,18 +25,21 @@ import isa.tim28.pharmacies.exceptions.PasswordIncorrectException;
 import isa.tim28.pharmacies.exceptions.UserDoesNotExistException;
 import isa.tim28.pharmacies.model.Role;
 import isa.tim28.pharmacies.model.User;
-import isa.tim28.pharmacies.service.PharmacistService;
+import isa.tim28.pharmacies.service.interfaces.IPharmacistService;
+import isa.tim28.pharmacies.service.interfaces.IPharmacyAdminService;
 
 @RestController
 @RequestMapping(value = "pharm")
 public class PharmacistController {
 
-	private PharmacistService pharmacistService;
+	private IPharmacistService pharmacistService;
+	private IPharmacyAdminService pharmacyAdminService;
 	
 	@Autowired
-	public PharmacistController(PharmacistService pharmacistService) {
+	public PharmacistController(IPharmacistService pharmacistService, IPharmacyAdminService pharmacyAdminService) {
 		super();
 		this.pharmacistService = pharmacistService;
+		this.pharmacyAdminService = pharmacyAdminService;
 	}
 	
 	/*
@@ -126,5 +132,23 @@ public class PharmacistController {
 		}
 		
 		return new ResponseEntity<>("", HttpStatus.OK);
+	}
+	
+	@GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<Set<PharmacistDTO>> getAll(HttpSession session) {
+		User loggedInUser = (User) session.getAttribute("loggedInUser");
+		if(loggedInUser == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not logged in!");
+		}
+		if(loggedInUser.getRole() == Role.PATIENT)
+			return new ResponseEntity<>(pharmacistService.findAll(), HttpStatus.OK);
+		if(loggedInUser.getRole() == Role.PHARMACY_ADMIN) {
+			try {
+				return new ResponseEntity<>(pharmacistService.findAllByPharmacyAdmin(pharmacyAdminService.findByUser(loggedInUser)), HttpStatus.OK);
+			} catch(UserDoesNotExistException e) {
+				throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+			}
+		}
+		throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You don't have required permissions!");
 	}
 }

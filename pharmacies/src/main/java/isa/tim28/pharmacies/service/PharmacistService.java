@@ -1,17 +1,23 @@
 package isa.tim28.pharmacies.service;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import isa.tim28.pharmacies.dtos.PharmacistDTO;
 import isa.tim28.pharmacies.dtos.PharmacistProfileDTO;
 import isa.tim28.pharmacies.exceptions.BadNameException;
 import isa.tim28.pharmacies.exceptions.BadNewEmailException;
 import isa.tim28.pharmacies.exceptions.BadSurnameException;
 import isa.tim28.pharmacies.exceptions.PasswordIncorrectException;
 import isa.tim28.pharmacies.exceptions.UserDoesNotExistException;
+import isa.tim28.pharmacies.mapper.PharmacistMapper;
 import isa.tim28.pharmacies.model.Pharmacist;
+import isa.tim28.pharmacies.model.PharmacyAdmin;
 import isa.tim28.pharmacies.model.User;
 import isa.tim28.pharmacies.repository.PharmacistRepository;
 import isa.tim28.pharmacies.repository.UserRepository;
@@ -22,12 +28,14 @@ public class PharmacistService implements IPharmacistService {
 
 	private PharmacistRepository pharmacistRepository;
 	private UserRepository userRepository;
+	private PharmacistMapper pharmacistMapper;
 	
 	@Autowired
-	public PharmacistService(PharmacistRepository pharmacistRepository, UserRepository userRepository) {
+	public PharmacistService(PharmacistRepository pharmacistRepository, UserRepository userRepository, PharmacistMapper pharmacistMapper) {
 		super();
 		this.pharmacistRepository = pharmacistRepository;
 		this.userRepository = userRepository;
+		this.pharmacistMapper = pharmacistMapper;
 	}
 	
 	@Override
@@ -88,5 +96,25 @@ public class PharmacistService implements IPharmacistService {
 				&& p.getEngegementInPharmacy().getPharmacy().getId() == pharmacyId)
 				ret.add(p);
 		return ret;
+	}
+
+	@Override
+	public Set<PharmacistDTO> findAllByPharmacyAdmin(PharmacyAdmin admin) {
+		Set<PharmacistDTO> dtos = new HashSet<PharmacistDTO>();
+		Set<Pharmacist> pharmacists = pharmacistRepository.findAll().stream()
+				.filter(p -> p.getEngegementInPharmacy().getPharmacy().getId() == admin.getPharmacy().getId())
+				.collect(Collectors.toSet());
+		for(Pharmacist pharmacist : pharmacists)
+			dtos.add(pharmacistMapper.pharmacistToPharmacistDTO(pharmacist));
+		return dtos;
+	}
+
+	@Override
+	public Set<PharmacistDTO> findAll() {
+		Set<PharmacistDTO> dtos = new HashSet<PharmacistDTO>();
+		List<Pharmacist> pharmacists = pharmacistRepository.findAll();
+		for(Pharmacist pharmacist : pharmacists)
+			dtos.add(pharmacistMapper.pharmacistToPharmacistDTO(pharmacist));
+		return dtos;
 	}
 }
