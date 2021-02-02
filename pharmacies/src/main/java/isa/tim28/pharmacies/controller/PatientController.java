@@ -1,5 +1,9 @@
 package isa.tim28.pharmacies.controller;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+
 import javax.servlet.http.HttpSession;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,14 +17,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
-import isa.tim28.pharmacies.dtos.DermatologistProfileDTO;
+
 import isa.tim28.pharmacies.dtos.PasswordChangeDTO;
 import isa.tim28.pharmacies.dtos.PatientProfileDTO;
-import isa.tim28.pharmacies.exceptions.BadNameException;
-import isa.tim28.pharmacies.exceptions.BadNewEmailException;
-import isa.tim28.pharmacies.exceptions.BadSurnameException;
+
 import isa.tim28.pharmacies.exceptions.PasswordIncorrectException;
 import isa.tim28.pharmacies.exceptions.UserDoesNotExistException;
+import isa.tim28.pharmacies.model.Medicine;
 import isa.tim28.pharmacies.model.Patient;
 import isa.tim28.pharmacies.model.Role;
 import isa.tim28.pharmacies.model.User;
@@ -67,10 +70,11 @@ public class PatientController {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		ArrayList<String> allergy = patientService.getAllAllergies(patient);
 
 		return new ResponseEntity<PatientProfileDTO>(new PatientProfileDTO(user.getName(), user.getSurname(),
 				user.getEmail(), patient.getAddress(), patient.getCity(), patient.getCountry(), patient.getPhone(),
-				patient.getPoints(), patient.getCategory().toString()), HttpStatus.OK);
+				patient.getPoints(), patient.getCategory().toString(),allergy), HttpStatus.OK);
 	}
 
 	@PostMapping(value = "edit", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
@@ -136,6 +140,36 @@ public class PatientController {
 		}
 		
 		return new ResponseEntity<>(HttpStatus.OK);
+	}
+	
+	@GetMapping(value = "/medicine", produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<ArrayList<String>> getMedicine(HttpSession session) {
+
+		User loggedInUser = (User) session.getAttribute("loggedInUser");
+		if (loggedInUser == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No logged in user!");
+		}
+		if (loggedInUser.getRole() != Role.PATIENT) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only patient can view his profile data.");
+		}
+
+		User user;
+		try {
+			user = patientService.getUserPart(loggedInUser.getId());
+		} catch (UserDoesNotExistException e) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User with given id doesn't exist!");
+		}
+
+		Patient patient = new Patient();
+		try {
+			patient = patientService.getPatientById(loggedInUser.getId());
+		} catch (UserDoesNotExistException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		ArrayList<String> medicine = patientService.getAllMedicine(patient);
+
+		return new ResponseEntity<ArrayList<String>>(medicine, HttpStatus.OK);
 	}
 
 }

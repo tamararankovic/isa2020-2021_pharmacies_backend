@@ -1,5 +1,7 @@
 package isa.tim28.pharmacies.dtos;
 
+import java.util.ArrayList;
+
 public class PatientProfileDTO {
 
 	private String name;
@@ -11,13 +13,14 @@ public class PatientProfileDTO {
 	private String phone;
 	private int points;
 	private String category;
+	private ArrayList<String> allergies;
 	
 	public PatientProfileDTO() {
 		super();
 	}
 	
 	public PatientProfileDTO(String name, String surname, String email, String address, String city, String country,
-			String phone, int points, String category) {
+			String phone, int points, String category,ArrayList<String> allergies) {
 		super();
 		this.name = name;
 		this.surname = surname;
@@ -28,6 +31,7 @@ public class PatientProfileDTO {
 		this.phone = phone;
 		this.points = points;
 		this.category = category;
+		this.allergies = allergies;
 	}
 
 	public String getName() {
@@ -100,6 +104,14 @@ public class PatientProfileDTO {
 
 	public void setCategory(String category) {
 		this.category = category;
+	}
+
+	public ArrayList<String> getAllergies() {
+		return allergies;
+	}
+
+	public void setAllergies(ArrayList<String> allergies) {
+		this.allergies = allergies;
 	}
 	
 	
