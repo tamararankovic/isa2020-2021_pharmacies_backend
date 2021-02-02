@@ -7,4 +7,5 @@ import isa.tim28.pharmacies.model.User;
 public interface IAuthenticationService {
 
 	User getUserByCredentials(String email, String password) throws UserDoesNotExistException, PasswordIncorrectException;
+	User getUserByEmail(String email);
 }

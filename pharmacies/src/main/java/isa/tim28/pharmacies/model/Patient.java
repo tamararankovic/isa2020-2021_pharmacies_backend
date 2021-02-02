@@ -51,6 +51,15 @@ public class Patient {
 		super();
 	}
 	
+	public Patient(User user, String address, String city, String country, String phone) {
+		super();
+		this.user = user;
+		this.address = address;
+		this.city = city;
+		this.country = country;
+		this.phone = phone;
+	}
+	
 	public Patient(long id, User user, String address, String city, String country, String phone,
 			Set<Medicine> allergies) {
 		super();
