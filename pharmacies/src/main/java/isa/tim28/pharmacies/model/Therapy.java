@@ -19,7 +19,7 @@ public class Therapy {
 	@ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
 	private Medicine medicine;
 	
-	@Column(name = "rating", nullable = false)
+	@Column(name = "durationInDays", nullable = false)
 	private int durationInDays;
 
 	public Therapy() {

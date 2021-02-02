@@ -150,7 +150,7 @@ public class PharmacistController {
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only pharmacist can view patients.");
 		}
 		
-		return new ResponseEntity<>(dermatologistService.getAllPatientsByNameAndSurname(dto.name, dto.surname), HttpStatus.OK);
+		return new ResponseEntity<>(dermatologistService.getAllPatientsByNameAndSurname(dto.getName(), dto.getSurname()), HttpStatus.OK);
 	}
 	
 }
