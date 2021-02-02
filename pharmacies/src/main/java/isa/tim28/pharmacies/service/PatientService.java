@@ -4,6 +4,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import isa.tim28.pharmacies.dtos.PatientProfileDTO;
+import isa.tim28.pharmacies.exceptions.BadNameException;
+import isa.tim28.pharmacies.exceptions.BadNewEmailException;
+import isa.tim28.pharmacies.exceptions.BadSurnameException;
+import isa.tim28.pharmacies.exceptions.PasswordIncorrectException;
 import isa.tim28.pharmacies.exceptions.UserDoesNotExistException;
 import isa.tim28.pharmacies.model.Patient;
 import isa.tim28.pharmacies.model.User;
@@ -44,9 +48,43 @@ public class PatientService implements IPatientService{
 	}
 
 	@Override
-	public Patient editPatient(PatientProfileDTO newPatient) {
-		// TODO Auto-generated method stub
-		return null;
+	public Patient editPatient(PatientProfileDTO newPatient, long id) throws UserDoesNotExistException {
+		User user;
+		user = getUserPart(id);
+		user.setName(newPatient.getName());
+		user.setSurname(newPatient.getSurname());
+		
+		Patient patient = getPatientById(id);
+		patient.setAddress(newPatient.getAddress());
+		patient.setCity(newPatient.getCity());
+		patient.setCountry(newPatient.getCountry());
+		patient.setPhone(newPatient.getPhone());
+		
+		/*if(!user.isNameValid()) throw new BadNameException("Bad name. Try again.");
+		if(!user.isSurnameValid()) throw new BadSurnameException("Bad surname. Try again.");
+		if(!user.isEmailValid()) throw new BadNewEmailException("Bad email. Try again.");*/
+
+		userRepository.save(user);
+		patientRepository.save(patient);
+		return patient;
 	}
+	
+	@Override
+	public boolean checkOldPassword(long id, String oldPassword) throws UserDoesNotExistException, PasswordIncorrectException {
+		User user = getUserPart(id);
+		
+		if(!user.getPassword().equals(oldPassword)) throw new PasswordIncorrectException("Old password is incorrect.");
+		
+		return true;
+	}
+	
+	@Override
+	public void changePassword(long id, String newPassword) throws UserDoesNotExistException {
+		User user = getUserPart(id);
+		user.setPassword(newPassword);
+		
+		userRepository.save(user);
+	}
+
 
 }
