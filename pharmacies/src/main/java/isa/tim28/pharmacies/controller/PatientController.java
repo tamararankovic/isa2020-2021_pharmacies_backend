@@ -74,7 +74,7 @@ public class PatientController {
 	}
 
 	@PostMapping(value = "edit", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<PatientProfileDTO> updateDermatologist(@RequestBody PatientProfileDTO newPatient,
+	public ResponseEntity<PatientProfileDTO> editPatient(@RequestBody PatientProfileDTO newPatient,
 			HttpSession session) {
 
 		User loggedInUser = (User) session.getAttribute("loggedInUser");

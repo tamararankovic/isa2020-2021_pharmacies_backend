@@ -4,9 +4,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import isa.tim28.pharmacies.dtos.PatientProfileDTO;
-import isa.tim28.pharmacies.exceptions.BadNameException;
-import isa.tim28.pharmacies.exceptions.BadNewEmailException;
-import isa.tim28.pharmacies.exceptions.BadSurnameException;
 import isa.tim28.pharmacies.exceptions.PasswordIncorrectException;
 import isa.tim28.pharmacies.exceptions.UserDoesNotExistException;
 import isa.tim28.pharmacies.model.Patient;
@@ -32,10 +29,10 @@ public class PatientService implements IPatientService{
 	
 	@Override
 	public Patient getPatientById(long id) throws UserDoesNotExistException {
-		if (patientRepository.findOneByUserId(id) == null)
+		if (patientRepository.findOneByUser_Id(id) == null)
 			throw new UserDoesNotExistException("Patient does not exist!");
 		else 
-			return patientRepository.findById(id).get();
+			return patientRepository.findOneByUser_Id(id);
 	}
 
 	@Override
@@ -70,20 +67,19 @@ public class PatientService implements IPatientService{
 	}
 	
 	@Override
-	public boolean checkOldPassword(long id, String oldPassword) throws UserDoesNotExistException, PasswordIncorrectException {
-		User user = getUserPart(id);
-		
-		if(!user.getPassword().equals(oldPassword)) throw new PasswordIncorrectException("Old password is incorrect.");
-		
-		return true;
-	}
-	
-	@Override
 	public void changePassword(long id, String newPassword) throws UserDoesNotExistException {
 		User user = getUserPart(id);
 		user.setPassword(newPassword);
 		
 		userRepository.save(user);
+	}
+
+
+	@Override
+	public boolean checkOldPassword(long id, String oldPassword)
+			throws UserDoesNotExistException, PasswordIncorrectException {
+		// TODO Auto-generated method stub
+		return false;
 	}
 
 
