@@ -4,6 +4,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import isa.tim28.pharmacies.model.Patient;
 
-public interface PatientRepository extends JpaRepository<Patient, Long> {
-	
+public interface PatientRepository extends JpaRepository<Patient, Long>{
+
+
+	Patient findOneByUser_Id(long id);
 }
