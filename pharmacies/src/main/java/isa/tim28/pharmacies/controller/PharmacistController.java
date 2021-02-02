@@ -1,5 +1,7 @@
 package isa.tim28.pharmacies.controller;
 
+import java.util.List;
+
 import javax.servlet.http.HttpSession;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 import isa.tim28.pharmacies.dtos.PasswordChangeDTO;
+import isa.tim28.pharmacies.dtos.PatientSearchDTO;
 import isa.tim28.pharmacies.dtos.PharmacistProfileDTO;
 import isa.tim28.pharmacies.exceptions.BadNameException;
 import isa.tim28.pharmacies.exceptions.BadNewEmailException;
@@ -22,6 +25,7 @@ import isa.tim28.pharmacies.exceptions.PasswordIncorrectException;
 import isa.tim28.pharmacies.exceptions.UserDoesNotExistException;
 import isa.tim28.pharmacies.model.Role;
 import isa.tim28.pharmacies.model.User;
+import isa.tim28.pharmacies.service.DermatologistService;
 import isa.tim28.pharmacies.service.PharmacistService;
 
 @RestController
@@ -29,11 +33,13 @@ import isa.tim28.pharmacies.service.PharmacistService;
 public class PharmacistController {
 
 	private PharmacistService pharmacistService;
+	private DermatologistService dermatologistService;
 	
 	@Autowired
-	public PharmacistController(PharmacistService pharmacistService) {
+	public PharmacistController(PharmacistService pharmacistService, DermatologistService dermatologistService) {
 		super();
 		this.pharmacistService = pharmacistService;
+		this.dermatologistService = dermatologistService;
 	}
 	
 	/*
@@ -127,4 +133,24 @@ public class PharmacistController {
 		
 		return new ResponseEntity<>("", HttpStatus.OK);
 	}
+	
+	/*
+	 url: POST localhost:8081/pharm/patients
+	 HTTP request for searching patients
+	 returns ResponseEntity object
+	*/
+	@PostMapping(value = "/patients", produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<List<PatientSearchDTO>> getPatients(@RequestBody PatientSearchDTO dto, HttpSession session){
+		
+		User loggedInUser = (User) session.getAttribute("loggedInUser");
+		if(loggedInUser == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No logged in user!");
+		}
+		if(loggedInUser.getRole() != Role.PHARMACIST) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only pharmacist can view patients.");
+		}
+		
+		return new ResponseEntity<>(dermatologistService.getAllPatientsByNameAndSurname(dto.name, dto.surname), HttpStatus.OK);
+	}
+	
 }

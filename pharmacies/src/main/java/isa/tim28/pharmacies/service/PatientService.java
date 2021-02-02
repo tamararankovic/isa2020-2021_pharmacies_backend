@@ -55,7 +55,8 @@ public class PatientService implements IPatientService {
 	}
 
 	@Override
-	public Patient editPatient(PatientProfileDTO newPatient, long id) throws UserDoesNotExistException, BadNameException, BadSurnameException{
+	public Patient editPatient(PatientProfileDTO newPatient, long id)
+			throws UserDoesNotExistException, BadNameException, BadSurnameException {
 		User user;
 		user = getUserPart(id);
 		user.setName(newPatient.getName());
@@ -78,8 +79,7 @@ public class PatientService implements IPatientService {
 			throw new BadNameException("Bad name. Try again.");
 		if (!user.isSurnameValid())
 			throw new BadSurnameException("Bad surname. Try again.");
-		
-			
+
 		userRepository.save(user);
 		patientRepository.save(patient);
 		return patient;
@@ -126,6 +126,12 @@ public class PatientService implements IPatientService {
 			}
 		}
 		return res;
+	}
+
+	@Override
+	public Patient save(Patient patient) {
+		Patient newPatient = patientRepository.save(patient);
+		return newPatient;
 	}
 
 	@Override

@@ -1,5 +1,7 @@
 package isa.tim28.pharmacies.controller;
 
+import java.util.List;
+
 import javax.servlet.http.HttpSession;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +17,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import isa.tim28.pharmacies.dtos.DermatologistProfileDTO;
 import isa.tim28.pharmacies.dtos.PasswordChangeDTO;
+import isa.tim28.pharmacies.dtos.PatientSearchDTO;
 import isa.tim28.pharmacies.exceptions.BadNameException;
 import isa.tim28.pharmacies.exceptions.BadNewEmailException;
 import isa.tim28.pharmacies.exceptions.BadSurnameException;
@@ -63,7 +66,7 @@ public class DermatologistController {
 	}
 	
 	/*
-	 url: GET localhost:8081/derm/update
+	 url: POST localhost:8081/derm/update
 	 HTTP request for changing dermatologist personal info
 	 returns ResponseEntity object
 	*/
@@ -127,4 +130,24 @@ public class DermatologistController {
 		
 		return new ResponseEntity<>("", HttpStatus.OK);
 	}
+	
+	/*
+	 url: POST localhost:8081/derm/patients
+	 HTTP request for searching patients
+	 returns ResponseEntity object
+	*/
+	@PostMapping(value = "/patients", produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<List<PatientSearchDTO>> getPatients(@RequestBody PatientSearchDTO dto, HttpSession session){
+		
+		User loggedInUser = (User) session.getAttribute("loggedInUser");
+		if(loggedInUser == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No logged in user!");
+		}
+		if(loggedInUser.getRole() != Role.DERMATOLOGIST) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only dermatologist can view patients.");
+		}
+		
+		return new ResponseEntity<>(dermatologistService.getAllPatientsByNameAndSurname(dto.name, dto.surname), HttpStatus.OK);
+	}
+	
 }
