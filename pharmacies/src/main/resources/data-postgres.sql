@@ -19,3 +19,10 @@ insert into pharmacy_admin(id, pharmacy_id, user_id) values (1, 1, 6);
 insert into dermatologist(id, user_id) values (1, 3);
 insert into dermatologist_engegement_in_pharmacies(dermatologist_id, engegement_in_pharmacies_id) values (1, 2);
 insert into dermatologist_engegement_in_pharmacies(dermatologist_id, engegement_in_pharmacies_id) values (1, 3);
+
+alter sequence users_id_seq restart with 7;
+alter sequence pharmacy_id_seq restart with 3;
+alter sequence engagement_in_pharmacy_id_seq restart with 4;
+alter sequence pharmacist_id_seq restart with 2;
+alter sequence pharmacy_admin_id_seq restart with 2;
+alter sequence dermatologist_id_seq restart with 2;

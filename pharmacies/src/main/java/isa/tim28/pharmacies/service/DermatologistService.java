@@ -1,5 +1,6 @@
 package isa.tim28.pharmacies.service;
 
+import java.time.DayOfWeek;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -11,6 +12,8 @@ import org.springframework.stereotype.Service;
 import isa.tim28.pharmacies.dtos.DermatologistDTO;
 import isa.tim28.pharmacies.dtos.DermatologistProfileDTO;
 import isa.tim28.pharmacies.dtos.DermatologistToEmployDTO;
+import isa.tim28.pharmacies.dtos.NewDermatologistInPharmacyDTO;
+import isa.tim28.pharmacies.exceptions.AddingDermatologistToPharmacyException;
 import isa.tim28.pharmacies.exceptions.BadNameException;
 import isa.tim28.pharmacies.exceptions.BadNewEmailException;
 import isa.tim28.pharmacies.exceptions.BadSurnameException;
@@ -18,6 +21,7 @@ import isa.tim28.pharmacies.exceptions.InvalidDeleteUserAttemptException;
 import isa.tim28.pharmacies.exceptions.PasswordIncorrectException;
 import isa.tim28.pharmacies.exceptions.UserDoesNotExistException;
 import isa.tim28.pharmacies.mapper.DermatologistMapper;
+import isa.tim28.pharmacies.model.DailyEngagement;
 import isa.tim28.pharmacies.model.Dermatologist;
 import isa.tim28.pharmacies.model.EngagementInPharmacy;
 import isa.tim28.pharmacies.model.Pharmacy;
@@ -190,5 +194,75 @@ public class DermatologistService implements IDermatologistService {
 			if(!d.hasEngagementInPharmacy(pharmacy))
 				ret.add(dermatologistMapper.dermatologistToDermatologistToEmployDTO(d));
 		return ret;
+	}
+
+	@Override
+	public void addToPharmacy(NewDermatologistInPharmacyDTO dto, Pharmacy pharmacy)
+			throws AddingDermatologistToPharmacyException, UserDoesNotExistException {
+		Optional<Dermatologist> dermatologistOptional = dermatologistRepository.findById(dto.getDermatologistId());
+		if(dermatologistOptional.isEmpty())
+			throw new UserDoesNotExistException("You attempted to add a pharmacist that does not exist!");
+		Dermatologist dermatologist = dermatologistOptional.get();
+		if(dermatologist.hasEngagementInPharmacy(pharmacy))
+			throw new AddingDermatologistToPharmacyException("Dermatologist is already employed in the pharmacy!");
+		for(EngagementInPharmacy engagement : dermatologist.getEngegementInPharmacies()) {
+			for (DailyEngagement dailyEngagement : engagement.getDailyEngagements()) {
+				if(dto.isMonday() && dailyEngagement.getDayOfWeek() == DayOfWeek.MONDAY) {
+					if (dailyEngagement.isOverlappingWith(dto.getMondayStart().toLocalTime(), dto.getMondayEnd().toLocalTime())) {
+						throw new AddingDermatologistToPharmacyException("Working hours overlapping with other pharmacies. Day: MONDAY");
+					}
+				}
+				else if(dto.isTuesday() && dailyEngagement.getDayOfWeek() == DayOfWeek.TUESDAY) {
+					if (dailyEngagement.isOverlappingWith(dto.getTuesdayStart().toLocalTime(), dto.getTuesdayEnd().toLocalTime())) {
+						throw new AddingDermatologistToPharmacyException("Working hours overlapping with other pharmacies. Day: TUESDAY");
+					}
+				}
+				else if(dto.isWednesday() && dailyEngagement.getDayOfWeek() == DayOfWeek.WEDNESDAY) {
+					if (dailyEngagement.isOverlappingWith(dto.getWednesdayStart().toLocalTime(), dto.getWednesdayEnd().toLocalTime())) {
+						throw new AddingDermatologistToPharmacyException("Working hours overlapping with other pharmacies. Day: WEDNESDAY");
+					}
+				}
+				else if(dto.isThursday() && dailyEngagement.getDayOfWeek() == DayOfWeek.THURSDAY) {
+					if (dailyEngagement.isOverlappingWith(dto.getThursdayStart().toLocalTime(), dto.getThursdayEnd().toLocalTime())) {
+						throw new AddingDermatologistToPharmacyException("Working hours overlapping with other pharmacies. Day: THURSDAY");
+					}
+				}
+				else if(dto.isFriday() && dailyEngagement.getDayOfWeek() == DayOfWeek.FRIDAY) {
+					if (dailyEngagement.isOverlappingWith(dto.getFridayStart().toLocalTime(), dto.getFridayEnd().toLocalTime())) {
+						throw new AddingDermatologistToPharmacyException("Working hours overlapping with other pharmacies. Day: FRIDAY");
+					}
+				}
+				else if(dto.isSaturday() && dailyEngagement.getDayOfWeek() == DayOfWeek.SATURDAY) {
+					if (dailyEngagement.isOverlappingWith(dto.getSaturdayStart().toLocalTime(), dto.getSaturdayEnd().toLocalTime())) {
+						throw new AddingDermatologistToPharmacyException("Working hours overlapping with other pharmacies. Day: SATURDAY");
+					}
+				}
+				else if(dto.isSunday() && dailyEngagement.getDayOfWeek() == DayOfWeek.SUNDAY) {
+					if (dailyEngagement.isOverlappingWith(dto.getSundayStart().toLocalTime(), dto.getSundayEnd().toLocalTime())) {
+						throw new AddingDermatologistToPharmacyException("Working hours overlapping with other pharmacies. Day: SUNDAY");
+					}
+				}
+			}
+		}
+		EngagementInPharmacy engagement = new EngagementInPharmacy();
+		Set<DailyEngagement> dailyEngagements = new HashSet<DailyEngagement>();
+		if(dto.isMonday())
+			dailyEngagements.add(new DailyEngagement(DayOfWeek.MONDAY, dto.getMondayStart().toLocalTime(), dto.getMondayEnd().toLocalTime()));
+		if(dto.isTuesday())
+			dailyEngagements.add(new DailyEngagement(DayOfWeek.TUESDAY, dto.getTuesdayStart().toLocalTime(), dto.getTuesdayEnd().toLocalTime()));
+		if(dto.isWednesday())
+			dailyEngagements.add(new DailyEngagement(DayOfWeek.WEDNESDAY, dto.getWednesdayStart().toLocalTime(), dto.getWednesdayEnd().toLocalTime()));
+		if(dto.isThursday())
+			dailyEngagements.add(new DailyEngagement(DayOfWeek.THURSDAY, dto.getThursdayStart().toLocalTime(), dto.getThursdayEnd().toLocalTime()));
+		if(dto.isFriday())
+			dailyEngagements.add(new DailyEngagement(DayOfWeek.FRIDAY, dto.getFridayStart().toLocalTime(), dto.getFridayEnd().toLocalTime()));
+		if(dto.isSaturday())
+			dailyEngagements.add(new DailyEngagement(DayOfWeek.SATURDAY, dto.getSaturdayStart().toLocalTime(), dto.getSaturdayEnd().toLocalTime()));
+		if(dto.isSunday())
+			dailyEngagements.add(new DailyEngagement(DayOfWeek.SUNDAY, dto.getSundayStart().toLocalTime(), dto.getSundayEnd().toLocalTime()));
+		engagement.setDailyEngagements(dailyEngagements);
+		engagement.setPharmacy(pharmacy);
+		dermatologist.getEngegementInPharmacies().add(engagement);
+		dermatologistRepository.save(dermatologist);
 	}
 }
