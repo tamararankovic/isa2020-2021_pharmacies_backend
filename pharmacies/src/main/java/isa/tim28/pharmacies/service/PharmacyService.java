@@ -99,4 +99,9 @@ public class PharmacyService implements IPharmacyService {
 		return ret;
 	}
 	
+	@Override
+	public Pharmacy save(Pharmacy pharmacy) {
+		Pharmacy newPharmacy = pharmacyRepository.save(pharmacy);
+		return newPharmacy;
+	}
 }

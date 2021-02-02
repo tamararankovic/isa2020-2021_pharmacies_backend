@@ -9,8 +9,8 @@ insert into users(id, name, surname, email, password, role, active, loged) value
 insert into patient(id, address, category, city, country, penalties, phone, points, user_id) values (301, 'Podgoricka 2', 0, 'Novi Sad', 'Srbija', 0, '0655555555', 0, 301);
 insert into patient(id, address, category, city, country, penalties, phone, points, user_id) values (302, 'Podgoricka 2', 0, 'Novi Sad', 'Srbija', 0, '0655555555', 0, 307);
 
-insert into pharmacy(id, name, description, address) values (1, 'Pharmacy 1', 'Some description of pharmacy 1', 'Masarikova 1, Novi Sad');
+insert into pharmacy(id, name, description, address) values (301, 'Pharmacy 1', 'Some description of pharmacy 1', 'Masarikova 1, Novi Sad');
 
-insert into engagement_in_pharmacy(id, pharmacy_id) values (1, 1);
+insert into engagement_in_pharmacy(id, pharmacy_id) values (1, 301);
 
 insert into pharmacist(id, engegement_in_pharmacy_id, user_id) values (301, 1, 302);
