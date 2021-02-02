@@ -22,6 +22,7 @@ import isa.tim28.pharmacies.model.EngagementInPharmacy;
 import isa.tim28.pharmacies.model.PharmacyAdmin;
 import isa.tim28.pharmacies.model.User;
 import isa.tim28.pharmacies.repository.DermatologistRepository;
+import isa.tim28.pharmacies.repository.EngagementInPharmacyRepository;
 import isa.tim28.pharmacies.repository.UserRepository;
 import isa.tim28.pharmacies.service.interfaces.IDermatologistAppointmentService;
 import isa.tim28.pharmacies.service.interfaces.IDermatologistService;
@@ -33,14 +34,17 @@ public class DermatologistService implements IDermatologistService {
 	private UserRepository userRepository;
 	private DermatologistMapper dermatologistMapper;
 	private IDermatologistAppointmentService appointmentService;
+	private EngagementInPharmacyRepository engagementRepository;
 	
 	@Autowired
-	public DermatologistService(DermatologistRepository dermatolgistRepository, UserRepository userRepository, DermatologistMapper dermatologistMapper, IDermatologistAppointmentService appointmentService) {
+	public DermatologistService(DermatologistRepository dermatolgistRepository, UserRepository userRepository, DermatologistMapper dermatologistMapper, IDermatologistAppointmentService appointmentService, EngagementInPharmacyRepository engagementRepository) {
 		super();
 		this.dermatologistRepository = dermatolgistRepository;
 		this.userRepository = userRepository;
 		this.dermatologistMapper = dermatologistMapper;
 		this.appointmentService = appointmentService;
+		this.engagementRepository = engagementRepository;
+		
 	}
 	
 	@Override
@@ -134,7 +138,16 @@ public class DermatologistService implements IDermatologistService {
 			throw new InvalidDeleteUserAttemptException("It is not allowed to delete a dermatologist that does not work in your pharmacy!");
 		if(appointmentService.dermatologistHasIncomingAppointmentsInPharmacy(dermatologist, admin.getPharmacy()))
 			throw new InvalidDeleteUserAttemptException("Dermatologist has incoming appointments!");
-		dermatologistRepository.delete(dermatologist);
+		
+		Set<Long> engagementIds = new HashSet<Long>();
+		for(EngagementInPharmacy e : dermatologist.getEngegementInPharmacies())
+			if(e.getPharmacy().getId() == admin.getPharmacy().getId())
+				engagementIds.add(e.getId());
+		dermatologist.getEngegementInPharmacies().removeIf(e -> e.getPharmacy().getId() == admin.getPharmacy().getId());
+		dermatologistRepository.save(dermatologist);
+		for (Long engid : engagementIds)
+			engagementRepository.deleteById(engid);
+		appointmentService.deleteUnscheduledAppointments(dermatologist);
 	}
 
 }

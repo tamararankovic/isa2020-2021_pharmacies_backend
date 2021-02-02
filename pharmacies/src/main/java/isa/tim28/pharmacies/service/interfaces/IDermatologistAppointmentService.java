@@ -11,4 +11,6 @@ public interface IDermatologistAppointmentService {
 	Set<DermatologistAppointment> findAllAvailableByPharmacyId(long pharmacyId);
 	
 	boolean dermatologistHasIncomingAppointmentsInPharmacy(Dermatologist dermatologist, Pharmacy pharmacy);
+	
+	void deleteUnscheduledAppointments(Dermatologist dermatologist);
 }

@@ -39,4 +39,15 @@ public class DermatologistAppointmentService implements IDermatologistAppointmen
 				&& a.getStartDateTime().isAfter(LocalDateTime.now())
 				&& a.isScheduled()).count() > 0;
 	}
+
+	@Override
+	public void deleteUnscheduledAppointments(Dermatologist dermatologist) {
+		Set<DermatologistAppointment> appointments = appointmentRepository.findAll().stream()
+														.filter(a -> a.getDermatologist().getId() == dermatologist.getId()
+														&& a.getStartDateTime().isAfter(LocalDateTime.now())
+														&& !a.isScheduled())
+														.collect(Collectors.toSet());
+		for(DermatologistAppointment a : appointments)
+			appointmentRepository.delete(a);
+	}
 }
