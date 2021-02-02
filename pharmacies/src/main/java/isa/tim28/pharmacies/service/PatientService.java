@@ -9,6 +9,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import isa.tim28.pharmacies.dtos.PatientProfileDTO;
+import isa.tim28.pharmacies.exceptions.BadNameException;
+import isa.tim28.pharmacies.exceptions.BadSurnameException;
 import isa.tim28.pharmacies.exceptions.PasswordIncorrectException;
 import isa.tim28.pharmacies.exceptions.UserDoesNotExistException;
 import isa.tim28.pharmacies.model.Medicine;
@@ -53,7 +55,7 @@ public class PatientService implements IPatientService {
 	}
 
 	@Override
-	public Patient editPatient(PatientProfileDTO newPatient, long id) throws UserDoesNotExistException {
+	public Patient editPatient(PatientProfileDTO newPatient, long id) throws UserDoesNotExistException, BadNameException, BadSurnameException{
 		User user;
 		user = getUserPart(id);
 		user.setName(newPatient.getName());
@@ -64,21 +66,20 @@ public class PatientService implements IPatientService {
 		patient.setCity(newPatient.getCity());
 		patient.setCountry(newPatient.getCountry());
 		patient.setPhone(newPatient.getPhone());
-		
+
 		ArrayList<String> allergies = newPatient.getAllergies();
 		Set<Medicine> medicine = new HashSet<Medicine>();
-		for (String s: allergies) {
+		for (String s : allergies) {
 			medicine.add(medicineRepository.findByName(s));
 		}
 		patient.setAllergies(medicine);
 
-		/*
-		 * if(!user.isNameValid()) throw new BadNameException("Bad name. Try again.");
-		 * if(!user.isSurnameValid()) throw new
-		 * BadSurnameException("Bad surname. Try again."); if(!user.isEmailValid())
-		 * throw new BadNewEmailException("Bad email. Try again.");
-		 */
-
+		if (!user.isNameValid())
+			throw new BadNameException("Bad name. Try again.");
+		if (!user.isSurnameValid())
+			throw new BadSurnameException("Bad surname. Try again.");
+		
+			
 		userRepository.save(user);
 		patientRepository.save(patient);
 		return patient;
@@ -106,11 +107,11 @@ public class PatientService implements IPatientService {
 
 		boolean medExistsInAllergies = false;
 		ArrayList<String> res = new ArrayList<String>();
-		if(allergies.isEmpty()) {
-			for(Medicine me : medicine) {
+		if (allergies.isEmpty()) {
+			for (Medicine me : medicine) {
 				res.add(me.getName());
 			}
-		}else {
+		} else {
 			for (Medicine m : medicine) {
 				medExistsInAllergies = false;
 				for (String s : allergies) {
@@ -118,10 +119,10 @@ public class PatientService implements IPatientService {
 						medExistsInAllergies = true;
 					}
 				}
-				if(!medExistsInAllergies) {
+				if (!medExistsInAllergies) {
 					res.add(m.getName());
 				}
-				
+
 			}
 		}
 		return res;
