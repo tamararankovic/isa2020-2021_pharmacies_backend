@@ -135,4 +135,35 @@ public class PharmacistService implements IPharmacistService {
 			throw new InvalidDeleteUserAttemptException("Pharmacist has incoming appointments!");
 		pharmacistRepository.delete(pharmacist);
 	}
+
+	@Override
+	public Set<PharmacistDTO> search(String fullName) {
+		return search(findAll(), fullName);
+	}
+
+	@Override
+	public Set<PharmacistDTO> searchByPharmacyAdmin(String fullName, PharmacyAdmin admin) {
+		return search(findAllByPharmacyAdmin(admin), fullName);
+	}
+	
+	private String formatFullName(String fullName) {
+		return fullName.trim().replaceAll(" +", " ").toLowerCase();
+	}
+
+	private Set<PharmacistDTO> search(Set<PharmacistDTO> pharmacists, String fullName) {
+		Set<PharmacistDTO> ret = new HashSet<PharmacistDTO>();
+		if (fullName.length() == 0) return pharmacists;
+		String[] tokens = formatFullName(fullName).split(" ");
+		for(PharmacistDTO p : pharmacists) {
+			boolean hasAllTokens = true;
+			for(String token : tokens)
+				if(!formatFullName(p.getName() + " " + p.getSurname()).contains(token)) {
+					hasAllTokens = false;
+					break;
+				}
+			if(hasAllTokens)
+				ret.add(p);
+		}
+		return ret;
+	}
 }

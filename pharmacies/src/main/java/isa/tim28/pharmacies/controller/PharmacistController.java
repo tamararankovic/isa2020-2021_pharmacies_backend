@@ -174,4 +174,23 @@ public class PharmacistController {
 		}
 		throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You don't have required permissions!");
 	}
+	
+	@GetMapping(value="/search/{fullName}")
+	public ResponseEntity<Set<PharmacistDTO>> search(@PathVariable String fullName, HttpSession session) {
+		User loggedInUser = (User) session.getAttribute("loggedInUser");
+		if(loggedInUser == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not logged in!");
+		}
+		if(loggedInUser.getRole() == Role.PATIENT)
+			return new ResponseEntity<>(pharmacistService.search(fullName), HttpStatus.OK);
+		if(loggedInUser.getRole() == Role.PHARMACY_ADMIN) {
+			try {
+				PharmacyAdmin admin = pharmacyAdminService.findByUser(loggedInUser);
+				return new ResponseEntity<>(pharmacistService.searchByPharmacyAdmin(fullName, admin), HttpStatus.OK);
+			} catch(UserDoesNotExistException e1) {
+				throw new ResponseStatusException(HttpStatus.NOT_FOUND, e1.getMessage());
+			}
+		}
+		throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You don't have required permissions!");
+	}
 }

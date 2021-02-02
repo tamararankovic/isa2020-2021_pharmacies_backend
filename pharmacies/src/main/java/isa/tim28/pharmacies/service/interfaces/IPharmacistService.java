@@ -2,6 +2,7 @@ package isa.tim28.pharmacies.service.interfaces;
 
 import java.util.Set;
 
+import isa.tim28.pharmacies.dtos.DermatologistDTO;
 import isa.tim28.pharmacies.dtos.PharmacistDTO;
 import isa.tim28.pharmacies.dtos.PharmacistProfileDTO;
 import isa.tim28.pharmacies.exceptions.BadNameException;
@@ -33,4 +34,8 @@ public interface IPharmacistService {
 	Set<PharmacistDTO> findAll();
 	
 	void deleteByPharmacyAdmin(long pharmacistId, PharmacyAdmin admin) throws UserDoesNotExistException, InvalidDeleteUserAttemptException;
+
+	Set<PharmacistDTO> search(String fullName);
+	
+	Set<PharmacistDTO> searchByPharmacyAdmin(String fullName, PharmacyAdmin admin);
 }

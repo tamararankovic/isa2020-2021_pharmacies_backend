@@ -33,4 +33,8 @@ public interface IDermatologistService {
 	Set<DermatologistDTO> findAll();
 	
 	void deleteByPharmacyAdmin(long dermatologistId, PharmacyAdmin admin) throws UserDoesNotExistException, InvalidDeleteUserAttemptException;
+	
+	Set<DermatologistDTO> search(String fullName);
+	
+	Set<DermatologistDTO> searchByPharmacyAdmin(String fullName, PharmacyAdmin admin);
 }

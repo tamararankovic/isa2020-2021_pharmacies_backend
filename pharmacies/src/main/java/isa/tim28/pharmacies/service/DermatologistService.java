@@ -150,4 +150,34 @@ public class DermatologistService implements IDermatologistService {
 		appointmentService.deleteUnscheduledAppointments(dermatologist);
 	}
 
+	@Override
+	public Set<DermatologistDTO> search(String fullName) {
+		return search(findAll(), fullName);
+	}
+
+	@Override
+	public Set<DermatologistDTO> searchByPharmacyAdmin(String fullName, PharmacyAdmin admin) {
+		return search(findAllByPharmacyAdmin(admin), fullName);
+	}
+	
+	private String formatFullName(String fullName) {
+		return fullName.trim().replaceAll(" +", " ").toLowerCase();
+	}
+
+	private Set<DermatologistDTO> search(Set<DermatologistDTO> dermatologists, String fullName) {
+		Set<DermatologistDTO> ret = new HashSet<DermatologistDTO>();
+		if(fullName.length() == 0) return dermatologists;
+		String[] tokens = formatFullName(fullName).split(" ");
+		for(DermatologistDTO d : dermatologists) {
+			boolean hasAllTokens = true;
+			for(String token : tokens)
+				if(!formatFullName(d.getName() + " " + d.getSurname()).contains(token)) {
+					hasAllTokens = false;
+					break;
+				}
+			if (hasAllTokens)
+				ret.add(d);
+		}
+		return ret;
+	}
 }
