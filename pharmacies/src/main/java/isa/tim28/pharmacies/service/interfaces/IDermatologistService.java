@@ -4,6 +4,7 @@ import java.util.Set;
 
 import isa.tim28.pharmacies.dtos.DermatologistDTO;
 import isa.tim28.pharmacies.dtos.DermatologistProfileDTO;
+import isa.tim28.pharmacies.dtos.DermatologistToEmployDTO;
 import isa.tim28.pharmacies.exceptions.BadNameException;
 import isa.tim28.pharmacies.exceptions.BadNewEmailException;
 import isa.tim28.pharmacies.exceptions.BadSurnameException;
@@ -11,6 +12,7 @@ import isa.tim28.pharmacies.exceptions.InvalidDeleteUserAttemptException;
 import isa.tim28.pharmacies.exceptions.PasswordIncorrectException;
 import isa.tim28.pharmacies.exceptions.UserDoesNotExistException;
 import isa.tim28.pharmacies.model.Dermatologist;
+import isa.tim28.pharmacies.model.Pharmacy;
 import isa.tim28.pharmacies.model.PharmacyAdmin;
 import isa.tim28.pharmacies.model.User;
 
@@ -37,4 +39,6 @@ public interface IDermatologistService {
 	Set<DermatologistDTO> search(String fullName);
 	
 	Set<DermatologistDTO> searchByPharmacyAdmin(String fullName, PharmacyAdmin admin);
+	
+	Set<DermatologistToEmployDTO> findUnemployedByPharmacyAdmin(Pharmacy pharmacy);
 }

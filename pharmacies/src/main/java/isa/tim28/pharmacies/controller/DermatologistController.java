@@ -18,6 +18,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import isa.tim28.pharmacies.dtos.DermatologistDTO;
 import isa.tim28.pharmacies.dtos.DermatologistProfileDTO;
+import isa.tim28.pharmacies.dtos.DermatologistToEmployDTO;
 import isa.tim28.pharmacies.dtos.PasswordChangeDTO;
 import isa.tim28.pharmacies.exceptions.BadNameException;
 import isa.tim28.pharmacies.exceptions.BadNewEmailException;
@@ -187,6 +188,23 @@ public class DermatologistController {
 			try {
 				PharmacyAdmin admin = pharmacyAdminService.findByUser(loggedInUser);
 				return new ResponseEntity<>(dermatologistService.searchByPharmacyAdmin(fullName, admin), HttpStatus.OK);
+			} catch(UserDoesNotExistException e1) {
+				throw new ResponseStatusException(HttpStatus.NOT_FOUND, e1.getMessage());
+			}
+		}
+		throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You don't have required permissions!");
+	}
+	
+	@GetMapping(value="/get-unemployed-in-pharmacy")
+	public ResponseEntity<Set<DermatologistToEmployDTO>> getUnemployedInPharmacy(HttpSession session) {
+		User loggedInUser = (User) session.getAttribute("loggedInUser");
+		if(loggedInUser == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not logged in!");
+		}
+		if(loggedInUser.getRole() == Role.PHARMACY_ADMIN) {
+			try {
+				PharmacyAdmin admin = pharmacyAdminService.findByUser(loggedInUser);
+				return new ResponseEntity<>(dermatologistService.findUnemployedByPharmacyAdmin(admin.getPharmacy()), HttpStatus.OK);
 			} catch(UserDoesNotExistException e1) {
 				throw new ResponseStatusException(HttpStatus.NOT_FOUND, e1.getMessage());
 			}

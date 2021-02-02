@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Component;
 
 import isa.tim28.pharmacies.dtos.DermatologistDTO;
+import isa.tim28.pharmacies.dtos.DermatologistToEmployDTO;
 import isa.tim28.pharmacies.model.Dermatologist;
 import isa.tim28.pharmacies.model.EngagementInPharmacy;
 import isa.tim28.pharmacies.model.Rating;
@@ -24,5 +25,9 @@ public class DermatologistMapper {
 		pharmacies = pharmacies.stream().distinct().collect(Collectors.toSet());
 		return new DermatologistDTO(dermatologist.getId(), dermatologist.getUser().getName(), dermatologist.getUser().getSurname(), 
 					dermatologist.getRatings().size() > 0 ? sumRating / dermatologist.getRatings().size() : 0, pharmacies);
+	}
+	
+	public DermatologistToEmployDTO dermatologistToDermatologistToEmployDTO(Dermatologist dermatologist) {
+		return new DermatologistToEmployDTO(dermatologist.getId(), dermatologist.getUser().getName(), dermatologist.getUser().getSurname(), dermatologist.getUser().getEmail());
 	}
 }

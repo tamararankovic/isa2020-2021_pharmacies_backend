@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 import isa.tim28.pharmacies.dtos.DermatologistDTO;
 import isa.tim28.pharmacies.dtos.DermatologistProfileDTO;
+import isa.tim28.pharmacies.dtos.DermatologistToEmployDTO;
 import isa.tim28.pharmacies.exceptions.BadNameException;
 import isa.tim28.pharmacies.exceptions.BadNewEmailException;
 import isa.tim28.pharmacies.exceptions.BadSurnameException;
@@ -19,6 +20,7 @@ import isa.tim28.pharmacies.exceptions.UserDoesNotExistException;
 import isa.tim28.pharmacies.mapper.DermatologistMapper;
 import isa.tim28.pharmacies.model.Dermatologist;
 import isa.tim28.pharmacies.model.EngagementInPharmacy;
+import isa.tim28.pharmacies.model.Pharmacy;
 import isa.tim28.pharmacies.model.PharmacyAdmin;
 import isa.tim28.pharmacies.model.User;
 import isa.tim28.pharmacies.repository.DermatologistRepository;
@@ -178,6 +180,15 @@ public class DermatologistService implements IDermatologistService {
 			if (hasAllTokens)
 				ret.add(d);
 		}
+		return ret;
+	}
+
+	@Override
+	public Set<DermatologistToEmployDTO> findUnemployedByPharmacyAdmin(Pharmacy pharmacy) {
+		Set<DermatologistToEmployDTO> ret = new HashSet<DermatologistToEmployDTO>();
+		for(Dermatologist d : dermatologistRepository.findAll())
+			if(!d.hasEngagementInPharmacy(pharmacy))
+				ret.add(dermatologistMapper.dermatologistToDermatologistToEmployDTO(d));
 		return ret;
 	}
 }
