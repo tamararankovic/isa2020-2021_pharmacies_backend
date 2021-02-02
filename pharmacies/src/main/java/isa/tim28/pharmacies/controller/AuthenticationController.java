@@ -80,7 +80,7 @@ public class AuthenticationController {
 	public ResponseEntity<PatientDTO> registerPatient(@RequestBody PatientDTO patientDto, HttpSession session, HttpServletRequest request) throws Exception {
 		
 		if (session.getAttribute("loggedInUser") != null) {
-			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot register while user is loged in!");
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Cannot register while user is loged in!");
 		}
 		
 		User user = authenticationService.getUserByEmail(patientDto.getEmail());
