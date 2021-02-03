@@ -1,5 +1,6 @@
 package isa.tim28.pharmacies.service.interfaces;
 
+import java.util.List;
 import java.util.Set;
 
 import isa.tim28.pharmacies.dtos.DermatologistDTO;
@@ -7,6 +8,7 @@ import isa.tim28.pharmacies.dtos.DermatologistProfileDTO;
 import isa.tim28.pharmacies.dtos.DermatologistToEmployDTO;
 import isa.tim28.pharmacies.dtos.NewDermatologistInPharmacyDTO;
 import isa.tim28.pharmacies.exceptions.AddingDermatologistToPharmacyException;
+import isa.tim28.pharmacies.dtos.PatientSearchDTO;
 import isa.tim28.pharmacies.exceptions.BadNameException;
 import isa.tim28.pharmacies.exceptions.BadNewEmailException;
 import isa.tim28.pharmacies.exceptions.BadSurnameException;
@@ -45,4 +47,6 @@ public interface IDermatologistService {
 	Set<DermatologistToEmployDTO> findUnemployedByPharmacyAdmin(Pharmacy pharmacy);
 	
 	void addToPharmacy(NewDermatologistInPharmacyDTO dto, Pharmacy pharmacy) throws AddingDermatologistToPharmacyException, UserDoesNotExistException;
+	
+	List<PatientSearchDTO> getAllPatientsByNameAndSurname(String name, String surname);
 }

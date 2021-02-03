@@ -1,9 +1,10 @@
 package isa.tim28.pharmacies.service;
 
 import java.time.DayOfWeek;
+import java.util.Optional;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +15,7 @@ import isa.tim28.pharmacies.dtos.DermatologistProfileDTO;
 import isa.tim28.pharmacies.dtos.DermatologistToEmployDTO;
 import isa.tim28.pharmacies.dtos.NewDermatologistInPharmacyDTO;
 import isa.tim28.pharmacies.exceptions.AddingDermatologistToPharmacyException;
+import isa.tim28.pharmacies.dtos.PatientSearchDTO;
 import isa.tim28.pharmacies.exceptions.BadNameException;
 import isa.tim28.pharmacies.exceptions.BadNewEmailException;
 import isa.tim28.pharmacies.exceptions.BadSurnameException;
@@ -26,9 +28,11 @@ import isa.tim28.pharmacies.model.Dermatologist;
 import isa.tim28.pharmacies.model.EngagementInPharmacy;
 import isa.tim28.pharmacies.model.Pharmacy;
 import isa.tim28.pharmacies.model.PharmacyAdmin;
+import isa.tim28.pharmacies.repository.EngagementInPharmacyRepository;
+import isa.tim28.pharmacies.model.Patient;
 import isa.tim28.pharmacies.model.User;
 import isa.tim28.pharmacies.repository.DermatologistRepository;
-import isa.tim28.pharmacies.repository.EngagementInPharmacyRepository;
+import isa.tim28.pharmacies.repository.PatientRepository;
 import isa.tim28.pharmacies.repository.UserRepository;
 import isa.tim28.pharmacies.service.interfaces.IDermatologistAppointmentService;
 import isa.tim28.pharmacies.service.interfaces.IDermatologistService;
@@ -41,16 +45,17 @@ public class DermatologistService implements IDermatologistService {
 	private DermatologistMapper dermatologistMapper;
 	private IDermatologistAppointmentService appointmentService;
 	private EngagementInPharmacyRepository engagementRepository;
+	private PatientRepository patientRepository;
 	
 	@Autowired
-	public DermatologistService(DermatologistRepository dermatolgistRepository, UserRepository userRepository, DermatologistMapper dermatologistMapper, IDermatologistAppointmentService appointmentService, EngagementInPharmacyRepository engagementRepository) {
+	public DermatologistService(DermatologistRepository dermatolgistRepository, UserRepository userRepository, DermatologistMapper dermatologistMapper, IDermatologistAppointmentService appointmentService, EngagementInPharmacyRepository engagementRepository, PatientRepository patientRepository) {
 		super();
 		this.dermatologistRepository = dermatolgistRepository;
 		this.userRepository = userRepository;
 		this.dermatologistMapper = dermatologistMapper;
 		this.appointmentService = appointmentService;
 		this.engagementRepository = engagementRepository;
-		
+		this.patientRepository = patientRepository;
 	}
 	
 	@Override
@@ -264,5 +269,28 @@ public class DermatologistService implements IDermatologistService {
 		engagement.setPharmacy(pharmacy);
 		dermatologist.getEngegementInPharmacies().add(engagement);
 		dermatologistRepository.save(dermatologist);
+	}
+
+	public List<PatientSearchDTO> getAllPatientsByNameAndSurname(String name, String surname) {
+		if (name.equals("") && surname.equals("")) return patientsToDtos(patientRepository.findAll());
+		else return patientsToDtos(findAllPatientsWithCriteria(name, surname));
+	}
+
+	private List<PatientSearchDTO> patientsToDtos(List<Patient> patients) {
+		List<PatientSearchDTO> dtos = new ArrayList<PatientSearchDTO>();
+		for (Patient p : patients) {
+			dtos.add(new PatientSearchDTO(p.getUser().getName(), p.getUser().getSurname()));
+		}
+		return dtos;
+	}
+	
+	private List<Patient> findAllPatientsWithCriteria(String name, String surname) {
+		List<Patient> ret = new ArrayList<Patient>();
+		for(Patient p : patientRepository.findAll()) {
+			if(p.getUser().getName().toLowerCase().contains(name.toLowerCase()) &&
+					p.getUser().getSurname().toLowerCase().contains(surname.toLowerCase()))
+				ret.add(p);
+		}
+		return ret;
 	}
 }
