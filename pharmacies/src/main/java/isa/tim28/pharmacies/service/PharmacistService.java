@@ -111,6 +111,10 @@ public class PharmacistService implements IPharmacistService {
 	}
 
 	@Override
+	public Pharmacist getPharmacistFromUser(long userId) {
+		return pharmacistRepository.findOneByUser_Id(userId);
+	}
+	
 	public Set<PharmacistDTO> findAllByPharmacyAdmin(PharmacyAdmin admin) {
 		Set<PharmacistDTO> dtos = new HashSet<PharmacistDTO>();
 		Set<Pharmacist> pharmacists = pharmacistRepository.findAll().stream()
@@ -176,7 +180,7 @@ public class PharmacistService implements IPharmacistService {
 
 	@Override
 	public void create(NewPharmacistDTO dto, Pharmacy pharmacy) throws CreatePharmacistException {
-		// TODO Auto-generated method stub
+
 		User user = new User();
 		user.setName(dto.getName());
 		user.setSurname(dto.getSurname());

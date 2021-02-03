@@ -3,6 +3,7 @@ package isa.tim28.pharmacies.controller;
 import java.util.Set;
 import java.util.List;
 
+import javax.mail.MessagingException;
 import javax.servlet.http.HttpSession;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,12 +17,18 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
-
-import isa.tim28.pharmacies.dtos.NewPharmacistDTO;
+import isa.tim28.pharmacies.dtos.DermatologistAppointmentDTO;
+import isa.tim28.pharmacies.dtos.DermatologistReportDTO;
+import isa.tim28.pharmacies.dtos.IsAllergicDTO;
+import isa.tim28.pharmacies.dtos.MedicineDTOM;
+import isa.tim28.pharmacies.dtos.MedicineQuantityCheckDTO;
 import isa.tim28.pharmacies.dtos.PasswordChangeDTO;
+import isa.tim28.pharmacies.dtos.PatientReportAllergyDTO;
+import isa.tim28.pharmacies.dtos.NewPharmacistDTO;
 import isa.tim28.pharmacies.dtos.PharmacistDTO;
 import isa.tim28.pharmacies.dtos.PatientSearchDTO;
 import isa.tim28.pharmacies.dtos.PharmacistProfileDTO;
+import isa.tim28.pharmacies.dtos.ReservationValidDTO;
 import isa.tim28.pharmacies.exceptions.BadNameException;
 import isa.tim28.pharmacies.exceptions.BadNewEmailException;
 import isa.tim28.pharmacies.exceptions.BadSurnameException;
@@ -29,27 +36,35 @@ import isa.tim28.pharmacies.exceptions.CreatePharmacistException;
 import isa.tim28.pharmacies.exceptions.InvalidDeleteUserAttemptException;
 import isa.tim28.pharmacies.exceptions.PasswordIncorrectException;
 import isa.tim28.pharmacies.exceptions.UserDoesNotExistException;
-import isa.tim28.pharmacies.model.PharmacyAdmin;
+import isa.tim28.pharmacies.model.Pharmacist;
+import isa.tim28.pharmacies.model.Reservation;
 import isa.tim28.pharmacies.model.Role;
 import isa.tim28.pharmacies.model.User;
-import isa.tim28.pharmacies.service.interfaces.IPharmacistService;
+import isa.tim28.pharmacies.service.DermatologistService;
+import isa.tim28.pharmacies.service.EmailService;
+import isa.tim28.pharmacies.service.PharmacistAppointmentService;
+import isa.tim28.pharmacies.service.PharmacistService;
+import isa.tim28.pharmacies.model.PharmacyAdmin;
 import isa.tim28.pharmacies.service.interfaces.IPharmacyAdminService;
-import isa.tim28.pharmacies.service.interfaces.IDermatologistService;
 
 @RestController
 @RequestMapping(value = "pharm")
 public class PharmacistController {
 
-	private IPharmacistService pharmacistService;
+	private PharmacistService pharmacistService;
+	private DermatologistService dermatologistService;
 	private IPharmacyAdminService pharmacyAdminService;
-	private IDermatologistService dermatologistService;
+	private PharmacistAppointmentService pharmacistAppointmentService;
+	private EmailService emailService;
 	
 	@Autowired
-	public PharmacistController(IPharmacistService pharmacistService, IPharmacyAdminService pharmacyAdminService, IDermatologistService dermatologistService) {
+	public PharmacistController(PharmacistService pharmacistService, DermatologistService dermatologistService, PharmacistAppointmentService pharmacistAppointmentService, EmailService emailService, IPharmacyAdminService pharmacyAdminService) {
 		super();
 		this.pharmacistService = pharmacistService;
 		this.pharmacyAdminService = pharmacyAdminService;
 		this.dermatologistService = dermatologistService;
+		this.emailService = emailService;
+		this.pharmacistAppointmentService = pharmacistAppointmentService;
 	}
 	
 	/*
@@ -236,7 +251,176 @@ public class PharmacistController {
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only pharmacist can view patients.");
 		}
 		
-		return new ResponseEntity<>(dermatologistService.getAllPatientsByNameAndSurname(dto.name, dto.surname), HttpStatus.OK);
+		return new ResponseEntity<>(dermatologistService.getAllPatientsByNameAndSurname(dto.getName(), dto.getSurname()), HttpStatus.OK);
 	}
 	
+	/*
+	 url: GET localhost:8081/pharm/appointment/{appointmentId}
+	 HTTP request for appointment
+	 returns ResponseEntity object
+	*/
+	@GetMapping(value = "/appointment/{appointmentId}", produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<DermatologistAppointmentDTO> getAppointment(@PathVariable Long appointmentId, HttpSession session){
+		
+		User loggedInUser = (User) session.getAttribute("loggedInUser");
+		if(loggedInUser == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No logged in user!");
+		}
+		if(loggedInUser.getRole() != Role.PHARMACIST) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only pharmacist can get appointment.");
+		}
+		
+		return new ResponseEntity<>(pharmacistAppointmentService.getAppointmentDTOById(appointmentId), HttpStatus.OK);
+	}
+	
+	/*
+	 url: GET localhost:8081/pharm/medicine
+	 HTTP request for medicine list
+	 returns ResponseEntity object
+	*/
+	@GetMapping(value = "/medicine", produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<List<MedicineDTOM>> getMedicine(HttpSession session){
+		
+		User loggedInUser = (User) session.getAttribute("loggedInUser");
+		if(loggedInUser == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No logged in user!");
+		}
+		if(loggedInUser.getRole() != Role.PHARMACIST) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only pharmacist can get medicine list.");
+		}
+		
+		return new ResponseEntity<>(pharmacistAppointmentService.getMedicineList(), HttpStatus.OK);
+	}
+	
+	/*
+	 url: POST localhost:8081/pharm/report
+	 HTTP request for saving report
+	 returns ResponseEntity object
+	*/
+	@PostMapping(value = "/report", produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<String> saveReport(@RequestBody DermatologistReportDTO dto, HttpSession session) throws Exception{
+		
+		User loggedInUser = (User) session.getAttribute("loggedInUser");
+		if(loggedInUser == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No logged in user!");
+		}
+		if(loggedInUser.getRole() != Role.PHARMACIST) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only pharmacist can fill report.");
+		}
+		String medicineCodes = pharmacistAppointmentService.fillReport(dto);
+		User u = pharmacistAppointmentService.getAppointmentById(dto.getAppointmentId()).getPatient().getUser();
+		emailService.sendMedicineEmailAsync(u.getName(), u.getEmail(), medicineCodes);
+		return new ResponseEntity<>("", HttpStatus.OK);
+	}
+	
+	/*
+	 url: POST localhost:8081/pharm/allergies
+	 HTTP request for checking if patient is allergic
+	 returns ResponseEntity object
+	*/
+	@PostMapping(value = "/allergies", produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<IsAllergicDTO> checkAllergies(@RequestBody PatientReportAllergyDTO dto, HttpSession session){
+		
+		User loggedInUser = (User) session.getAttribute("loggedInUser");
+		if(loggedInUser == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No logged in user!");
+		}
+		if(loggedInUser.getRole() != Role.PHARMACIST) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only pharmacist can check if patient is allergic.");
+		}
+		try {
+			boolean isAllergic = pharmacistAppointmentService.checkAllergies(dto.getPatientId(), dto.getMedicineId());
+			return new ResponseEntity<>(new IsAllergicDTO(isAllergic), HttpStatus.OK);
+		} catch (UserDoesNotExistException e) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Patient with given id does not exist.");
+		}
+	}
+	
+	/*
+	 url: GET localhost:8081/pharm/medicine/isAvailable/{medicineId}/{appointmentId}
+	 HTTP request for checking if medicine is available
+	 returns ResponseEntity object
+	*/
+	@GetMapping(value = "/medicine/isAvailable/{medicineId}/{appointmentId}", produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<MedicineQuantityCheckDTO> checkMedicineQuantity(@PathVariable Long medicineId, @PathVariable Long appointmentId, HttpSession session){
+		
+		User loggedInUser = (User) session.getAttribute("loggedInUser");
+		if(loggedInUser == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No logged in user!");
+		}
+		if(loggedInUser.getRole() != Role.PHARMACIST) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only pharmacist can check medicine quantity.");
+		}
+		return new ResponseEntity<>(pharmacistAppointmentService.checkIfMedicineIsAvailable(medicineId, appointmentId), HttpStatus.OK);
+	}
+	
+	/*
+	 url: GET localhost:8081/pharm/medicine/compatible/{medicineId}
+	 HTTP request for compatible medicine
+	 returns ResponseEntity object
+	*/
+	@GetMapping(value = "/medicine/compatible/{medicineId}", produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<List<MedicineDTOM>> compatibleMedicine(@PathVariable Long medicineId, HttpSession session){
+		
+		User loggedInUser = (User) session.getAttribute("loggedInUser");
+		if(loggedInUser == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No logged in user!");
+		}
+		if(loggedInUser.getRole() != Role.PHARMACIST) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only pharmacist can get compatible medicine.");
+		}
+		return new ResponseEntity<>(pharmacistAppointmentService.compatibleMedicine(medicineId), HttpStatus.OK);
+	}
+	
+	/*
+	 url: GET localhost:8081/pharm/reservationValid/{reservationId}
+	 HTTP request for searching reservations
+	 returns ResponseEntity object
+	*/
+	@GetMapping(value = "/reservationValid/{reservationId}", produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<ReservationValidDTO> reservationValid(@PathVariable Long reservationId, HttpSession session){
+		
+		User loggedInUser = (User) session.getAttribute("loggedInUser");
+		if(loggedInUser == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No logged in user!");
+		}
+		if(loggedInUser.getRole() != Role.PHARMACIST) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only pharmacist can see reservations.");
+		}
+		Pharmacist pharmacist = pharmacistService.getPharmacistFromUser(loggedInUser.getId());
+		if(pharmacist != null) {
+			return new ResponseEntity<>(pharmacistAppointmentService.isReservationValid(reservationId, pharmacist), HttpStatus.OK);
+		} else return new ResponseEntity<>(new ReservationValidDTO(false), HttpStatus.OK);
+	}
+	
+	/*
+	 url: GET localhost:8081/pharm/reservation/{reservationId}
+	 HTTP request for reservation medicine received
+	 returns ResponseEntity object
+	*/
+	@GetMapping(value = "/reservation/{reservationId}", produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<String> reservationReceived(@PathVariable Long reservationId, HttpSession session){
+		
+		User loggedInUser = (User) session.getAttribute("loggedInUser");
+		if(loggedInUser == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No logged in user!");
+		}
+		if(loggedInUser.getRole() != Role.PHARMACIST) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only pharmacist can see reservations.");
+		}
+		
+		Reservation reservation = pharmacistAppointmentService.reservationTaken(reservationId);
+		if(reservation != null) {
+			String patientName = reservation.getPatient().getUser().getName();
+			String patientEmail = reservation.getPatient().getUser().getEmail();
+			try {
+				emailService.sendReservationReceivedEmailAsync(patientName, patientEmail, reservationId);
+				return new ResponseEntity<>("", HttpStatus.OK);
+			} catch (MessagingException e) {
+				throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email not sent.");
+			}
+		}
+		else throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No reservation.");
+		
+	}
 }

@@ -1,6 +1,6 @@
 package isa.tim28.pharmacies.model;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -28,7 +28,7 @@ public class Reservation {
 	private Medicine medicine;
 	
 	@Column(name = "dueDate", nullable = false)
-	private LocalDate dueDate;
+	private LocalDateTime dueDate;
 	
 	@Column(name = "received", nullable = false)
 	private boolean received;
@@ -37,7 +37,7 @@ public class Reservation {
 		super();
 	}
 	
-	public Reservation(long id, Patient patient, Pharmacy pharmacy, Medicine medicine, LocalDate dueDate,
+	public Reservation(long id, Patient patient, Pharmacy pharmacy, Medicine medicine, LocalDateTime dueDate,
 			boolean received) {
 		super();
 		this.id = id;
@@ -80,11 +80,11 @@ public class Reservation {
 		this.medicine = medicine;
 	}
 
-	public LocalDate getDueDate() {
+	public LocalDateTime getDueDate() {
 		return dueDate;
 	}
 
-	public void setDueDate(LocalDate dueDate) {
+	public void setDueDate(LocalDateTime dueDate) {
 		this.dueDate = dueDate;
 	}
 
@@ -95,4 +95,5 @@ public class Reservation {
 	public void setReceived(boolean received) {
 		this.received = received;
 	}
+
 }

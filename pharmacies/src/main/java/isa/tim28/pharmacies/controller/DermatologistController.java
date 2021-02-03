@@ -16,12 +16,18 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
-
-import isa.tim28.pharmacies.dtos.DermatologistDTO;
+import isa.tim28.pharmacies.dtos.DermatologistAppointmentDTO;
 import isa.tim28.pharmacies.dtos.DermatologistProfileDTO;
+import isa.tim28.pharmacies.dtos.DermatologistReportDTO;
+import isa.tim28.pharmacies.dtos.IsAllergicDTO;
+import isa.tim28.pharmacies.dtos.MedicineDTOM;
+import isa.tim28.pharmacies.dtos.MedicineDetailsDTO;
+import isa.tim28.pharmacies.dtos.MedicineQuantityCheckDTO;
+import isa.tim28.pharmacies.dtos.PasswordChangeDTO;
+import isa.tim28.pharmacies.dtos.PatientReportAllergyDTO;
+import isa.tim28.pharmacies.dtos.DermatologistDTO;
 import isa.tim28.pharmacies.dtos.DermatologistToEmployDTO;
 import isa.tim28.pharmacies.dtos.NewDermatologistInPharmacyDTO;
-import isa.tim28.pharmacies.dtos.PasswordChangeDTO;
 import isa.tim28.pharmacies.exceptions.AddingDermatologistToPharmacyException;
 import isa.tim28.pharmacies.dtos.PatientSearchDTO;
 import isa.tim28.pharmacies.exceptions.BadNameException;
@@ -33,20 +39,26 @@ import isa.tim28.pharmacies.exceptions.UserDoesNotExistException;
 import isa.tim28.pharmacies.model.PharmacyAdmin;
 import isa.tim28.pharmacies.model.Role;
 import isa.tim28.pharmacies.model.User;
-import isa.tim28.pharmacies.service.interfaces.IDermatologistService;
+import isa.tim28.pharmacies.service.DermatologistAppointmentService;
+import isa.tim28.pharmacies.service.DermatologistService;
+import isa.tim28.pharmacies.service.EmailService;
 import isa.tim28.pharmacies.service.interfaces.IPharmacyAdminService;
 
 @RestController
 @RequestMapping(value = "derm")
 public class DermatologistController {
 	
-	private IDermatologistService dermatologistService;
+	private DermatologistService dermatologistService;
 	private IPharmacyAdminService pharmacyAdminService;
+	private DermatologistAppointmentService dermatologistAppointmentService;
+	private EmailService emailService;
 	
 	@Autowired
-	public DermatologistController(IDermatologistService dermatologistService, IPharmacyAdminService pharmacyAdminService) {
+	public DermatologistController(DermatologistService dermatologistService, DermatologistAppointmentService dermatologistAppointmentService, EmailService emailService, IPharmacyAdminService pharmacyAdminService) {
 		super();
 		this.dermatologistService = dermatologistService;
+		this.dermatologistAppointmentService = dermatologistAppointmentService;
+		this.emailService = emailService;
 		this.pharmacyAdminService = pharmacyAdminService;
 	}
 	
@@ -251,7 +263,145 @@ public class DermatologistController {
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only dermatologist can view patients.");
 		}
 		
-		return new ResponseEntity<>(dermatologistService.getAllPatientsByNameAndSurname(dto.name, dto.surname), HttpStatus.OK);
+		return new ResponseEntity<>(dermatologistService.getAllPatientsByNameAndSurname(dto.getName(), dto.getSurname()), HttpStatus.OK);
 	}
+	
+	/*
+	 url: GET localhost:8081/derm/appointment/{appointmentId}
+	 HTTP request for appointment
+	 returns ResponseEntity object
+	*/
+	@GetMapping(value = "/appointment/{appointmentId}", produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<DermatologistAppointmentDTO> getAppointment(@PathVariable Long appointmentId, HttpSession session){
+		
+		User loggedInUser = (User) session.getAttribute("loggedInUser");
+		if(loggedInUser == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No logged in user!");
+		}
+		if(loggedInUser.getRole() != Role.DERMATOLOGIST) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only dermatologist can get appointment.");
+		}
+		
+		return new ResponseEntity<>(dermatologistAppointmentService.getAppointmentDTOById(appointmentId), HttpStatus.OK);
+	}
+	
+	/*
+	 url: GET localhost:8081/derm/medicine
+	 HTTP request for medicine list
+	 returns ResponseEntity object
+	*/
+	@GetMapping(value = "/medicine", produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<List<MedicineDTOM>> getMedicine(HttpSession session){
+		
+		User loggedInUser = (User) session.getAttribute("loggedInUser");
+		if(loggedInUser == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No logged in user!");
+		}
+		if(loggedInUser.getRole() != Role.DERMATOLOGIST) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only dermatologist can get medicine list.");
+		}
+		
+		return new ResponseEntity<>(dermatologistAppointmentService.getMedicineList(), HttpStatus.OK);
+	}
+	
+	/*
+	 url: POST localhost:8081/derm/report
+	 HTTP request for saving report
+	 returns ResponseEntity object
+	*/
+	@PostMapping(value = "/report", produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<String> saveReport(@RequestBody DermatologistReportDTO dto, HttpSession session) throws Exception{
+		
+		User loggedInUser = (User) session.getAttribute("loggedInUser");
+		if(loggedInUser == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No logged in user!");
+		}
+		if(loggedInUser.getRole() != Role.DERMATOLOGIST) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only dermatologist can fill report.");
+		}
+		String medicineCodes = dermatologistAppointmentService.fillReport(dto);
+		User u = dermatologistAppointmentService.getAppointmentById(dto.getAppointmentId()).getPatient().getUser();
+		emailService.sendMedicineEmailAsync(u.getName(), u.getEmail(), medicineCodes);
+		return new ResponseEntity<>("", HttpStatus.OK);
+	}
+	
+	/*
+	 url: POST localhost:8081/derm/allergies
+	 HTTP request for checking if patient is allergic
+	 returns ResponseEntity object
+	*/
+	@PostMapping(value = "/allergies", produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<IsAllergicDTO> checkAllergies(@RequestBody PatientReportAllergyDTO dto, HttpSession session){
+		
+		User loggedInUser = (User) session.getAttribute("loggedInUser");
+		if(loggedInUser == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No logged in user!");
+		}
+		if(loggedInUser.getRole() != Role.DERMATOLOGIST) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only dermatologist can check if patient is allergic.");
+		}
+		try {
+			boolean isAllergic = dermatologistAppointmentService.checkAllergies(dto.getPatientId(), dto.getMedicineId());
+			return new ResponseEntity<>(new IsAllergicDTO(isAllergic), HttpStatus.OK);
+		} catch (UserDoesNotExistException e) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Patient with given id does not exist.");
+		}
+	}
+	
+	/*
+	 url: GET localhost:8081/derm/medicine/isAvailable/{medicineId}/{appointmentId}
+	 HTTP request for checking if medicine is available
+	 returns ResponseEntity object
+	*/
+	@GetMapping(value = "/medicine/isAvailable/{medicineId}/{appointmentId}", produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<MedicineQuantityCheckDTO> checkMedicineQuantity(@PathVariable Long medicineId, @PathVariable Long appointmentId, HttpSession session){
+		
+		User loggedInUser = (User) session.getAttribute("loggedInUser");
+		if(loggedInUser == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No logged in user!");
+		}
+		if(loggedInUser.getRole() != Role.DERMATOLOGIST) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only dermatologist can check medicine quantity.");
+		}
+		return new ResponseEntity<>(dermatologistAppointmentService.checkIfMedicineIsAvailable(medicineId, appointmentId), HttpStatus.OK);
+	}
+	
+	/*
+	 url: GET localhost:8081/derm/medicine/compatible/{medicineId}
+	 HTTP request for compatible medicine
+	 returns ResponseEntity object
+	*/
+	@GetMapping(value = "/medicine/compatible/{medicineId}", produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<List<MedicineDTOM>> compatibleMedicine(@PathVariable Long medicineId, HttpSession session){
+		
+		User loggedInUser = (User) session.getAttribute("loggedInUser");
+		if(loggedInUser == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No logged in user!");
+		}
+		if(loggedInUser.getRole() != Role.DERMATOLOGIST) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only dermatologist can get compatible medicine.");
+		}
+		return new ResponseEntity<>(dermatologistAppointmentService.compatibleMedicine(medicineId), HttpStatus.OK);
+	}
+	
+	/*
+	 url: GET localhost:8081/derm/medicineDetails/{medicineId}
+	 HTTP request for compatible medicine
+	 returns ResponseEntity object
+	*/
+	@GetMapping(value = "/medicineDetails/{medicineId}", produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<MedicineDetailsDTO> medicineDetails(@PathVariable Long medicineId, HttpSession session){
+		
+		User loggedInUser = (User) session.getAttribute("loggedInUser");
+		if(loggedInUser == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No logged in user!");
+		}
+		if(loggedInUser.getRole() != Role.DERMATOLOGIST && loggedInUser.getRole() != Role.PHARMACIST) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only dermatologist and pharmacist can see medicine details.");
+		}
+		return new ResponseEntity<>(dermatologistAppointmentService.medicineDetails(medicineId), HttpStatus.OK);
+	}
+	
+	
 	
 }

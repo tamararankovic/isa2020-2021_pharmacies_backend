@@ -1,4 +1,4 @@
-insert into users(id, name, surname, email, password, role, active, loged) values (1, 'Tamara', 'Rankovic', 'email1@gmail.com', '1234', 0, TRUE, TRUE);
+insert into users(id, name, surname, email, password, role, active, loged) values (1, 'Tamara', 'Rankovic', 'milijana.djordjevic1998@gmail.com', '1234', 0, TRUE, TRUE);
 insert into users(id, name, surname, email, password, role, active, loged) values (2, 'Tamara', 'Rankovic', 'email2@gmail.com', '1234', 1, TRUE, TRUE);
 insert into users(id, name, surname, email, password, role, active, loged) values (3, 'Tamara', 'Rankovic', 'email3@gmail.com', '1234', 2, TRUE, TRUE);
 insert into users(id, name, surname, email, password, role, active, loged) values (4, 'Tamara', 'Rankovic', 'email4@gmail.com', '1234', 3, TRUE, FALSE);
@@ -8,7 +8,6 @@ insert into users(id, name, surname, email, password, role, active, loged) value
 
 insert into patient(id, address, category, city, country, penalties, phone, points, user_id) values (1, 'Podgoricka 2', 0, 'Novi Sad', 'Srbija', 0, '0655555555', 0, 1);
 insert into patient(id, address, category, city, country, penalties, phone, points, user_id) values (2, 'Podgoricka 2', 0, 'Novi Sad', 'Srbija', 0, '0655555555', 0, 7);
-
 
 insert into pharmacy(id, name, description, address) values (1, 'Pharmacy 1', 'Some description of pharmacy 1', 'Masarikova 1, Novi Sad');
 insert into pharmacy(id, name, description, address) values (2, 'Pharmacy 2', 'Some description of pharmacy 2', 'Trg Dositeja Obradovica 6, Novi Sad');
@@ -25,8 +24,10 @@ insert into dermatologist(id, user_id) values (1, 3);
 insert into dermatologist_engegement_in_pharmacies(dermatologist_id, engegement_in_pharmacies_id) values (1, 2);
 insert into dermatologist_engegement_in_pharmacies(dermatologist_id, engegement_in_pharmacies_id) values (1, 3);
 
-insert into medicine values (1,	'a',1,	'aa',	0,'a',	'paracetamol',	2,	'1',	0,	false);
-insert into medicine values (2,	'a',1,	'bb',	0,'b',	'brufen',	2,	'1',	0,	false);
+insert into medicine(id, additional_info, advised_daily_dose, code, form, manufacturer, name, points, side_effects, type, with_prescription) values (1, 'info', 1, 'LEK1', 0, 'Manufacturer1', 'Lek1', 2, '', 0, '1');
+insert into medicine(id, additional_info, advised_daily_dose, code, form, manufacturer, name, points, side_effects, type, with_prescription) values (2, 'info', 1, 'LEK2', 1, 'Manufacturer2', 'Lek2', 2, '', 1, '0');
+insert into medicine(id, additional_info, advised_daily_dose, code, form, manufacturer, name, points, side_effects, type, with_prescription) values (3, 'info', 1, 'LEK3', 2, 'Manufacturer3', 'Lek3', 2, '', 2, '1');
+insert into medicine(id, additional_info, advised_daily_dose, code, form, manufacturer, name, points, side_effects, type, with_prescription) values (4, 'info', 1, 'LEK4', 2, 'Manufacturer4', 'Lek4', 2, '', 2, '1');
 
 alter sequence users_id_seq restart with 8;
 alter sequence pharmacy_id_seq restart with 3;
@@ -37,3 +38,37 @@ alter sequence dermatologist_id_seq restart with 2;
 alter sequence medicine_id_seq restart with 3;
 alter sequence patient_id_seq restart with 3;
 
+insert into dermatologist_appointment(id, default_duration_in_minutes, duration_in_minutes, patient_was_present, price, scheduled, start_date_time, dermatologist_id, patient_id, pharmacy_id) values (1, 30, 30, '0', 2000, '0', '2021-02-02 08:00:00.000000', 1, 1, 1);
+alter sequence dermatologist_appointment_id_seq restart with 2;
+
+insert into pharmacist_appointment(id, default_duration_in_minutes, patient_was_present, start_date_time, patient_id, pharmacist_id) values (1, 30, '0', '2021-02-02 08:00:00.000000', 1, 1);
+alter sequence pharmacist_appointment_id_seq restart with 2;
+
+insert into medicine_ingredients(medicine_id, ingredients) values (1, 'ingredient1');
+insert into medicine_ingredients(medicine_id, ingredients) values (1, 'ingredient2');
+insert into medicine_ingredients(medicine_id, ingredients) values (1, 'ingredient3');
+insert into medicine_ingredients(medicine_id, ingredients) values (2, 'ingredient1');
+insert into medicine_ingredients(medicine_id, ingredients) values (2, 'ingredient2');
+insert into medicine_ingredients(medicine_id, ingredients) values (3, 'ingredient1');
+
+insert into medicine_quantity(id, quantity, medicine_id) values (1, 5, 1);
+insert into medicine_quantity(id, quantity, medicine_id) values (2, 5, 2);
+insert into medicine_quantity(id, quantity, medicine_id) values (3, 0, 3);
+insert into medicine_quantity(id, quantity, medicine_id) values (4, 5, 4);
+alter sequence pharmacist_appointment_id_seq restart with 5;
+
+insert into medicine_compatible_medicine_codes(medicine_id, compatible_medicine_codes) values(3, 'LEK4');
+insert into medicine_compatible_medicine_codes(medicine_id, compatible_medicine_codes) values(3, 'LEK2');
+
+insert into pharmacy_medicines(pharmacy_id, medicines_id) values (1, 1);
+insert into pharmacy_medicines(pharmacy_id, medicines_id) values (1, 2);
+insert into pharmacy_medicines(pharmacy_id, medicines_id) values (1, 3);
+insert into pharmacy_medicines(pharmacy_id, medicines_id) values (1, 4);
+
+insert into patient_allergies(patient_id, allergies_id) values(1, 1);
+insert into patient_allergies(patient_id, allergies_id) values(2, 1);
+
+insert into reservation(id, due_date, received, medicine_id, patient_id, pharmacy_id) values(1, '2021-02-25 08:00:00.000000', '0', 1, 1, 1);
+insert into reservation(id, due_date, received, medicine_id, patient_id, pharmacy_id) values(2, '2021-02-04 08:00:00.000000', '0', 2, 1, 1);
+insert into reservation(id, due_date, received, medicine_id, patient_id, pharmacy_id) values(3, '2021-02-25 08:00:00.000000', '1', 3, 1, 1);
+alter sequence pharmacist_appointment_id_seq restart with 4;
