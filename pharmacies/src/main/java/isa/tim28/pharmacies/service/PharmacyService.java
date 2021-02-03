@@ -2,15 +2,24 @@ package isa.tim28.pharmacies.service;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+<<<<<<< HEAD
 import java.util.List;
+=======
+import java.util.Optional;
+>>>>>>> master
 import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import isa.tim28.pharmacies.dtos.DermatologistExaminationForPatientDTO;
+<<<<<<< HEAD
 import isa.tim28.pharmacies.dtos.PharmacyAddAdminDTO;
+=======
+import isa.tim28.pharmacies.dtos.PharmacyBasicInfoDTO;
+>>>>>>> master
 import isa.tim28.pharmacies.dtos.PharmacyInfoForPatientDTO;
+import isa.tim28.pharmacies.exceptions.PharmacyDataInvalidException;
 import isa.tim28.pharmacies.exceptions.PharmacyNotFoundException;
 import isa.tim28.pharmacies.model.Dermatologist;
 import isa.tim28.pharmacies.model.DermatologistAppointment;
@@ -18,6 +27,7 @@ import isa.tim28.pharmacies.model.Medicine;
 import isa.tim28.pharmacies.model.MedicineQuantity;
 import isa.tim28.pharmacies.model.Pharmacist;
 import isa.tim28.pharmacies.model.Pharmacy;
+import isa.tim28.pharmacies.model.PharmacyAdmin;
 import isa.tim28.pharmacies.model.Rating;
 import isa.tim28.pharmacies.repository.PharmacyRepository;
 import isa.tim28.pharmacies.service.interfaces.IDermatologistAppointmentService;
@@ -100,6 +110,27 @@ public class PharmacyService implements IPharmacyService {
 			if(mq.getQuantity() > 0)
 				ret.add(mq.getMedicine());
 		return ret;
+	}
+
+	@Override
+	public PharmacyBasicInfoDTO getBasicInfo(PharmacyAdmin admin) throws PharmacyNotFoundException {
+		Optional<Pharmacy> pharmacy = pharmacyRepository.findById(admin.getPharmacy().getId());
+		if(pharmacy.isEmpty())
+			throw new PharmacyNotFoundException("Pharmacy admin's pharmacy not found");
+		Pharmacy ret = pharmacy.get();
+		return new PharmacyBasicInfoDTO(ret.getName(), ret.getDescription(), ret.getAddress());
+	}
+
+	@Override
+	public void update(PharmacyAdmin admin, PharmacyBasicInfoDTO dto) throws PharmacyNotFoundException, PharmacyDataInvalidException {
+		Optional<Pharmacy> pharmacyOpt = pharmacyRepository.findById(admin.getPharmacy().getId());
+		if(pharmacyOpt.isEmpty())
+			throw new PharmacyNotFoundException("Pharmacy admin's pharmacy not found");
+		Pharmacy pharmacy = pharmacyOpt.get();
+		pharmacy.setName(dto.getName());
+		pharmacy.setAddress(dto.getAddress());
+		pharmacy.setDescription(dto.getDescription());
+		pharmacyRepository.save(pharmacy);
 	}
 	
 	@Override
