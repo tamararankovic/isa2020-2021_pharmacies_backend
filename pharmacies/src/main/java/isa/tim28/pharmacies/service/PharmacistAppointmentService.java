@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import isa.tim28.pharmacies.dtos.DermatologistAppointmentDTO;
 import isa.tim28.pharmacies.dtos.DermatologistReportDTO;
@@ -30,6 +31,7 @@ import isa.tim28.pharmacies.repository.PharmacistReportRepository;
 import isa.tim28.pharmacies.repository.ReservationRepository;
 import isa.tim28.pharmacies.service.interfaces.IPharmacistAppointmentService;
 
+@Service
 public class PharmacistAppointmentService implements IPharmacistAppointmentService  {
 
 	private PharmacistAppointmentRepository appointmentRepository;

@@ -19,6 +19,7 @@ insert into pharmacist(id, engegement_in_pharmacy_id, user_id) values (301, 1, 3
 insert into dermatologist(id, user_id) values (301, 303);
 
 insert into dermatologist_appointment(id, default_duration_in_minutes, duration_in_minutes, patient_was_present, price, scheduled, start_date_time, dermatologist_id, patient_id, pharmacy_id) values (1, 30, 30, '0', 2000, '0', '2021-02-02 08:00:00.000000', 301, 301, 1);
+insert into pharmacist_appointment(id, default_duration_in_minutes, patient_was_present, start_date_time, patient_id, pharmacist_id) values (1, 30, '0', '2021-02-02 08:00:00.000000', 301, 301);
 
 insert into medicine(id, additional_info, advised_daily_dose, code, form, manufacturer, name, points, side_effects, type, with_prescription) values (1, 'info', 1, 'LEK1', 0, 'Manufacturer1', 'Lek1', 1, '', 0, '1');
 insert into medicine(id, additional_info, advised_daily_dose, code, form, manufacturer, name, points, side_effects, type, with_prescription) values (2, 'info', 1, 'LEK2', 1, 'Manufacturer2', 'Lek2', 1, '', 1, '0');
