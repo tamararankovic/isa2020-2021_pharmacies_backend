@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
 
 import isa.tim28.pharmacies.dtos.DermatologistAppointmentDTO;
 import isa.tim28.pharmacies.dtos.DermatologistReportDTO;
-import isa.tim28.pharmacies.dtos.MedicineDTO;
+import isa.tim28.pharmacies.dtos.MedicineDTOM;
 import isa.tim28.pharmacies.dtos.MedicineDetailsDTO;
 import isa.tim28.pharmacies.dtos.MedicineQuantityCheckDTO;
 import isa.tim28.pharmacies.dtos.TherapyDTO;
@@ -24,8 +24,8 @@ import isa.tim28.pharmacies.model.MedicineMissingNotification;
 import isa.tim28.pharmacies.model.MedicineQuantity;
 import isa.tim28.pharmacies.model.Patient;
 import isa.tim28.pharmacies.model.Pharmacy;
-import isa.tim28.pharmacies.model.Reservation;
 import isa.tim28.pharmacies.model.Therapy;
+import isa.tim28.pharmacies.model.Dermatologist;
 import isa.tim28.pharmacies.repository.DermatologistAppointmentRepository;
 import isa.tim28.pharmacies.repository.DermatologistReportRepository;
 import isa.tim28.pharmacies.repository.MedicineMissingNotificationRepository;
@@ -76,10 +76,10 @@ public class DermatologistAppointmentService implements IDermatologistAppointmen
 	}
 
 	@Override
-	public List<MedicineDTO> getMedicineList() {
-		List<MedicineDTO> dtos = new ArrayList<MedicineDTO>();
+	public List<MedicineDTOM> getMedicineList() {
+		List<MedicineDTOM> dtos = new ArrayList<MedicineDTOM>();
 		for (Medicine m : medicineRepository.findAll()) {
-			dtos.add(new MedicineDTO(m.getId(), m.getName(), m.getManufacturer()));
+			dtos.add(new MedicineDTOM(m.getId(), m.getName(), m.getManufacturer()));
 		}
 		return dtos;
 	}
@@ -175,12 +175,12 @@ public class DermatologistAppointmentService implements IDermatologistAppointmen
 	}
 
 	@Override
-	public List<MedicineDTO> compatibleMedicine(long medicineId) {
+	public List<MedicineDTOM> compatibleMedicine(long medicineId) {
 		Medicine medicine = medicineRepository.findById(medicineId).get();
-		List<MedicineDTO> compatible = new ArrayList<MedicineDTO>();
+		List<MedicineDTOM> compatible = new ArrayList<MedicineDTOM>();
 		for(String code : medicine.getCompatibleMedicineCodes()) {
 			Medicine m = medicineRepository.findOneByCode(code);
-			if(m != null) compatible.add(new MedicineDTO(m.getId(), m.getName(), m.getManufacturer()));
+			if(m != null) compatible.add(new MedicineDTOM(m.getId(), m.getName(), m.getManufacturer()));
 		}
 		return compatible;
 	}
@@ -192,4 +192,21 @@ public class DermatologistAppointmentService implements IDermatologistAppointmen
 		else return new MedicineDetailsDTO();
 	}
 	
+	public boolean dermatologistHasIncomingAppointmentsInPharmacy(Dermatologist dermatologist, Pharmacy pharmacy) {
+		return appointmentRepository.findAll().stream().filter(a -> a.getDermatologist().getId() == dermatologist.getId()
+				&& a.getPharmacy().getId() == pharmacy.getId()
+				&& a.getStartDateTime().isAfter(LocalDateTime.now())
+				&& a.isScheduled()).count() > 0;
+	}
+
+	@Override
+	public void deleteUnscheduledAppointments(Dermatologist dermatologist) {
+		Set<DermatologistAppointment> appointments = appointmentRepository.findAll().stream()
+														.filter(a -> a.getDermatologist().getId() == dermatologist.getId()
+														&& a.getStartDateTime().isAfter(LocalDateTime.now())
+														&& !a.isScheduled())
+														.collect(Collectors.toSet());
+		for(DermatologistAppointment a : appointments)
+			appointmentRepository.delete(a);
+	}
 }

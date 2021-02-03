@@ -31,10 +31,13 @@ public class User {
 	@Column(name = "active", nullable = false)
 	private boolean active;
 	
+	@Column(name = "loged", nullable = false)
+	private boolean loged;
+	
 	public User() {
 		super();
 	}
-	public User(long id, String name, String surname, String email, String password, Role role, boolean active) {
+	public User(long id, String name, String surname, String email, String password, Role role, boolean active, boolean loged) {
 		super();
 		this.id = id;
 		this.name = name;
@@ -43,6 +46,7 @@ public class User {
 		this.password = password;
 		this.role = role;
 		this.active = active;
+		this.loged = loged;
 	}
 	
 	public long getId() {
@@ -91,6 +95,13 @@ public class User {
 	public void setActive(boolean active) {
 		this.active = active;
 	}
+	
+	public boolean getLoged() {
+		return loged;
+	}
+	public void setLoged(boolean loged) {
+		this.loged = loged;
+	}
 	public boolean isNameValid() {
 		if(this.name == "" || this.name.length() < 2 || this.name.length() > 30) return false;
 		return true;
@@ -104,6 +115,10 @@ public class User {
 	public boolean isEmailValid() {
 		if(this.name == "" || this.name.length() < 3 || this.name.length() > 30 || !this.email.contains("@")) return false;
 		return true;
+	}
+	
+	public boolean isPasswordValid() {
+		return this.password.length() >=4 && this.password.length() <= 30;
 	}
 	
 }

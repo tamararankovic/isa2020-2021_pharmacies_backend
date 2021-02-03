@@ -13,6 +13,8 @@ import javax.persistence.Id;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 
+import isa.tim28.pharmacies.exceptions.PharmacyDataInvalidException;
+
 @Entity
 public class Pharmacy {
 	
@@ -43,8 +45,11 @@ public class Pharmacy {
 	}
 	
 	public Pharmacy(long id, String name, String address, String description, Set<MedicineQuantity> medicines,
-			PriceList priceList, Set<Rating> ratings) {
-		super();
+			PriceList priceList, Set<Rating> ratings) throws PharmacyDataInvalidException {
+		if(name.length() < 1 || name.length() > 50)
+			throw new PharmacyDataInvalidException("Pharmacy name must have between 1 and 50 characters");
+		if(description.length() > 1000)
+			throw new PharmacyDataInvalidException("Description mustn't be longer than 1000 characters");
 		this.id = id;
 		this.name = name;
 		this.address = address;
@@ -66,7 +71,9 @@ public class Pharmacy {
 		return name;
 	}
 
-	public void setName(String name) {
+	public void setName(String name) throws PharmacyDataInvalidException {
+		if(name.length() < 1 || name.length() > 50)
+			throw new PharmacyDataInvalidException("Pharmacy name must have between 1 and 50 characters");
 		this.name = name;
 	}
 
@@ -82,7 +89,9 @@ public class Pharmacy {
 		return description;
 	}
 
-	public void setDescription(String description) {
+	public void setDescription(String description) throws PharmacyDataInvalidException {
+		if(description.length() > 1000)
+			throw new PharmacyDataInvalidException("Description mustn't be longer than 1000 characters");
 		this.description = description;
 	}
 

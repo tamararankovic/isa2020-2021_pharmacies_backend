@@ -4,13 +4,14 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.time.LocalDateTime;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import isa.tim28.pharmacies.dtos.DermatologistAppointmentDTO;
 import isa.tim28.pharmacies.dtos.DermatologistReportDTO;
-import isa.tim28.pharmacies.dtos.MedicineDTO;
+import isa.tim28.pharmacies.dtos.MedicineDTOM;
 import isa.tim28.pharmacies.dtos.MedicineQuantityCheckDTO;
 import isa.tim28.pharmacies.dtos.ReservationValidDTO;
 import isa.tim28.pharmacies.dtos.TherapyDTO;
@@ -68,10 +69,10 @@ public class PharmacistAppointmentService implements IPharmacistAppointmentServi
 	}
 
 	@Override
-	public List<MedicineDTO> getMedicineList() {
-		List<MedicineDTO> dtos = new ArrayList<MedicineDTO>();
+	public List<MedicineDTOM> getMedicineList() {
+		List<MedicineDTOM> dtos = new ArrayList<MedicineDTOM>();
 		for (Medicine m : medicineRepository.findAll()) {
-			dtos.add(new MedicineDTO(m.getId(), m.getName(), m.getManufacturer()));
+			dtos.add(new MedicineDTOM(m.getId(), m.getName(), m.getManufacturer()));
 		}
 		return dtos;
 	}
@@ -156,12 +157,12 @@ public class PharmacistAppointmentService implements IPharmacistAppointmentServi
 	}
 
 	@Override
-	public List<MedicineDTO> compatibleMedicine(long medicineId) {
+	public List<MedicineDTOM> compatibleMedicine(long medicineId) {
 		Medicine medicine = medicineRepository.findById(medicineId).get();
-		List<MedicineDTO> compatible = new ArrayList<MedicineDTO>();
+		List<MedicineDTOM> compatible = new ArrayList<MedicineDTOM>();
 		for(String code : medicine.getCompatibleMedicineCodes()) {
 			Medicine m = medicineRepository.findOneByCode(code);
-			if(m != null) compatible.add(new MedicineDTO(m.getId(), m.getName(), m.getManufacturer()));
+			if(m != null) compatible.add(new MedicineDTOM(m.getId(), m.getName(), m.getManufacturer()));
 		}
 		return compatible;
 	}
@@ -218,4 +219,10 @@ public class PharmacistAppointmentService implements IPharmacistAppointmentServi
 		}
 	}
 
+	@Override
+	public boolean pharmacistHasIncomingAppointments(Pharmacist pharmacist) {
+		return appointmentRepository.findAll().stream()
+				.filter(a -> a.getPharmacist().getId() == pharmacist.getId() 
+				&& a.getStartDateTime().isAfter(LocalDateTime.now())).count() > 0;
+	}
 }

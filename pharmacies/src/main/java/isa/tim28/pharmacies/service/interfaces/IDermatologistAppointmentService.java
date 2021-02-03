@@ -5,11 +5,13 @@ import java.util.Set;
 
 import isa.tim28.pharmacies.dtos.DermatologistAppointmentDTO;
 import isa.tim28.pharmacies.dtos.DermatologistReportDTO;
-import isa.tim28.pharmacies.dtos.MedicineDTO;
+import isa.tim28.pharmacies.dtos.MedicineDTOM;
 import isa.tim28.pharmacies.dtos.MedicineDetailsDTO;
 import isa.tim28.pharmacies.dtos.MedicineQuantityCheckDTO;
 import isa.tim28.pharmacies.exceptions.UserDoesNotExistException;
+import isa.tim28.pharmacies.model.Dermatologist;
 import isa.tim28.pharmacies.model.DermatologistAppointment;
+import isa.tim28.pharmacies.model.Pharmacy;
 
 public interface IDermatologistAppointmentService {
 
@@ -17,7 +19,7 @@ public interface IDermatologistAppointmentService {
 	
 	DermatologistAppointmentDTO getAppointmentDTOById(long appointmentId);
 	
-	List<MedicineDTO> getMedicineList();
+	List<MedicineDTOM> getMedicineList();
 	
 	String fillReport(DermatologistReportDTO dto);
 	
@@ -29,7 +31,11 @@ public interface IDermatologistAppointmentService {
 	
 	MedicineQuantityCheckDTO checkIfMedicineIsAvailable(long medicineId, long appointmentId);
 	
-	List<MedicineDTO> compatibleMedicine(long medicineId);
+	List<MedicineDTOM> compatibleMedicine(long medicineId);
 	
 	MedicineDetailsDTO medicineDetails(long medicineId);
+	
+	boolean dermatologistHasIncomingAppointmentsInPharmacy(Dermatologist dermatologist, Pharmacy pharmacy);
+	
+	void deleteUnscheduledAppointments(Dermatologist dermatologist);
 }

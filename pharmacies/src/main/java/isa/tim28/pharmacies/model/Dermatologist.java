@@ -70,5 +70,12 @@ public class Dermatologist {
 	public void setRatings(Set<Rating> ratings) {
 		this.ratings = ratings;
 	}
+
+	public boolean hasEngagementInPharmacy(Pharmacy pharmacy) {
+		for (EngagementInPharmacy e : engegementInPharmacies)
+			if(e.getPharmacy().getId() == pharmacy.getId())
+				return true;
+		return false;
+	}
 	
 }
