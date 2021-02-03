@@ -93,4 +93,8 @@ public class User {
 		return true;
 	}
 	
+	public boolean isPasswordValid() {
+		return this.password.length() >=4 && this.password.length() <= 30;
+	}
+	
 }

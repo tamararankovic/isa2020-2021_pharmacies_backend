@@ -1,5 +1,6 @@
 package isa.tim28.pharmacies.service;
 
+import java.time.DayOfWeek;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -9,17 +10,23 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import isa.tim28.pharmacies.dtos.NewPharmacistDTO;
 import isa.tim28.pharmacies.dtos.PharmacistDTO;
 import isa.tim28.pharmacies.dtos.PharmacistProfileDTO;
 import isa.tim28.pharmacies.exceptions.BadNameException;
 import isa.tim28.pharmacies.exceptions.BadNewEmailException;
 import isa.tim28.pharmacies.exceptions.BadSurnameException;
+import isa.tim28.pharmacies.exceptions.CreatePharmacistException;
 import isa.tim28.pharmacies.exceptions.InvalidDeleteUserAttemptException;
 import isa.tim28.pharmacies.exceptions.PasswordIncorrectException;
 import isa.tim28.pharmacies.exceptions.UserDoesNotExistException;
 import isa.tim28.pharmacies.mapper.PharmacistMapper;
+import isa.tim28.pharmacies.model.DailyEngagement;
+import isa.tim28.pharmacies.model.EngagementInPharmacy;
 import isa.tim28.pharmacies.model.Pharmacist;
+import isa.tim28.pharmacies.model.Pharmacy;
 import isa.tim28.pharmacies.model.PharmacyAdmin;
+import isa.tim28.pharmacies.model.Role;
 import isa.tim28.pharmacies.model.User;
 import isa.tim28.pharmacies.repository.PharmacistRepository;
 import isa.tim28.pharmacies.repository.UserRepository;
@@ -165,5 +172,45 @@ public class PharmacistService implements IPharmacistService {
 				ret.add(p);
 		}
 		return ret;
+	}
+
+	@Override
+	public void create(NewPharmacistDTO dto, Pharmacy pharmacy) throws CreatePharmacistException {
+		// TODO Auto-generated method stub
+		User user = new User();
+		user.setName(dto.getName());
+		user.setSurname(dto.getSurname());
+		user.setEmail(dto.getEmail());
+		user.setPassword(dto.getPassword());
+		user.setRole(Role.PHARMACIST);
+		
+		if(!user.isNameValid()) throw new CreatePharmacistException("Name must have between 2 and 30 characters. Try again.");
+		if(!user.isSurnameValid()) throw new CreatePharmacistException("Surname must have between 2 and 30 characters. Try again.");
+		if(!user.isEmailValid()) throw new CreatePharmacistException("Email must have between 3 and 30 characters and contain @. Try again.");
+		if(!user.isPasswordValid()) throw new CreatePharmacistException("Password must have between 4 and 30 characters. Try again.");
+		
+		EngagementInPharmacy engagement = new EngagementInPharmacy();
+		Set<DailyEngagement> dailyEngagements = new HashSet<DailyEngagement>();
+		if(dto.isMonday())
+			dailyEngagements.add(new DailyEngagement(DayOfWeek.MONDAY, dto.getMondayStart().toLocalTime(), dto.getMondayEnd().toLocalTime()));
+		if(dto.isTuesday())
+			dailyEngagements.add(new DailyEngagement(DayOfWeek.TUESDAY, dto.getTuesdayStart().toLocalTime(), dto.getTuesdayEnd().toLocalTime()));
+		if(dto.isWednesday())
+			dailyEngagements.add(new DailyEngagement(DayOfWeek.WEDNESDAY, dto.getWednesdayStart().toLocalTime(), dto.getWednesdayEnd().toLocalTime()));
+		if(dto.isThursday())
+			dailyEngagements.add(new DailyEngagement(DayOfWeek.THURSDAY, dto.getThursdayStart().toLocalTime(), dto.getThursdayEnd().toLocalTime()));
+		if(dto.isFriday())
+			dailyEngagements.add(new DailyEngagement(DayOfWeek.FRIDAY, dto.getFridayStart().toLocalTime(), dto.getFridayEnd().toLocalTime()));
+		if(dto.isSaturday())
+			dailyEngagements.add(new DailyEngagement(DayOfWeek.SATURDAY, dto.getSaturdayStart().toLocalTime(), dto.getSaturdayEnd().toLocalTime()));
+		if(dto.isSunday())
+			dailyEngagements.add(new DailyEngagement(DayOfWeek.SUNDAY, dto.getSundayStart().toLocalTime(), dto.getSundayEnd().toLocalTime()));
+		engagement.setDailyEngagements(dailyEngagements);
+		engagement.setPharmacy(pharmacy);
+		
+		Pharmacist pharmacist = new Pharmacist();
+		pharmacist.setUser(user);
+		pharmacist.setEngegementInPharmacy(engagement);
+		pharmacistRepository.save(pharmacist);
 	}
 }

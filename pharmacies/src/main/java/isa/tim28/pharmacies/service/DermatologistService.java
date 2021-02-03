@@ -201,7 +201,7 @@ public class DermatologistService implements IDermatologistService {
 			throws AddingDermatologistToPharmacyException, UserDoesNotExistException {
 		Optional<Dermatologist> dermatologistOptional = dermatologistRepository.findById(dto.getDermatologistId());
 		if(dermatologistOptional.isEmpty())
-			throw new UserDoesNotExistException("You attempted to add a pharmacist that does not exist!");
+			throw new UserDoesNotExistException("You attempted to add a dermatologist that does not exist!");
 		Dermatologist dermatologist = dermatologistOptional.get();
 		if(dermatologist.hasEngagementInPharmacy(pharmacy))
 			throw new AddingDermatologistToPharmacyException("Dermatologist is already employed in the pharmacy!");
