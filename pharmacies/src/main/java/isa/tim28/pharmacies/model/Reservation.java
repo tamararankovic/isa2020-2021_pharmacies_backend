@@ -1,6 +1,6 @@
 package isa.tim28.pharmacies.model;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -27,8 +27,11 @@ public class Reservation {
 	@ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
 	private Medicine medicine;
 	
+	@Column(name = "appointment", nullable = false)
+	private long appointment;
+	
 	@Column(name = "dueDate", nullable = false)
-	private LocalDate dueDate;
+	private LocalDateTime dueDate;
 	
 	@Column(name = "received", nullable = false)
 	private boolean received;
@@ -37,13 +40,14 @@ public class Reservation {
 		super();
 	}
 	
-	public Reservation(long id, Patient patient, Pharmacy pharmacy, Medicine medicine, LocalDate dueDate,
+	public Reservation(long id, Patient patient, Pharmacy pharmacy, Medicine medicine, long appointment, LocalDateTime dueDate,
 			boolean received) {
 		super();
 		this.id = id;
 		this.patient = patient;
 		this.pharmacy = pharmacy;
 		this.medicine = medicine;
+		this.appointment = appointment;
 		this.dueDate = dueDate;
 		this.received = received;
 	}
@@ -80,11 +84,11 @@ public class Reservation {
 		this.medicine = medicine;
 	}
 
-	public LocalDate getDueDate() {
+	public LocalDateTime getDueDate() {
 		return dueDate;
 	}
 
-	public void setDueDate(LocalDate dueDate) {
+	public void setDueDate(LocalDateTime dueDate) {
 		this.dueDate = dueDate;
 	}
 
@@ -95,4 +99,13 @@ public class Reservation {
 	public void setReceived(boolean received) {
 		this.received = received;
 	}
+
+	public long getAppointment() {
+		return appointment;
+	}
+
+	public void setAppointment(long appointment) {
+		this.appointment = appointment;
+	}
+	
 }

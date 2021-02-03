@@ -1,7 +1,5 @@
 package isa.tim28.pharmacies.service;
 
-import java.util.List;
-
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
@@ -52,20 +50,11 @@ public class EmailService {
 	}
 	
 	@Async
-	public void sendMedicineEmailAsync(String name, String address, List<String> medicineCodes) throws MessagingException {
+	public void sendMedicineEmailAsync(String name, String address, String medicineCodes) throws MessagingException {
 		System.out.println("Async metoda se izvrsava u drugom Threadu u odnosu na prihvaceni zahtev. Thread id: " + Thread.currentThread().getId());
 		System.out.println("Slanje emaila...");
-		String content = "";
-		if(medicineCodes.size() > 1) {
-			content = "Pozdrav " + name + ",<br>"
-		            + "Primili ste kodove za preuzimanje lekova:<br>"
-		            + "<h3>" + medicineCodes + "</h3>"
-		            + "Hvala Vam,<br>"
-		            + "ISA, TIM 28.";
-			
-		}
-		else content = "Pozdrav " + name + ",<br>"
-	            + "Primili ste kod za preuzimanje leka:<br>"
+		String content = "Pozdrav " + name + ",<br>"
+	            + "Prepisani su Vam lekovi:<br>"
 	            + "<h3>" + medicineCodes + "</h3>"
 	            + "Hvala Vam,<br>"
 	            + "ISA, TIM 28.";
@@ -75,7 +64,7 @@ public class EmailService {
 	    MimeMessageHelper helper = new MimeMessageHelper(message);
 	    helper.setFrom(env.getProperty("spring.mail.username"));
 	    helper.setTo(address);
-	    helper.setSubject("Recept za preuzimanje leka");
+	    helper.setSubject("Recept");
 	    helper.setText(content, true);
 	    
 		javaMailSender.send(message);

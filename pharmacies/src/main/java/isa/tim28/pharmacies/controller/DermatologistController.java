@@ -1,6 +1,5 @@
 package isa.tim28.pharmacies.controller;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import javax.servlet.http.HttpSession;
@@ -22,10 +21,10 @@ import isa.tim28.pharmacies.dtos.DermatologistProfileDTO;
 import isa.tim28.pharmacies.dtos.DermatologistReportDTO;
 import isa.tim28.pharmacies.dtos.IsAllergicDTO;
 import isa.tim28.pharmacies.dtos.MedicineDTO;
+import isa.tim28.pharmacies.dtos.MedicineQuantityCheckDTO;
 import isa.tim28.pharmacies.dtos.PasswordChangeDTO;
 import isa.tim28.pharmacies.dtos.PatientReportAllergyDTO;
 import isa.tim28.pharmacies.dtos.PatientSearchDTO;
-import isa.tim28.pharmacies.dtos.TherapyDTO;
 import isa.tim28.pharmacies.exceptions.BadNameException;
 import isa.tim28.pharmacies.exceptions.BadNewEmailException;
 import isa.tim28.pharmacies.exceptions.BadSurnameException;
@@ -217,11 +216,7 @@ public class DermatologistController {
 		if(loggedInUser.getRole() != Role.DERMATOLOGIST) {
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only dermatologist can fill report.");
 		}
-		dermatologistAppointmentService.fillReport(dto);
-		List<String> medicineCodes = new ArrayList<String>();
-		for (TherapyDTO t : dto.getTherapies()) {
-			medicineCodes.add(dermatologistAppointmentService.getMedicineCodeById(t.getMedicineId()));
-		}
+		String medicineCodes = dermatologistAppointmentService.fillReport(dto);
 		User u = dermatologistAppointmentService.getAppointmentById(dto.getAppointmentId()).getPatient().getUser();
 		emailService.sendMedicineEmailAsync(u.getName(), u.getEmail(), medicineCodes);
 		return new ResponseEntity<>("", HttpStatus.OK);
@@ -229,10 +224,9 @@ public class DermatologistController {
 	
 	/*
 	 url: POST localhost:8081/derm/allergies
-	 HTTP request for medicine list
+	 HTTP request for checking if patient is allergic
 	 returns ResponseEntity object
 	*/
-	
 	@PostMapping(value = "/allergies", produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<IsAllergicDTO> checkAllergies(@RequestBody PatientReportAllergyDTO dto, HttpSession session){
 		
@@ -249,6 +243,42 @@ public class DermatologistController {
 		} catch (UserDoesNotExistException e) {
 			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Patient with given id does not exist.");
 		}
+	}
+	
+	/*
+	 url: GET localhost:8081/derm/medicine/isAvailable/{medicineId}/{appointmentId}
+	 HTTP request for checking if medicine is available
+	 returns ResponseEntity object
+	*/
+	@GetMapping(value = "/medicine/isAvailable/{medicineId}/{appointmentId}", produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<MedicineQuantityCheckDTO> checkMedicineQuantity(@PathVariable Long medicineId, @PathVariable Long appointmentId, HttpSession session){
+		
+		User loggedInUser = (User) session.getAttribute("loggedInUser");
+		if(loggedInUser == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No logged in user!");
+		}
+		if(loggedInUser.getRole() != Role.DERMATOLOGIST) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only dermatologist can check medicine quantity.");
+		}
+		return new ResponseEntity<>(dermatologistAppointmentService.checkIfMedicineIsAvailable(medicineId, appointmentId), HttpStatus.OK);
+	}
+	
+	/*
+	 url: GET localhost:8081/derm/medicine/compatible/{medicineId}
+	 HTTP request for compatible medicine
+	 returns ResponseEntity object
+	*/
+	@GetMapping(value = "/medicine/compatible/{medicineId}", produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<List<MedicineDTO>> compatibleMedicine(@PathVariable Long medicineId, HttpSession session){
+		
+		User loggedInUser = (User) session.getAttribute("loggedInUser");
+		if(loggedInUser == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No logged in user!");
+		}
+		if(loggedInUser.getRole() != Role.DERMATOLOGIST) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only dermatologist can get compatible medicine.");
+		}
+		return new ResponseEntity<>(dermatologistAppointmentService.compatibleMedicine(medicineId), HttpStatus.OK);
 	}
 	
 }

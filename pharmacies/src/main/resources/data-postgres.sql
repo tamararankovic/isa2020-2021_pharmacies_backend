@@ -23,6 +23,20 @@ insert into dermatologist_appointment(id, default_duration_in_minutes, duration_
 insert into medicine(id, additional_info, advised_daily_dose, code, form, manufacturer, name, points, side_effects, type, with_prescription) values (1, 'info', 1, 'LEK1', 0, 'Manufacturer1', 'Lek1', 1, '', 0, '1');
 insert into medicine(id, additional_info, advised_daily_dose, code, form, manufacturer, name, points, side_effects, type, with_prescription) values (2, 'info', 1, 'LEK2', 1, 'Manufacturer2', 'Lek2', 1, '', 1, '0');
 insert into medicine(id, additional_info, advised_daily_dose, code, form, manufacturer, name, points, side_effects, type, with_prescription) values (3, 'info', 1, 'LEK3', 2, 'Manufacturer3', 'Lek3', 1, '', 2, '1');
+insert into medicine(id, additional_info, advised_daily_dose, code, form, manufacturer, name, points, side_effects, type, with_prescription) values (4, 'info', 1, 'LEK4', 2, 'Manufacturer4', 'Lek4', 1, '', 2, '1');
+
+insert into medicine_quantity(id, quantity, medicine_id) values (1, 5, 1);
+insert into medicine_quantity(id, quantity, medicine_id) values (2, 5, 2);
+insert into medicine_quantity(id, quantity, medicine_id) values (3, 0, 3);
+insert into medicine_quantity(id, quantity, medicine_id) values (4, 5, 4);
+
+insert into medicine_compatible_medicine_codes(medicine_id, compatible_medicine_codes) values(3, 'LEK4');
+insert into medicine_compatible_medicine_codes(medicine_id, compatible_medicine_codes) values(3, 'LEK2');
+
+insert into pharmacy_medicines(pharmacy_id, medicines_id) values (1, 1);
+insert into pharmacy_medicines(pharmacy_id, medicines_id) values (1, 2);
+insert into pharmacy_medicines(pharmacy_id, medicines_id) values (1, 3);
+insert into pharmacy_medicines(pharmacy_id, medicines_id) values (1, 4);
 
 insert into patient_allergies(patient_id, allergies_id) values(301, 1);
 insert into patient_allergies(patient_id, allergies_id) values(302, 1);
