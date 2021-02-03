@@ -7,7 +7,9 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import isa.tim28.pharmacies.model.Dermatologist;
 import isa.tim28.pharmacies.model.DermatologistAppointment;
+import isa.tim28.pharmacies.model.Pharmacy;
 import isa.tim28.pharmacies.repository.DermatologistAppointmentRepository;
 import isa.tim28.pharmacies.service.interfaces.IDermatologistAppointmentService;
 
@@ -28,5 +30,24 @@ public class DermatologistAppointmentService implements IDermatologistAppointmen
 				.filter(a -> a.getPharmacy().getId() == pharmacyId)
 				.filter(a -> a.getStartDateTime().isAfter(LocalDateTime.now()))
 				.filter(a -> !a.isScheduled()).collect(Collectors.toSet());
+	}
+
+	@Override
+	public boolean dermatologistHasIncomingAppointmentsInPharmacy(Dermatologist dermatologist, Pharmacy pharmacy) {
+		return appointmentRepository.findAll().stream().filter(a -> a.getDermatologist().getId() == dermatologist.getId()
+				&& a.getPharmacy().getId() == pharmacy.getId()
+				&& a.getStartDateTime().isAfter(LocalDateTime.now())
+				&& a.isScheduled()).count() > 0;
+	}
+
+	@Override
+	public void deleteUnscheduledAppointments(Dermatologist dermatologist) {
+		Set<DermatologistAppointment> appointments = appointmentRepository.findAll().stream()
+														.filter(a -> a.getDermatologist().getId() == dermatologist.getId()
+														&& a.getStartDateTime().isAfter(LocalDateTime.now())
+														&& !a.isScheduled())
+														.collect(Collectors.toSet());
+		for(DermatologistAppointment a : appointments)
+			appointmentRepository.delete(a);
 	}
 }
