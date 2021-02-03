@@ -4,5 +4,8 @@ import isa.tim28.pharmacies.model.User;
 
 public interface IUserService {
 	User save(User user);
+	
 	boolean activate(Long id);
+	
+	boolean isEmailTaken(String email);
 }
