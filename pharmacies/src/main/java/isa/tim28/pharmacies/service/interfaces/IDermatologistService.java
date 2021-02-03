@@ -28,4 +28,6 @@ public interface IDermatologistService {
 	Set<Dermatologist> findAllByPharmacyId(long pharmacyId);
 	
 	List<PatientSearchDTO> getAllPatientsByNameAndSurname(String name, String surname);
+	
+	Dermatologist save(Dermatologist dermatologist);
 }

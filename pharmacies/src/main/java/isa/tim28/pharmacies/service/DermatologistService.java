@@ -7,7 +7,6 @@ import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
 import isa.tim28.pharmacies.dtos.DermatologistProfileDTO;
 import isa.tim28.pharmacies.dtos.PatientSearchDTO;
 import isa.tim28.pharmacies.exceptions.BadNameException;
@@ -123,4 +122,11 @@ public class DermatologistService implements IDermatologistService {
 		}
 		return ret;
 	}
+	
+	@Override
+	public Dermatologist save(Dermatologist dermatologist) {
+		Dermatologist newDermatoligist = dermatologistRepository.save(dermatologist);
+		return newDermatoligist;
+	}
+
 }

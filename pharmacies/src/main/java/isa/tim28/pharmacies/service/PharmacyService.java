@@ -1,12 +1,15 @@
 package isa.tim28.pharmacies.service;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import isa.tim28.pharmacies.dtos.DermatologistExaminationForPatientDTO;
+import isa.tim28.pharmacies.dtos.PharmacyAddAdminDTO;
 import isa.tim28.pharmacies.dtos.PharmacyInfoForPatientDTO;
 import isa.tim28.pharmacies.exceptions.PharmacyNotFoundException;
 import isa.tim28.pharmacies.model.Dermatologist;
@@ -103,5 +106,27 @@ public class PharmacyService implements IPharmacyService {
 	public Pharmacy save(Pharmacy pharmacy) {
 		Pharmacy newPharmacy = pharmacyRepository.save(pharmacy);
 		return newPharmacy;
+	}
+
+	@Override
+	public List<PharmacyAddAdminDTO> getAllPharmacies() {
+		return pharmaciesToDtos(pharmacyRepository.findAll());
+	}
+	
+	private List<PharmacyAddAdminDTO> pharmaciesToDtos(List<Pharmacy> pharmacies){
+		List<PharmacyAddAdminDTO> dtos = new ArrayList<PharmacyAddAdminDTO>();
+		for(Pharmacy p : pharmacies) {
+			dtos.add(new PharmacyAddAdminDTO(p.getId(),p.getName(),p.getDescription(),p.getAddress()));
+		}
+		return dtos;
+	}
+
+	@Override
+	public Pharmacy getPharmacyById(long pharmacyId) throws PharmacyNotFoundException {
+		
+		if (pharmacyRepository.findById(pharmacyId).isEmpty())
+			throw new PharmacyNotFoundException();
+		Pharmacy pharmacy = pharmacyRepository.findById(pharmacyId).get();
+		return pharmacy;
 	}
 }
