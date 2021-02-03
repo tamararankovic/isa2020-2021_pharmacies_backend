@@ -2,6 +2,7 @@ package isa.tim28.pharmacies.controller;
 
 import java.util.List;
 
+import javax.mail.MessagingException;
 import javax.servlet.http.HttpSession;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,11 +26,14 @@ import isa.tim28.pharmacies.dtos.PasswordChangeDTO;
 import isa.tim28.pharmacies.dtos.PatientReportAllergyDTO;
 import isa.tim28.pharmacies.dtos.PatientSearchDTO;
 import isa.tim28.pharmacies.dtos.PharmacistProfileDTO;
+import isa.tim28.pharmacies.dtos.ReservationValidDTO;
 import isa.tim28.pharmacies.exceptions.BadNameException;
 import isa.tim28.pharmacies.exceptions.BadNewEmailException;
 import isa.tim28.pharmacies.exceptions.BadSurnameException;
 import isa.tim28.pharmacies.exceptions.PasswordIncorrectException;
 import isa.tim28.pharmacies.exceptions.UserDoesNotExistException;
+import isa.tim28.pharmacies.model.Pharmacist;
+import isa.tim28.pharmacies.model.Reservation;
 import isa.tim28.pharmacies.model.Role;
 import isa.tim28.pharmacies.model.User;
 import isa.tim28.pharmacies.service.DermatologistService;
@@ -282,5 +286,57 @@ public class PharmacistController {
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only pharmacist can get compatible medicine.");
 		}
 		return new ResponseEntity<>(pharmacistAppointmentService.compatibleMedicine(medicineId), HttpStatus.OK);
+	}
+	
+	/*
+	 url: GET localhost:8081/pharm/reservationValid/{reservationId}
+	 HTTP request for searching reservations
+	 returns ResponseEntity object
+	*/
+	@GetMapping(value = "/reservationValid/{reservationId}", produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<ReservationValidDTO> reservationValid(@PathVariable Long reservationId, HttpSession session){
+		
+		User loggedInUser = (User) session.getAttribute("loggedInUser");
+		if(loggedInUser == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No logged in user!");
+		}
+		if(loggedInUser.getRole() != Role.PHARMACIST) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only pharmacist can see reservations.");
+		}
+		Pharmacist pharmacist = pharmacistService.getPharmacistFromUser(loggedInUser.getId());
+		if(pharmacist != null) {
+			return new ResponseEntity<>(pharmacistAppointmentService.isReservationValid(reservationId, pharmacist), HttpStatus.OK);
+		} else return new ResponseEntity<>(new ReservationValidDTO(false), HttpStatus.OK);
+	}
+	
+	/*
+	 url: GET localhost:8081/pharm/reservation/{reservationId}
+	 HTTP request for reservation medicine received
+	 returns ResponseEntity object
+	*/
+	@GetMapping(value = "/reservation/{reservationId}", produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<String> reservationReceived(@PathVariable Long reservationId, HttpSession session){
+		
+		User loggedInUser = (User) session.getAttribute("loggedInUser");
+		if(loggedInUser == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No logged in user!");
+		}
+		if(loggedInUser.getRole() != Role.PHARMACIST) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only pharmacist can see reservations.");
+		}
+		
+		Reservation reservation = pharmacistAppointmentService.reservationTaken(reservationId);
+		if(reservation != null) {
+			String patientName = reservation.getPatient().getUser().getName();
+			String patientEmail = reservation.getPatient().getUser().getEmail();
+			try {
+				emailService.sendReservationReceivedEmailAsync(patientName, patientEmail, reservationId);
+				return new ResponseEntity<>("", HttpStatus.OK);
+			} catch (MessagingException e) {
+				throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email not sent.");
+			}
+		}
+		else throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No reservation.");
+		
 	}
 }

@@ -89,4 +89,9 @@ public class PharmacistService implements IPharmacistService {
 				ret.add(p);
 		return ret;
 	}
+
+	@Override
+	public Pharmacist getPharmacistFromUser(long userId) {
+		return pharmacistRepository.findOneByUser_Id(userId);
+	}
 }

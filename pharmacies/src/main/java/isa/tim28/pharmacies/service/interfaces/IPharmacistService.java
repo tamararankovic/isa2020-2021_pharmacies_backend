@@ -17,6 +17,8 @@ public interface IPharmacistService {
 	
 	User getUserPart(long id) throws UserDoesNotExistException;
 	
+	Pharmacist getPharmacistFromUser(long userId);
+	
 	User updatePharmacist(PharmacistProfileDTO newUser, long id) throws BadNameException, BadSurnameException, BadNewEmailException, UserDoesNotExistException;
 	
 	boolean checkOldPassword(long id, String oldPassword) throws UserDoesNotExistException, PasswordIncorrectException;

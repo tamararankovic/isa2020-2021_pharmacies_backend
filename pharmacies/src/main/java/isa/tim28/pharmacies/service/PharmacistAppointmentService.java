@@ -12,15 +12,18 @@ import isa.tim28.pharmacies.dtos.DermatologistAppointmentDTO;
 import isa.tim28.pharmacies.dtos.DermatologistReportDTO;
 import isa.tim28.pharmacies.dtos.MedicineDTO;
 import isa.tim28.pharmacies.dtos.MedicineQuantityCheckDTO;
+import isa.tim28.pharmacies.dtos.ReservationValidDTO;
 import isa.tim28.pharmacies.dtos.TherapyDTO;
 import isa.tim28.pharmacies.exceptions.UserDoesNotExistException;
 import isa.tim28.pharmacies.model.Medicine;
 import isa.tim28.pharmacies.model.MedicineMissingNotification;
 import isa.tim28.pharmacies.model.MedicineQuantity;
 import isa.tim28.pharmacies.model.Patient;
+import isa.tim28.pharmacies.model.Pharmacist;
 import isa.tim28.pharmacies.model.PharmacistAppointment;
 import isa.tim28.pharmacies.model.PharmacistReport;
 import isa.tim28.pharmacies.model.Pharmacy;
+import isa.tim28.pharmacies.model.Reservation;
 import isa.tim28.pharmacies.model.Therapy;
 import isa.tim28.pharmacies.repository.MedicineMissingNotificationRepository;
 import isa.tim28.pharmacies.repository.MedicineQuantityRepository;
@@ -165,6 +168,47 @@ public class PharmacistAppointmentService implements IPharmacistAppointmentServi
 	
 	private void updateMedicineQuantity(long medicineId, long appointmentId) {
 		Set<MedicineQuantity> medicines = appointmentRepository.findById(appointmentId).get().getPharmacist().getEngegementInPharmacy().getPharmacy().getMedicines();
+		for (MedicineQuantity mq : medicines) {
+			if (mq.getMedicine().getId() == medicineId) {
+				mq.setQuantity(mq.getQuantity() - 1);
+				medicineQuantityRepository.save(mq);
+				return;
+			}
+		}
+	}
+
+	@Override
+	public ReservationValidDTO isReservationValid(long reservationId, Pharmacist pharmacist) {
+		try {
+			Reservation reservation = reservationRepository.findById(reservationId).get();
+			if(reservation == null) return new ReservationValidDTO(false);
+			else if(reservation.getPharmacy().getId() == pharmacist.getEngegementInPharmacy().getId() && !reservation.isReceived()) {
+				return new ReservationValidDTO(reservation.getDueDate());
+			}
+			else return new ReservationValidDTO(false);
+		} catch(Exception e) {
+			return new ReservationValidDTO(false);
+		}
+	}
+	
+	@Override
+	public Reservation reservationTaken(long reservationId) {
+		try {
+			Reservation reservation = reservationRepository.findById(reservationId).get();
+			if(reservation == null) return null;
+			else {
+				reservation.setReceived(true);
+				reservationRepository.save(reservation);
+				updateMedicineQuantityAfterReservation(reservation.getMedicine().getId(), reservation.getPharmacy());
+				return reservation;
+			}
+		} catch(Exception e) {
+			return null;
+		}
+	}
+	
+	private void updateMedicineQuantityAfterReservation(long medicineId, Pharmacy pharmacy) {
+		Set<MedicineQuantity> medicines = pharmacy.getMedicines();
 		for (MedicineQuantity mq : medicines) {
 			if (mq.getMedicine().getId() == medicineId) {
 				mq.setQuantity(mq.getQuantity() - 1);

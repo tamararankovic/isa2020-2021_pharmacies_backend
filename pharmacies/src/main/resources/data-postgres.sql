@@ -48,3 +48,7 @@ insert into pharmacy_medicines(pharmacy_id, medicines_id) values (1, 4);
 
 insert into patient_allergies(patient_id, allergies_id) values(301, 1);
 insert into patient_allergies(patient_id, allergies_id) values(302, 1);
+
+insert into reservation(id, due_date, received, medicine_id, patient_id, pharmacy_id) values(1, '2021-02-25 08:00:00.000000', '0', 1, 301, 1);
+insert into reservation(id, due_date, received, medicine_id, patient_id, pharmacy_id) values(2, '2021-02-04 08:00:00.000000', '0', 2, 301, 1);
+insert into reservation(id, due_date, received, medicine_id, patient_id, pharmacy_id) values(3, '2021-02-25 08:00:00.000000', '1', 3, 301, 1);

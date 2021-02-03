@@ -27,9 +27,6 @@ public class Reservation {
 	@ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
 	private Medicine medicine;
 	
-	@Column(name = "appointment", nullable = false)
-	private long appointment;
-	
 	@Column(name = "dueDate", nullable = false)
 	private LocalDateTime dueDate;
 	
@@ -40,14 +37,13 @@ public class Reservation {
 		super();
 	}
 	
-	public Reservation(long id, Patient patient, Pharmacy pharmacy, Medicine medicine, long appointment, LocalDateTime dueDate,
+	public Reservation(long id, Patient patient, Pharmacy pharmacy, Medicine medicine, LocalDateTime dueDate,
 			boolean received) {
 		super();
 		this.id = id;
 		this.patient = patient;
 		this.pharmacy = pharmacy;
 		this.medicine = medicine;
-		this.appointment = appointment;
 		this.dueDate = dueDate;
 		this.received = received;
 	}
@@ -100,12 +96,4 @@ public class Reservation {
 		this.received = received;
 	}
 
-	public long getAppointment() {
-		return appointment;
-	}
-
-	public void setAppointment(long appointment) {
-		this.appointment = appointment;
-	}
-	
 }

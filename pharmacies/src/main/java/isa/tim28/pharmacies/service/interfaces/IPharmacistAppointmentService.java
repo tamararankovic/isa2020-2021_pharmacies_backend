@@ -6,8 +6,11 @@ import isa.tim28.pharmacies.dtos.DermatologistAppointmentDTO;
 import isa.tim28.pharmacies.dtos.DermatologistReportDTO;
 import isa.tim28.pharmacies.dtos.MedicineDTO;
 import isa.tim28.pharmacies.dtos.MedicineQuantityCheckDTO;
+import isa.tim28.pharmacies.dtos.ReservationValidDTO;
 import isa.tim28.pharmacies.exceptions.UserDoesNotExistException;
+import isa.tim28.pharmacies.model.Pharmacist;
 import isa.tim28.pharmacies.model.PharmacistAppointment;
+import isa.tim28.pharmacies.model.Reservation;
 
 public interface IPharmacistAppointmentService {
 	
@@ -26,5 +29,9 @@ public interface IPharmacistAppointmentService {
 	MedicineQuantityCheckDTO checkIfMedicineIsAvailable(long medicineId, long appointmentId);
 	
 	List<MedicineDTO> compatibleMedicine(long medicineId);
+	
+	ReservationValidDTO isReservationValid(long reservationId, Pharmacist pharmacist);
+
+	Reservation reservationTaken(long reservationId);
 
 }
