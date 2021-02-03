@@ -35,7 +35,7 @@ private UserRepository userRepository;
 	}
 	@Override
 	public boolean isEmailTaken(String email) {
-		return userRepository.findAll().stream().noneMatch(u -> u.getEmail().equals(email));
+		return userRepository.findAll().stream().anyMatch(u -> u.getEmail().equals(email));
 	}
 
 }
