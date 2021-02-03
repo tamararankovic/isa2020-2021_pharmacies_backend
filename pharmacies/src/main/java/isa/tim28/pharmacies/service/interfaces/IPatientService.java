@@ -2,15 +2,12 @@ package isa.tim28.pharmacies.service.interfaces;
 
 
 import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
 
 import isa.tim28.pharmacies.dtos.PatientProfileDTO;
 import isa.tim28.pharmacies.exceptions.BadNameException;
 import isa.tim28.pharmacies.exceptions.BadSurnameException;
 import isa.tim28.pharmacies.exceptions.PasswordIncorrectException;
 import isa.tim28.pharmacies.exceptions.UserDoesNotExistException;
-import isa.tim28.pharmacies.model.Medicine;
 import isa.tim28.pharmacies.model.Patient;
 import isa.tim28.pharmacies.model.User;
 

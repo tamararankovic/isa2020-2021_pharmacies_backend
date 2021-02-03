@@ -24,6 +24,7 @@ import isa.tim28.pharmacies.dtos.PharmacyAdminRegisterDTO;
 import isa.tim28.pharmacies.dtos.PharmacyRegisterDTO;
 import isa.tim28.pharmacies.dtos.SupplierDTO;
 import isa.tim28.pharmacies.dtos.SystemAdminDTO;
+import isa.tim28.pharmacies.exceptions.PharmacyDataInvalidException;
 import isa.tim28.pharmacies.exceptions.PharmacyNotFoundException;
 import isa.tim28.pharmacies.model.Dermatologist;
 import isa.tim28.pharmacies.model.Medicine;
@@ -200,7 +201,7 @@ public class SystemAdminController {
 	
 	
 	@PostMapping(value = "registerPharmacy")
-	public ResponseEntity<String> registerPharmacy(@RequestBody PharmacyRegisterDTO dto, HttpSession session){
+	public ResponseEntity<String> registerPharmacy(@RequestBody PharmacyRegisterDTO dto, HttpSession session) throws PharmacyDataInvalidException{
 		
 		User loggedInUser = (User) session.getAttribute("loggedInUser");
 		if(loggedInUser == null) {

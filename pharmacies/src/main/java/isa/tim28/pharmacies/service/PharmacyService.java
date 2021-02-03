@@ -2,22 +2,16 @@ package isa.tim28.pharmacies.service;
 
 import java.util.ArrayList;
 import java.util.HashSet;
-<<<<<<< HEAD
 import java.util.List;
-=======
 import java.util.Optional;
->>>>>>> master
 import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import isa.tim28.pharmacies.dtos.DermatologistExaminationForPatientDTO;
-<<<<<<< HEAD
 import isa.tim28.pharmacies.dtos.PharmacyAddAdminDTO;
-=======
 import isa.tim28.pharmacies.dtos.PharmacyBasicInfoDTO;
->>>>>>> master
 import isa.tim28.pharmacies.dtos.PharmacyInfoForPatientDTO;
 import isa.tim28.pharmacies.exceptions.PharmacyDataInvalidException;
 import isa.tim28.pharmacies.exceptions.PharmacyNotFoundException;
