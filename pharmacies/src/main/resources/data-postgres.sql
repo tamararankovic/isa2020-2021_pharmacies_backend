@@ -11,6 +11,7 @@ insert into patient(id, address, category, city, country, penalties, phone, poin
 
 
 insert into pharmacy(id, name, description, address) values (1, 'Pharmacy 1', 'Some description of pharmacy 1', 'Masarikova 1, Novi Sad');
+insert into pharmacy(id, name, description, address) values (2, 'Jankovic', 'Some description of pharmacy 2', 'Masarikova 44, Novi Sad');
 
 insert into engagement_in_pharmacy(id, pharmacy_id) values (1, 1);
 
