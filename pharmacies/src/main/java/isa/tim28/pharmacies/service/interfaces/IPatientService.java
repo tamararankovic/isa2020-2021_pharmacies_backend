@@ -2,7 +2,6 @@ package isa.tim28.pharmacies.service.interfaces;
 
 
 import java.util.ArrayList;
-
 import isa.tim28.pharmacies.dtos.PatientProfileDTO;
 import isa.tim28.pharmacies.exceptions.BadNameException;
 import isa.tim28.pharmacies.exceptions.BadSurnameException;
