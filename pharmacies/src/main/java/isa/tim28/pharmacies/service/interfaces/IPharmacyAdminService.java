@@ -17,4 +17,6 @@ public interface IPharmacyAdminService {
 	void update(PharmacyAdmin admin, PharmacyAdminDTO dto) throws BadNewEmailException, BadNameException, BadSurnameException;
 	
 	void changePassword(PharmacyAdmin admin, UserPasswordChangeDTO dto) throws PasswordIncorrectException;
+	
+	PharmacyAdmin save(PharmacyAdmin pharmacyAdmin);
 }

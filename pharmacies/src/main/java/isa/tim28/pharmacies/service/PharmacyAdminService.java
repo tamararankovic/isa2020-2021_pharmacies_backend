@@ -65,4 +65,10 @@ public class PharmacyAdminService implements IPharmacyAdminService {
 		pharmacyAdminRepository.save(admin);
 	}
 
+	@Override
+	public PharmacyAdmin save(PharmacyAdmin pharmacyAdmin) {
+		PharmacyAdmin newPharmacyAdmin = pharmacyAdminRepository.save(pharmacyAdmin);
+		return newPharmacyAdmin;
+	}
+
 }

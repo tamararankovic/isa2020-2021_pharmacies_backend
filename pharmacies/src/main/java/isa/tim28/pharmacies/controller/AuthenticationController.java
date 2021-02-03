@@ -71,6 +71,9 @@ public class AuthenticationController {
 			return new ResponseEntity<>("You are already logged in!", HttpStatus.FORBIDDEN);
 		}
 		User newUser = authenticationService.getUserByEmail(dto.getEmail());
+		if(newUser == null) {
+			return new ResponseEntity<>("User with specified email address does not exist.", HttpStatus.NOT_FOUND);
+		}
 		if(newUser.getActive() == false) {
 			return new ResponseEntity<>("You haven't activated your account yet! Check mail!", HttpStatus.FORBIDDEN);
 		}		

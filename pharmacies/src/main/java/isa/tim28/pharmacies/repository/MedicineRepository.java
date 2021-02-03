@@ -4,8 +4,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import isa.tim28.pharmacies.model.Medicine;
 
+public interface MedicineRepository extends JpaRepository<Medicine, Long> {
 
-public interface MedicineRepository extends JpaRepository<Medicine, Long>{
-	
+	Medicine findOneByCode(String code);
 	Medicine findByName(String name);
 }

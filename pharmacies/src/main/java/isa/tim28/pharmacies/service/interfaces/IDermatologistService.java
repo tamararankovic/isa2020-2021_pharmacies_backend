@@ -49,4 +49,6 @@ public interface IDermatologistService {
 	void addToPharmacy(NewDermatologistInPharmacyDTO dto, Pharmacy pharmacy) throws AddingDermatologistToPharmacyException, UserDoesNotExistException;
 	
 	List<PatientSearchDTO> getAllPatientsByNameAndSurname(String name, String surname);
+	
+	Dermatologist save(Dermatologist dermatologist);
 }
