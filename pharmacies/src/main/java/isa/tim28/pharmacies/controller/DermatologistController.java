@@ -21,6 +21,7 @@ import isa.tim28.pharmacies.dtos.DermatologistProfileDTO;
 import isa.tim28.pharmacies.dtos.DermatologistReportDTO;
 import isa.tim28.pharmacies.dtos.IsAllergicDTO;
 import isa.tim28.pharmacies.dtos.MedicineDTO;
+import isa.tim28.pharmacies.dtos.MedicineDetailsDTO;
 import isa.tim28.pharmacies.dtos.MedicineQuantityCheckDTO;
 import isa.tim28.pharmacies.dtos.PasswordChangeDTO;
 import isa.tim28.pharmacies.dtos.PatientReportAllergyDTO;
@@ -280,5 +281,25 @@ public class DermatologistController {
 		}
 		return new ResponseEntity<>(dermatologistAppointmentService.compatibleMedicine(medicineId), HttpStatus.OK);
 	}
+	
+	/*
+	 url: GET localhost:8081/derm/medicineDetails/{medicineId}
+	 HTTP request for compatible medicine
+	 returns ResponseEntity object
+	*/
+	@GetMapping(value = "/medicineDetails/{medicineId}", produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<MedicineDetailsDTO> medicineDetails(@PathVariable Long medicineId, HttpSession session){
+		
+		User loggedInUser = (User) session.getAttribute("loggedInUser");
+		if(loggedInUser == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No logged in user!");
+		}
+		if(loggedInUser.getRole() != Role.DERMATOLOGIST && loggedInUser.getRole() != Role.PHARMACIST) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only dermatologist and pharmacist can see medicine details.");
+		}
+		return new ResponseEntity<>(dermatologistAppointmentService.medicineDetails(medicineId), HttpStatus.OK);
+	}
+	
+	
 	
 }

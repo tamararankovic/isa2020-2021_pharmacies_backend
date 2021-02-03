@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import isa.tim28.pharmacies.dtos.DermatologistAppointmentDTO;
 import isa.tim28.pharmacies.dtos.DermatologistReportDTO;
 import isa.tim28.pharmacies.dtos.MedicineDTO;
+import isa.tim28.pharmacies.dtos.MedicineDetailsDTO;
 import isa.tim28.pharmacies.dtos.MedicineQuantityCheckDTO;
 import isa.tim28.pharmacies.dtos.TherapyDTO;
 import isa.tim28.pharmacies.exceptions.UserDoesNotExistException;
@@ -182,6 +183,13 @@ public class DermatologistAppointmentService implements IDermatologistAppointmen
 			if(m != null) compatible.add(new MedicineDTO(m.getId(), m.getName(), m.getManufacturer()));
 		}
 		return compatible;
+	}
+
+	@Override
+	public MedicineDetailsDTO medicineDetails(long medicineId) {
+		Medicine medicine = medicineRepository.findById(medicineId).get();
+		if(medicine != null) return new MedicineDetailsDTO(medicine);
+		else return new MedicineDetailsDTO();
 	}
 	
 }
