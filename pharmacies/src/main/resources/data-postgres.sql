@@ -36,7 +36,7 @@ alter sequence engagement_in_pharmacy_id_seq restart with 4;
 alter sequence pharmacist_id_seq restart with 2;
 alter sequence pharmacy_admin_id_seq restart with 2;
 alter sequence dermatologist_id_seq restart with 2;
-alter sequence medicine_id_seq restart with 3;
+alter sequence medicine_id_seq restart with 5;
 alter sequence patient_id_seq restart with 3;
 
 insert into dermatologist_appointment(id, default_duration_in_minutes, duration_in_minutes, patient_was_present, price, scheduled, start_date_time, dermatologist_id, patient_id, pharmacy_id) values (1, 30, 30, '0', 2000, '0', '2021-02-02 08:00:00.000000', 1, 1, 1);
