@@ -118,4 +118,19 @@ public class Pharmacy {
 	public void setRatings(Set<Rating> ratings) {
 		this.ratings = ratings;
 	}
+	
+	public boolean isNameValid() {
+		if(this.name == "" || this.name.length() < 2 || this.name.length() > 30) return false;
+		return true;
+	}
+	
+	public boolean isAddressValid() {
+		if(this.address == "" || this.address.length() < 2 || this.address.length() > 30) return false;
+		return true;
+	}
+	
+	public boolean isDescriptionValid() {
+		if(this.description == "" || this.description.length() < 2 || this.description.length() > 30) return false;
+		return true;
+	}
 }

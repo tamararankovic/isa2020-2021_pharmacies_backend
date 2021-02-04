@@ -113,7 +113,7 @@ public class User {
 	}
 	
 	public boolean isEmailValid() {
-		if(this.name == "" || this.name.length() < 3 || this.name.length() > 30 || !this.email.contains("@")) return false;
+		if(this.email == "" || this.email.length() < 3 || this.email.length() > 30 || !this.email.contains("@")) return false;
 		return true;
 	}
 	
