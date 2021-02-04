@@ -6,6 +6,7 @@ import javax.mail.MessagingException;
 
 import isa.tim28.pharmacies.dtos.NewOrderDTO;
 import isa.tim28.pharmacies.dtos.OrderForPharmacyAdminDTO;
+import isa.tim28.pharmacies.dtos.UpdateOrderDTO;
 import isa.tim28.pharmacies.exceptions.ForbiddenOperationException;
 import isa.tim28.pharmacies.exceptions.NewOrderInvalidException;
 import isa.tim28.pharmacies.exceptions.OrderNotFoundException;
@@ -18,4 +19,8 @@ public interface IOrderService {
 	public Set<OrderForPharmacyAdminDTO> get(PharmacyAdmin admin);
 	
 	public void chooseWinningOffer(long orderid, long offerId, PharmacyAdmin admin) throws OrderNotFoundException, ForbiddenOperationException, MessagingException;
+
+	public void update(UpdateOrderDTO dto, PharmacyAdmin admin) throws OrderNotFoundException, ForbiddenOperationException, NewOrderInvalidException;
+	
+	public void delete(long orderid, PharmacyAdmin admin) throws OrderNotFoundException, ForbiddenOperationException;
 }

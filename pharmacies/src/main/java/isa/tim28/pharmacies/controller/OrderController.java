@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -18,6 +19,7 @@ import org.springframework.web.server.ResponseStatusException;
 import isa.tim28.pharmacies.dtos.NewOrderDTO;
 import isa.tim28.pharmacies.dtos.OrderForPharmacyAdminDTO;
 import isa.tim28.pharmacies.dtos.OrderWinnerDTO;
+import isa.tim28.pharmacies.dtos.UpdateOrderDTO;
 import isa.tim28.pharmacies.exceptions.ForbiddenOperationException;
 import isa.tim28.pharmacies.exceptions.NewOrderInvalidException;
 import isa.tim28.pharmacies.exceptions.OrderNotFoundException;
@@ -98,6 +100,50 @@ public class OrderController {
 			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
 		} catch (MessagingException e) {
 			throw new ResponseStatusException(HttpStatus.OK, "Winner selected, but not all suppliers were informed. Reason: " + e.getMessage());
+		}
+	}
+	
+	@PostMapping(value = "update") 
+	public void update(@RequestBody UpdateOrderDTO dto, HttpSession session) {
+		User user = (User)session.getAttribute("loggedInUser");
+		if (user == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not logged in!");
+		}
+		if (user.getRole() != Role.PHARMACY_ADMIN) {
+			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You don't have required permissions!");
+		}
+		try {
+			PharmacyAdmin admin = pharmacyAdminService.findByUser(user);
+			orderService.update(dto, admin);
+		} catch(UserDoesNotExistException e1) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, e1.getMessage());
+		} catch (OrderNotFoundException e) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+		} catch (ForbiddenOperationException e) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+		} catch (NewOrderInvalidException e) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+		}
+	}
+	
+	@PostMapping(value = "delete/{id}")
+	public void delete(@PathVariable long id, HttpSession session) {
+		User user = (User)session.getAttribute("loggedInUser");
+		if (user == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not logged in!");
+		}
+		if (user.getRole() != Role.PHARMACY_ADMIN) {
+			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You don't have required permissions!");
+		}
+		try {
+			PharmacyAdmin admin = pharmacyAdminService.findByUser(user);
+			orderService.delete(id, admin);
+		} catch(UserDoesNotExistException e1) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, e1.getMessage());
+		} catch (OrderNotFoundException e) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+		} catch (ForbiddenOperationException e) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
 		}
 	}
 }

@@ -34,7 +34,7 @@ public class Order {
 	@OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
 	private Set<Offer> offers = new HashSet<Offer>();
 	
-	@ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+	@ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
 	private PharmacyAdmin adminCreator;
 	
 	public Order() {

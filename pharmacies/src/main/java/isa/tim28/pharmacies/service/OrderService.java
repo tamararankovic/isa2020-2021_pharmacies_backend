@@ -16,6 +16,7 @@ import isa.tim28.pharmacies.dtos.NewOrderDTO;
 import isa.tim28.pharmacies.dtos.OfferDTO;
 import isa.tim28.pharmacies.dtos.OrderForPharmacyAdminDTO;
 import isa.tim28.pharmacies.dtos.OrderedMedicineDTO;
+import isa.tim28.pharmacies.dtos.UpdateOrderDTO;
 import isa.tim28.pharmacies.exceptions.ForbiddenOperationException;
 import isa.tim28.pharmacies.exceptions.NewOrderInvalidException;
 import isa.tim28.pharmacies.exceptions.OrderNotFoundException;
@@ -126,5 +127,45 @@ public class OrderService implements IOrderService {
 		for(Offer o : order.getOffers()) {
 			emailService.sendEmailToSupplier(o.getSupplier().getUser().getEmail(), o.getSupplier().getUser().getFullName(), o.isAccepted() ? "prihvaćena" : "odbijena", o.getId());
 		}
+	}
+
+	@Override
+	public void update(UpdateOrderDTO dto, PharmacyAdmin admin) throws OrderNotFoundException, ForbiddenOperationException, NewOrderInvalidException {
+		Optional<Order> orderOpt = orderRepository.findById(dto.getId());
+		if(orderOpt.isEmpty())
+			throw new OrderNotFoundException("You are trying to change order that does not exist!");
+		Order order = orderOpt.get();
+		if(order.hasOffers())
+			throw new ForbiddenOperationException("Order already has offers!");
+		if(!order.isWaitingOffers())
+			throw new ForbiddenOperationException("Deadline passed!!");
+		if(order.getAdminCreator().getId() != admin.getId())
+			throw new ForbiddenOperationException("You can't edit orders that you hadn't made!");
+		Set<MedicineQuantity> medicines = new HashSet<MedicineQuantity>();
+		for(NewMedicineQuantityDTO mq : dto.getOrder().getMedicines()) {
+			Medicine m = medicineService.findById(mq.getMedicineId());
+			if (m == null) {
+				throw new NewOrderInvalidException("Medicine not found!");
+			}
+			medicines.add(new MedicineQuantity(m, (int)mq.getOrderedQuantity()));
+		}
+		order.setDeadline(dto.getOrder().getDeadline());
+		order.setMedicineQuantities(medicines);
+		orderRepository.save(order);
+	}
+
+	@Override
+	public void delete(long orderid, PharmacyAdmin admin) throws OrderNotFoundException, ForbiddenOperationException {
+		Optional<Order> orderOpt = orderRepository.findById(orderid);
+		if(orderOpt.isEmpty())
+			throw new OrderNotFoundException("You are trying to delete order that does not exist!");
+		Order order = orderOpt.get();
+		if(order.hasOffers())
+			throw new ForbiddenOperationException("Order already has offers!");
+		if(!order.isWaitingOffers())
+			throw new ForbiddenOperationException("Deadline passed!!");
+		if(order.getAdminCreator().getId() != admin.getId())
+			throw new ForbiddenOperationException("You can't delete orders that you hadn't made!");
+		orderRepository.delete(order);
 	}
 }
