@@ -154,4 +154,12 @@ public class PharmacyService implements IPharmacyService {
 		Pharmacy pharmacy = pharmacyRepository.findById(pharmacyId).get();
 		return pharmacy;
 	}
+
+	@Override
+	public void addNewmedicine(Pharmacy pharmacy, Medicine medicine) {
+		if(!pharmacy.offers(medicine)) {
+			pharmacy.getMedicines().add(new MedicineQuantity(medicine, 0));
+			pharmacyRepository.save(pharmacy);
+		}
+	}
 }

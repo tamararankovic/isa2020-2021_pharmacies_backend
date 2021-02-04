@@ -55,6 +55,8 @@ insert into medicine_quantity(id, quantity, medicine_id) values (1, 5, 1);
 insert into medicine_quantity(id, quantity, medicine_id) values (2, 5, 2);
 insert into medicine_quantity(id, quantity, medicine_id) values (3, 0, 3);
 insert into medicine_quantity(id, quantity, medicine_id) values (4, 5, 4);
+alter sequence medicine_quantity_id_seq restart with 5;
+
 alter sequence pharmacist_appointment_id_seq restart with 5;
 
 insert into medicine_compatible_medicine_codes(medicine_id, compatible_medicine_codes) values(3, 'LEK4');

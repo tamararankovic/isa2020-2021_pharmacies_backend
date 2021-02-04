@@ -14,6 +14,8 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
+import isa.tim28.pharmacies.exceptions.NewOrderInvalidException;
+
 @Entity
 @Table(name = "orders")
 public class Order {
@@ -44,6 +46,19 @@ public class Order {
 		this.medicineQuantities = medicineQuantities;
 		this.deadline = deadline;
 		this.offers = offers;
+		this.adminCreator = adminCreator;
+	}
+	
+	public Order(Set<MedicineQuantity> medicineQuantities, LocalDateTime deadline,
+			PharmacyAdmin adminCreator) throws NewOrderInvalidException {
+		if (deadline.isBefore(LocalDateTime.now()))
+			throw new NewOrderInvalidException("Deadline set in the past!");
+		for (MedicineQuantity mq : medicineQuantities) {
+			if(mq.getQuantity() <= 0 || mq.getQuantity() >= 1000)
+				throw new NewOrderInvalidException("Quantity must be a number between 1 and 999!");
+		}
+		this.medicineQuantities = medicineQuantities;
+		this.deadline = deadline;
 		this.adminCreator = adminCreator;
 	}
 

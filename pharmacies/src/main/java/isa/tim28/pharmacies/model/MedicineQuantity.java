@@ -32,6 +32,12 @@ public class MedicineQuantity {
 		this.medicine = medicine;
 		this.quantity = quantity;
 	}
+	
+	public MedicineQuantity(Medicine medicine, int quantity) {
+		super();
+		this.medicine = medicine;
+		this.quantity = quantity;
+	}
 
 	public long getId() {
 		return id;

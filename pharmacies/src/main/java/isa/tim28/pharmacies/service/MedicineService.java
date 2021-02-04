@@ -3,6 +3,7 @@ package isa.tim28.pharmacies.service;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -62,6 +63,14 @@ private MedicineRepository medicineRepository;
 		for (Medicine m : medicines)
 			ret.add(new MedicineForPharmacyAdminDTO(m.getId(), m.getCode(), m.getName(), m.getType().toString(), m.getManufacturer(), pharmacy.offers(m)));
 		return ret;
+	}
+
+	@Override
+	public Medicine findById(long id) {
+		Optional<Medicine> medicine = medicineRepository.findById(id);
+		if(medicine.isEmpty())
+			return null;
+		return medicine.get();
 	}
 
 }

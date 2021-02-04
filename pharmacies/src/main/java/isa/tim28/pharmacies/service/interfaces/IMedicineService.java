@@ -17,4 +17,6 @@ public interface IMedicineService {
 	Medicine save(Medicine medicine);
 	
 	Set<MedicineForPharmacyAdminDTO> getAll(Pharmacy pharmacy);
+	
+	Medicine findById(long id);
 }
