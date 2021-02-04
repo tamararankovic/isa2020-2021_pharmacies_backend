@@ -42,7 +42,7 @@ public class DermatologistAppointment {
 	private boolean patientWasPresent;
 
 	@Column(name = "defaultDurationInMinutes", nullable = false)
-	private final int defaultDurationMinutes = 30;
+	private final int defaultDurationInMinutes = 30;
 	
 	public DermatologistAppointment() {
 		super();
@@ -136,7 +136,7 @@ public class DermatologistAppointment {
 	}
 	
 	public int getDefaultDurationInMinutes() {
-		return defaultDurationMinutes;
+		return defaultDurationInMinutes;
 	}
 	
 }

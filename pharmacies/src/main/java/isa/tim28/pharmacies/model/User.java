@@ -67,6 +67,9 @@ public class User {
 	public void setSurname(String surname) {
 		this.surname = surname;
 	}
+	public String getFullName() {
+		return this.name + " " + this.surname;
+	}
 	public String getEmail() {
 		return email;
 	}
@@ -112,6 +115,10 @@ public class User {
 	public boolean isEmailValid() {
 		if(this.name == "" || this.name.length() < 3 || this.name.length() > 30 || !this.email.contains("@")) return false;
 		return true;
+	}
+	
+	public boolean isPasswordValid() {
+		return this.password.length() >=4 && this.password.length() <= 30;
 	}
 	
 }

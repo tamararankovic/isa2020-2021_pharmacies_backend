@@ -35,6 +35,13 @@ public class DailyEngagement {
 		this.startTime = startTime;
 		this.endTime = endTime;
 	}
+	
+	public DailyEngagement(DayOfWeek dayOfWeek, LocalTime startTime, LocalTime endTime) {
+		super();
+		this.dayOfWeek = dayOfWeek;
+		this.startTime = startTime;
+		this.endTime = endTime;
+	}
 
 	public long getId() {
 		return id;
@@ -66,5 +73,10 @@ public class DailyEngagement {
 
 	public void setEndTime(LocalTime endTime) {
 		this.endTime = endTime;
+	}
+	
+	public boolean isOverlappingWith(LocalTime startTime, LocalTime endTime) {
+		return (startTime.isAfter(this.startTime) && startTime.isBefore(this.endTime))
+		|| (endTime.isAfter(this.startTime) && endTime.isBefore(this.endTime));
 	}
 }

@@ -2,8 +2,8 @@ package isa.tim28.pharmacies.dtos;
 
 public class PatientSearchDTO {
 	
-	public String name;
-	public String surname;
+	private String name;
+	private String surname;
 	
 	public PatientSearchDTO() {
 		super();
