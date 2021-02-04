@@ -118,4 +118,8 @@ public class Pharmacy {
 	public void setRatings(Set<Rating> ratings) {
 		this.ratings = ratings;
 	}
+	
+	public boolean offers(Medicine medicine) {
+		return medicines.stream().anyMatch(mq -> mq.getMedicine().getId() == medicine.getId());
+	}
 }

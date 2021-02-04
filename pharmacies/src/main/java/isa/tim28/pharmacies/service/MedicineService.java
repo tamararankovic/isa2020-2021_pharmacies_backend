@@ -1,11 +1,17 @@
 package isa.tim28.pharmacies.service;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
 import isa.tim28.pharmacies.dtos.MedicineCodeDTO;
+import isa.tim28.pharmacies.dtos.MedicineForPharmacyAdminDTO;
 import isa.tim28.pharmacies.model.Medicine;
+import isa.tim28.pharmacies.model.Pharmacy;
 import isa.tim28.pharmacies.repository.MedicineRepository;
 import isa.tim28.pharmacies.service.interfaces.IMedicineService;
 
@@ -47,6 +53,15 @@ private MedicineRepository medicineRepository;
 	public Medicine save(Medicine medicine) {
 		Medicine newMedicine = medicineRepository.save(medicine);
 		return newMedicine;
+	}
+
+	@Override
+	public Set<MedicineForPharmacyAdminDTO> getAll(Pharmacy pharmacy) {
+		List<Medicine> medicines = medicineRepository.findAll();
+		Set<MedicineForPharmacyAdminDTO> ret = new HashSet<MedicineForPharmacyAdminDTO>();
+		for (Medicine m : medicines)
+			ret.add(new MedicineForPharmacyAdminDTO(m.getId(), m.getCode(), m.getName(), m.getType().toString(), m.getManufacturer(), pharmacy.offers(m)));
+		return ret;
 	}
 
 }
