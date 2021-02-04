@@ -1,8 +1,7 @@
 package isa.tim28.pharmacies.controller;
 
 import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
+
 
 import javax.servlet.http.HttpSession;
 
@@ -24,7 +23,7 @@ import isa.tim28.pharmacies.exceptions.BadNameException;
 import isa.tim28.pharmacies.exceptions.BadSurnameException;
 import isa.tim28.pharmacies.exceptions.PasswordIncorrectException;
 import isa.tim28.pharmacies.exceptions.UserDoesNotExistException;
-import isa.tim28.pharmacies.model.Medicine;
+
 import isa.tim28.pharmacies.model.Patient;
 import isa.tim28.pharmacies.model.Role;
 import isa.tim28.pharmacies.model.User;

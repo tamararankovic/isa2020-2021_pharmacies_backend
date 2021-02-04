@@ -9,14 +9,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import isa.tim28.pharmacies.dtos.DermatologistExaminationForPatientDTO;
-import isa.tim28.pharmacies.dtos.PatientSearchDTO;
+
 import isa.tim28.pharmacies.dtos.PharmacyInfoForPatientDTO;
 import isa.tim28.pharmacies.exceptions.PharmacyNotFoundException;
 import isa.tim28.pharmacies.model.Dermatologist;
 import isa.tim28.pharmacies.model.DermatologistAppointment;
 import isa.tim28.pharmacies.model.Medicine;
 import isa.tim28.pharmacies.model.MedicineQuantity;
-import isa.tim28.pharmacies.model.Patient;
+
 import isa.tim28.pharmacies.model.Pharmacist;
 import isa.tim28.pharmacies.model.Pharmacy;
 import isa.tim28.pharmacies.model.Rating;
