@@ -24,6 +24,12 @@ import isa.tim28.pharmacies.dtos.PharmacyAdminRegisterDTO;
 import isa.tim28.pharmacies.dtos.PharmacyRegisterDTO;
 import isa.tim28.pharmacies.dtos.SupplierDTO;
 import isa.tim28.pharmacies.dtos.SystemAdminDTO;
+import isa.tim28.pharmacies.exceptions.AddNewMedicineException;
+import isa.tim28.pharmacies.exceptions.CreateDermatologistException;
+import isa.tim28.pharmacies.exceptions.CreatePharmacyAdminException;
+import isa.tim28.pharmacies.exceptions.CreatePharmacyException;
+import isa.tim28.pharmacies.exceptions.CreateSupplierException;
+import isa.tim28.pharmacies.exceptions.CreateSystemAdminException;
 import isa.tim28.pharmacies.exceptions.PharmacyDataInvalidException;
 import isa.tim28.pharmacies.exceptions.PharmacyNotFoundException;
 import isa.tim28.pharmacies.model.Dermatologist;
@@ -74,7 +80,7 @@ public class SystemAdminController {
 	}
 	
 	@PostMapping(value = "registerSupplier")
-	public ResponseEntity<String> registerSupplier(@RequestBody SupplierDTO dto, HttpSession session){
+	public ResponseEntity<String> registerSupplier(@RequestBody SupplierDTO dto, HttpSession session) throws CreateSupplierException{
 		
 		User loggedInUser = (User) session.getAttribute("loggedInUser");
 		if(loggedInUser == null) {
@@ -97,6 +103,12 @@ public class SystemAdminController {
 		newUser.setLoged(false);
 		newUser.setActive(true);
 		
+		if(!newUser.isNameValid()) throw new CreateSupplierException("Name must have between 2 and 30 characters. Try again.");
+		if(!newUser.isSurnameValid()) throw new CreateSupplierException("Surname must have between 2 and 30 characters. Try again.");
+		if(!newUser.isEmailValid()) throw new CreateSupplierException("Email must have between 3 and 30 characters and contain @. Try again.");
+		if(!newUser.isPasswordValid()) throw new CreateSupplierException("Password must have between 4 and 30 characters. Try again.");
+		
+		
 		Supplier newSupplier = new Supplier();
 		newSupplier.setUser(newUser);
 		
@@ -116,7 +128,7 @@ public class SystemAdminController {
 	}
 	
 	@PostMapping(value = "registerSystemAdmin")
-	public ResponseEntity<String> registerSystemAdmin(@RequestBody SystemAdminDTO dto, HttpSession session){
+	public ResponseEntity<String> registerSystemAdmin(@RequestBody SystemAdminDTO dto, HttpSession session) throws CreateSystemAdminException{
 		
 		User loggedInUser = (User) session.getAttribute("loggedInUser");
 		if(loggedInUser == null) {
@@ -139,6 +151,13 @@ public class SystemAdminController {
 		newUser.setLoged(false);
 		newUser.setActive(true);
 		
+		if(!newUser.isNameValid()) throw new CreateSystemAdminException("Name must have between 2 and 30 characters. Try again.");
+		if(!newUser.isSurnameValid()) throw new CreateSystemAdminException("Surname must have between 2 and 30 characters. Try again.");
+		if(!newUser.isEmailValid()) throw new CreateSystemAdminException("Email must have between 3 and 30 characters and contain @. Try again.");
+		if(!newUser.isPasswordValid()) throw new CreateSystemAdminException("Password must have between 4 and 30 characters. Try again.");
+		
+		
+		
 		SystemAdmin newSystemAdmin = new SystemAdmin();
 		newSystemAdmin.setUser(newUser);
 		
@@ -158,7 +177,7 @@ public class SystemAdminController {
 	}
 	
 	@PostMapping(value = "registerDermatologist")
-	public ResponseEntity<String> registerDermatologist(@RequestBody DermatologistRegisterDTO dto, HttpSession session){
+	public ResponseEntity<String> registerDermatologist(@RequestBody DermatologistRegisterDTO dto, HttpSession session) throws CreateDermatologistException{
 		
 		User loggedInUser = (User) session.getAttribute("loggedInUser");
 		if(loggedInUser == null) {
@@ -181,6 +200,12 @@ public class SystemAdminController {
 		newUser.setLoged(false);
 		newUser.setActive(true);
 		
+		if(!newUser.isNameValid()) throw new CreateDermatologistException("Name must have between 2 and 30 characters. Try again.");
+		if(!newUser.isSurnameValid()) throw new CreateDermatologistException("Surname must have between 2 and 30 characters. Try again.");
+		if(!newUser.isEmailValid()) throw new CreateDermatologistException("Email must have between 3 and 30 characters and contain @. Try again.");
+		if(!newUser.isPasswordValid()) throw new CreateDermatologistException("Password must have between 4 and 30 characters. Try again.");
+		
+		
 		Dermatologist newDermatologist = new Dermatologist();
 		newDermatologist.setUser(newUser);
 		
@@ -201,7 +226,7 @@ public class SystemAdminController {
 	
 	
 	@PostMapping(value = "registerPharmacy")
-	public ResponseEntity<String> registerPharmacy(@RequestBody PharmacyRegisterDTO dto, HttpSession session) throws PharmacyDataInvalidException{
+	public ResponseEntity<String> registerPharmacy(@RequestBody PharmacyRegisterDTO dto, HttpSession session) throws PharmacyDataInvalidException, CreatePharmacyException{
 		
 		User loggedInUser = (User) session.getAttribute("loggedInUser");
 		if(loggedInUser == null) {
@@ -214,6 +239,10 @@ public class SystemAdminController {
 		pharmacy.setName(dto.getName());
 		pharmacy.setAddress(dto.getAddress());
 		pharmacy.setDescription(dto.getDescription());
+		
+		if(!pharmacy.isNameValid()) throw new CreatePharmacyException("Name must have between 2 and 30 characters. Try again.");
+		if(!pharmacy.isAddressValid()) throw new CreatePharmacyException("Address must have between 2 and 30 characters. Try again.");
+		if(!pharmacy.isDescriptionValid()) throw new CreatePharmacyException("Description must have between 3 and 30 characters. Try again.");		
 		
 		try {
 			pharmacyService.save(pharmacy);
@@ -238,7 +267,7 @@ public class SystemAdminController {
 	}
 	
 	@PostMapping(value = "registerPharmacyAdmin")
-	public ResponseEntity<String> registerPharmacyAdmin(@RequestBody PharmacyAdminRegisterDTO dto, HttpSession session){
+	public ResponseEntity<String> registerPharmacyAdmin(@RequestBody PharmacyAdminRegisterDTO dto, HttpSession session) throws CreatePharmacyAdminException{
 		
 		User loggedInUser = (User) session.getAttribute("loggedInUser");
 		if(loggedInUser == null) {
@@ -260,6 +289,12 @@ public class SystemAdminController {
 		newUser.setRole(Role.PHARMACY_ADMIN);
 		newUser.setLoged(false);
 		newUser.setActive(true);
+		
+		if(!newUser.isNameValid()) throw new CreatePharmacyAdminException("Name must have between 2 and 30 characters. Try again.");
+		if(!newUser.isSurnameValid()) throw new CreatePharmacyAdminException("Surname must have between 2 and 30 characters. Try again.");
+		if(!newUser.isEmailValid()) throw new CreatePharmacyAdminException("Email must have between 3 and 30 characters and contain @. Try again.");
+		if(!newUser.isPasswordValid()) throw new CreatePharmacyAdminException("Password must have between 4 and 30 characters. Try again.");
+		
 		
 		PharmacyAdmin newPharmacyAdmin = new PharmacyAdmin();
 		newPharmacyAdmin.setUser(newUser);
@@ -302,7 +337,7 @@ public class SystemAdminController {
 	}
 	
 	@PostMapping(value = "addNewMedicine")
-	public ResponseEntity<String> registerNewMedicine(@RequestBody MedicineDTO dto, HttpSession session){
+	public ResponseEntity<String> registerNewMedicine(@RequestBody MedicineDTO dto, HttpSession session) throws AddNewMedicineException{
 		
 		User loggedInUser = (User) session.getAttribute("loggedInUser");
 		if(loggedInUser == null) {
@@ -357,6 +392,15 @@ public class SystemAdminController {
 		newMedicine.setPoints(dto.getPoints());
 		newMedicine.setSideEffects(dto.getSideEffects());
 		newMedicine.setAdvisedDailyDose(dto.getAdvisedDailyDose());
+		
+		if(!newMedicine.isNameValid()) throw new AddNewMedicineException("Name must have between 2 and 30 characters. Try again.");
+		if(!newMedicine.isCodeValid()) throw new AddNewMedicineException("Code must have between 2 and 30 characters. Try again.");
+		if(!newMedicine.isManufacturerValid()) throw new AddNewMedicineException("Manufacturer must have between 2 and 30 characters. Try again.");
+		if(!newMedicine.isAdditionalInfoValid()) throw new AddNewMedicineException("Additional info must have between 2 and 30 characters. Try again.");
+		if(!newMedicine.isSideEffectsValid()) throw new AddNewMedicineException("Side effects must have between 2 and 30 characters. Try again.");
+		if(!newMedicine.isAdvisedDailyDose()) throw new AddNewMedicineException("Advised daily dose must have be between 1 and 10. Try again.");
+	
+		
 		
 		try {
 			medicineService.save(newMedicine);
