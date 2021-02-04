@@ -1,7 +1,6 @@
 package isa.tim28.pharmacies.controller;
 
 import java.util.ArrayList;
-
 import javax.servlet.http.HttpSession;
 
 import org.springframework.beans.factory.annotation.Autowired;
