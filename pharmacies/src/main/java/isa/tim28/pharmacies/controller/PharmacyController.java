@@ -65,15 +65,24 @@ public class PharmacyController {
 	public ResponseEntity<ArrayList<PharmacyInfoForPatientDTO>> getPharmacyInfoForPatient(
 			@RequestBody PharmacyInfoForPatientDTO dto, HttpSession session) {
 		User user = (User) session.getAttribute("loggedInUser");
-		if (user != null) {
-			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are logged in!");
+		if (user == null) {
+			try {
+				return new ResponseEntity<>(pharmacyService.getAllPharmacies(dto.getName(), dto.getAddress()),
+						HttpStatus.OK);
+			} catch (PharmacyNotFoundException e) {
+				throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Pharmacy not found");
+			}
 		}
-
-		try {
-			return new ResponseEntity<>(pharmacyService.getAllPharmacies(dto.getName(), dto.getAddress()),
-					HttpStatus.OK);
-		} catch (PharmacyNotFoundException e) {
-			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Pharmacy not found");
+		else if (user.getRole() == Role.PATIENT) {
+			try {
+				return new ResponseEntity<>(pharmacyService.getAllPharmacies(dto.getName(), dto.getAddress()),
+						HttpStatus.OK);
+			} catch (PharmacyNotFoundException e) {
+				throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Pharmacy not found");
+			}
+		}
+		else {
+			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You don't have required permissions!");
 		}
 	}
 
