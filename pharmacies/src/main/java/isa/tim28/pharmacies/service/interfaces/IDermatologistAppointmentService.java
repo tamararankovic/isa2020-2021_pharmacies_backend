@@ -38,4 +38,5 @@ public interface IDermatologistAppointmentService {
 	boolean dermatologistHasIncomingAppointmentsInPharmacy(Dermatologist dermatologist, Pharmacy pharmacy);
 	
 	void deleteUnscheduledAppointments(Dermatologist dermatologist);
+	
 }
