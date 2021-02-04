@@ -101,4 +101,17 @@ public class Order {
 	public void setAdminCreator(PharmacyAdmin adminCreator) {
 		this.adminCreator = adminCreator;
 	}
+	
+	public boolean hasOffers() {
+		return offers.size() > 0;
+	}
+	
+	public boolean isWaitingOffers() {
+		return deadline.isAfter(LocalDateTime.now());
+	}
+	
+	public boolean hasWinner() {
+		return offers.stream().anyMatch(offer -> offer.isAccepted());
+	}
 }
+
