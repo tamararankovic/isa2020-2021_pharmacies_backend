@@ -2,6 +2,7 @@ package isa.tim28.pharmacies.model;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 
 import javax.persistence.CascadeType;
@@ -14,6 +15,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
+import isa.tim28.pharmacies.exceptions.ForbiddenOperationException;
 import isa.tim28.pharmacies.exceptions.NewOrderInvalidException;
 
 @Entity
@@ -112,6 +114,20 @@ public class Order {
 	
 	public boolean hasWinner() {
 		return offers.stream().anyMatch(offer -> offer.isAccepted());
+	}
+	
+	public Offer getWinningOffer() {
+		Optional<Offer> o = offers.stream().filter(offer -> offer.isAccepted()).findFirst();
+		if(o.isEmpty()) return null;
+		return o.get();
+	}
+	
+	public void SetWinner(long offerId) throws ForbiddenOperationException {
+		Optional<Offer> offerOpt = offers.stream().filter(o -> o.getId() == offerId).findFirst();
+		if (offerOpt.isEmpty())
+			throw new ForbiddenOperationException("Order doesn't have an offer with provided id!");
+		Offer offer = offerOpt.get();
+		offer.setAccepted(true);
 	}
 }
 

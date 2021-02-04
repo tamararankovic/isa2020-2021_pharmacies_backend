@@ -11,6 +11,8 @@ public class OrderForPharmacyAdminDTO {
 	private boolean editable;
 	private String state;
 	private boolean canChooseWinner;
+	private Set<OfferDTO> allOffers;
+	private OfferDTO winningOffer;
 	
 	public OrderForPharmacyAdminDTO() {
 		super();
@@ -18,7 +20,7 @@ public class OrderForPharmacyAdminDTO {
 	}
 	
 	public OrderForPharmacyAdminDTO(long id, Set<OrderedMedicineDTO> medicines, LocalDateTime deadline,
-			boolean editable, String state, boolean canChooseWinner) {
+			boolean editable, String state, boolean canChooseWinner, Set<OfferDTO> allOffers, OfferDTO winningOffer) {
 		super();
 		this.id = id;
 		this.medicines = medicines;
@@ -26,8 +28,12 @@ public class OrderForPharmacyAdminDTO {
 		this.editable = editable;
 		this.state = state;
 		this.canChooseWinner = canChooseWinner;
+		this.allOffers = allOffers;
+		this.winningOffer = winningOffer;
 	}
-	
+
+
+
 	public long getId() {
 		return id;
 	}
@@ -65,5 +71,21 @@ public class OrderForPharmacyAdminDTO {
 
 	public void setCanChooseWinner(boolean canChooseWinner) {
 		this.canChooseWinner = canChooseWinner;
+	}
+
+	public Set<OfferDTO> getAllOffers() {
+		return allOffers;
+	}
+
+	public void setAllOffers(Set<OfferDTO> allOffers) {
+		this.allOffers = allOffers;
+	}
+
+	public OfferDTO getWinningOffer() {
+		return winningOffer;
+	}
+
+	public void setWinningOffer(OfferDTO winningOffer) {
+		this.winningOffer = winningOffer;
 	}
 }

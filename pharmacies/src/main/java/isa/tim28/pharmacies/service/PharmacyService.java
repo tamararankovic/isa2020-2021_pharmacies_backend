@@ -13,6 +13,7 @@ import isa.tim28.pharmacies.dtos.DermatologistExaminationForPatientDTO;
 import isa.tim28.pharmacies.dtos.PharmacyAddAdminDTO;
 import isa.tim28.pharmacies.dtos.PharmacyBasicInfoDTO;
 import isa.tim28.pharmacies.dtos.PharmacyInfoForPatientDTO;
+import isa.tim28.pharmacies.exceptions.ForbiddenOperationException;
 import isa.tim28.pharmacies.exceptions.PharmacyDataInvalidException;
 import isa.tim28.pharmacies.exceptions.PharmacyNotFoundException;
 import isa.tim28.pharmacies.model.Dermatologist;
@@ -161,5 +162,12 @@ public class PharmacyService implements IPharmacyService {
 			pharmacy.getMedicines().add(new MedicineQuantity(medicine, 0));
 			pharmacyRepository.save(pharmacy);
 		}
+	}
+
+	@Override
+	public void addMedicines(Pharmacy pharmacy, Set<MedicineQuantity> medicines) throws ForbiddenOperationException {
+		for(MedicineQuantity mq : medicines)
+			pharmacy.addMedicine(mq);
+		pharmacyRepository.save(pharmacy);
 	}
 }

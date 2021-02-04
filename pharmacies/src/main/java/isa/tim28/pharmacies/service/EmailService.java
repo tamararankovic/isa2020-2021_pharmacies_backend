@@ -94,5 +94,23 @@ public class EmailService {
 
 		System.out.println("Email poslat!");
 	}
+	
+	public void sendEmailToSupplier(String email, String name, String text, long offerId) throws MessagingException {
+		String content = "Poštovani/Poštovana " + name + ",<br>"
+	            + "Vaša ponuda je " + text + "<br>"
+	            + "Broj ponude: " + offerId + "<br>"
+	            + "Radujemo se budućem poslovanju,<br>"
+	            + "ISA, TIM 28.";
+		
+		
+		MimeMessage message = javaMailSender.createMimeMessage();
+	    MimeMessageHelper helper = new MimeMessageHelper(message);
+	    helper.setFrom(env.getProperty("spring.mail.username"));
+	    helper.setTo(email);
+	    helper.setSubject("Odgovor na ponudu za narudžbinu");
+	    helper.setText(content, true);
+	    
+		javaMailSender.send(message);
+	}
 
 }

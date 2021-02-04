@@ -6,9 +6,11 @@ import java.util.Set;
 import isa.tim28.pharmacies.dtos.PharmacyAddAdminDTO;
 import isa.tim28.pharmacies.dtos.PharmacyBasicInfoDTO;
 import isa.tim28.pharmacies.dtos.PharmacyInfoForPatientDTO;
+import isa.tim28.pharmacies.exceptions.ForbiddenOperationException;
 import isa.tim28.pharmacies.exceptions.PharmacyDataInvalidException;
 import isa.tim28.pharmacies.exceptions.PharmacyNotFoundException;
 import isa.tim28.pharmacies.model.Medicine;
+import isa.tim28.pharmacies.model.MedicineQuantity;
 import isa.tim28.pharmacies.model.Pharmacy;
 import isa.tim28.pharmacies.model.PharmacyAdmin;
 
@@ -29,4 +31,6 @@ public interface IPharmacyService {
 	void update(PharmacyAdmin admin, PharmacyBasicInfoDTO dto) throws PharmacyNotFoundException, PharmacyDataInvalidException;
 
 	void addNewmedicine(Pharmacy pharmacy, Medicine medicine);
+	
+	void addMedicines(Pharmacy pharmacy, Set<MedicineQuantity> medicines) throws ForbiddenOperationException;
 }
