@@ -13,6 +13,8 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
 
+import isa.tim28.pharmacies.exceptions.PriceInvalidException;
+
 @Entity
 public class PriceList  implements Comparable<PriceList> {
 	
@@ -44,8 +46,11 @@ public class PriceList  implements Comparable<PriceList> {
 
 	public PriceList(long id, Set<MedicinePrice> medicinePrices, double pharmacistAppointmentPrice,
 			double defaultDermatologistAppointmentPrice, boolean pharmAppPriceDefined, boolean dermAppPriceDefined,
-			LocalDate startDate) {
-		super();
+			LocalDate startDate) throws PriceInvalidException {
+		if (!isPriceValid(defaultDermatologistAppointmentPrice) && dermAppPriceDefined) 
+			throw new PriceInvalidException("Price must be a number between 1 and 100000");
+		if (!isPriceValid(pharmacistAppointmentPrice) && pharmAppPriceDefined) 
+			throw new PriceInvalidException("Price must be a number between 1 and 100000");
 		this.id = id;
 		this.medicinePrices = medicinePrices;
 		this.pharmacistAppointmentPrice = pharmacistAppointmentPrice;
@@ -57,14 +62,21 @@ public class PriceList  implements Comparable<PriceList> {
 
 	public PriceList(Set<MedicinePrice> medicinePrices, double pharmacistAppointmentPrice,
 			double defaultDermatologistAppointmentPrice, boolean pharmAppPriceDefined, boolean dermAppPriceDefined,
-			LocalDate startDate) {
-		super();
+			LocalDate startDate) throws PriceInvalidException {
+		if (!isPriceValid(defaultDermatologistAppointmentPrice) && dermAppPriceDefined) 
+			throw new PriceInvalidException("Price must be a number between 1 and 100000");
+		if (!isPriceValid(pharmacistAppointmentPrice) && pharmAppPriceDefined) 
+			throw new PriceInvalidException("Price must be a number between 1 and 100000");
 		this.medicinePrices = medicinePrices;
 		this.pharmacistAppointmentPrice = pharmacistAppointmentPrice;
 		this.defaultDermatologistAppointmentPrice = defaultDermatologistAppointmentPrice;
 		this.pharmAppPriceDefined = pharmAppPriceDefined;
 		this.dermAppPriceDefined = dermAppPriceDefined;
 		this.startDate = startDate;
+	}
+	
+	private boolean isPriceValid (double price) {
+		return price > 0 && price <= 100000;
 	}
 
 	public long getId() {
@@ -148,7 +160,7 @@ public class PriceList  implements Comparable<PriceList> {
 		return 0;
 	}
 	
-	public void setPrice(Medicine medicine, double price) {
+	public void setPrice(Medicine medicine, double price) throws PriceInvalidException {
 		if (isInPriceList(medicine)) {
 			medicinePrices.stream().filter(mp -> mp.getMedicine().getId() == medicine.getId()).findFirst().get().setPrice(price);
 		} else {

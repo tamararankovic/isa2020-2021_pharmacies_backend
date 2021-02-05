@@ -21,6 +21,7 @@ import isa.tim28.pharmacies.exceptions.ForbiddenOperationException;
 import isa.tim28.pharmacies.exceptions.MedicineDoesNotExistException;
 import isa.tim28.pharmacies.exceptions.PharmacyDataInvalidException;
 import isa.tim28.pharmacies.exceptions.PharmacyNotFoundException;
+import isa.tim28.pharmacies.exceptions.PriceInvalidException;
 import isa.tim28.pharmacies.model.Dermatologist;
 import isa.tim28.pharmacies.model.DermatologistAppointment;
 import isa.tim28.pharmacies.model.Medicine;
@@ -278,7 +279,7 @@ public class PharmacyService implements IPharmacyService {
 	}
 
 	@Override
-	public void updatePriceLists(PriceListDTO dto, Pharmacy pharmacy) throws MedicineDoesNotExistException, ForbiddenOperationException {
+	public void updatePriceLists(PriceListDTO dto, Pharmacy pharmacy) throws MedicineDoesNotExistException, ForbiddenOperationException, PriceInvalidException {
 		if(dto.getStartDate().isBefore(LocalDate.now()))
 			throw new ForbiddenOperationException("You can't set price list with start date in the past");
 		if (pharmacy.hasPriceListDefinedOnDate(dto.getStartDate())) {
@@ -288,7 +289,7 @@ public class PharmacyService implements IPharmacyService {
 		}
 	}
 	
-	private void updatePriceList(PriceListDTO dto, Pharmacy pharmacy) throws MedicineDoesNotExistException {
+	private void updatePriceList(PriceListDTO dto, Pharmacy pharmacy) throws MedicineDoesNotExistException, PriceInvalidException {
 		PriceList pl = pharmacy.getPriceListDefinedOnDate(dto.getStartDate());
 		
 		if (!dto.getDermatologistAppointmentPrice().isUndefined()) {
@@ -311,7 +312,7 @@ public class PharmacyService implements IPharmacyService {
 		pharmacyRepository.save(pharmacy);
 	}
 	
-	private void createPriceList(PriceListDTO dto, Pharmacy pharmacy) throws MedicineDoesNotExistException {
+	private void createPriceList(PriceListDTO dto, Pharmacy pharmacy) throws MedicineDoesNotExistException, PriceInvalidException {
 		PriceList pl = new PriceList();
 		pl.setStartDate(dto.getStartDate());
 		

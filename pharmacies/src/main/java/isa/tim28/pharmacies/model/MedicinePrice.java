@@ -9,6 +9,8 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 
+import isa.tim28.pharmacies.exceptions.PriceInvalidException;
+
 @Entity
 public class MedicinePrice {
 
@@ -26,17 +28,23 @@ public class MedicinePrice {
 		super();
 	}
 	
-	public MedicinePrice(long id, Medicine medicine, double price) {
-		super();
+	public MedicinePrice(long id, Medicine medicine, double price) throws PriceInvalidException {
+		if (!isPriceValid(price)) 
+			throw new PriceInvalidException("Price must be a number between 1 and 100000");
 		this.id = id;
 		this.medicine = medicine;
 		this.price = price;
 	}
 	
-	public MedicinePrice(Medicine medicine, double price) {
-		super();
+	public MedicinePrice(Medicine medicine, double price) throws PriceInvalidException {
+		if (!isPriceValid(price)) 
+			throw new PriceInvalidException("Price must be a number between 1 and 100000");
 		this.medicine = medicine;
 		this.price = price;
+	}
+	
+	private boolean isPriceValid (double price) {
+		return price > 0 && price <= 100000;
 	}
 
 	public long getId() {
