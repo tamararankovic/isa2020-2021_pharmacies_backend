@@ -1,6 +1,7 @@
 package isa.tim28.pharmacies.model;
 
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 
 import javax.persistence.CascadeType;
@@ -13,6 +14,7 @@ import javax.persistence.Id;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 
+import isa.tim28.pharmacies.exceptions.ForbiddenOperationException;
 import isa.tim28.pharmacies.exceptions.PharmacyDataInvalidException;
 
 @Entity
@@ -119,18 +121,29 @@ public class Pharmacy {
 		this.ratings = ratings;
 	}
 	
+	public boolean offers(Medicine medicine) {
+		return medicines.stream().anyMatch(mq -> mq.getMedicine().getId() == medicine.getId());
+	}
+	
+	public void addMedicine(MedicineQuantity medicine) throws ForbiddenOperationException {
+		Optional<MedicineQuantity> mq = medicines.stream().filter(m -> m.getMedicine().getId() == medicine.getMedicine().getId()).findFirst();
+		if(mq.isEmpty())
+			throw new ForbiddenOperationException("Can't add quantity to medicine that is not offered!");
+		mq.get().setQuantity(mq.get().getQuantity() + medicine.getQuantity());
+	}
+
 	public boolean isNameValid() {
-		if(this.name == "" || this.name.length() < 2 || this.name.length() > 30) return false;
+		if(this.name == "" || this.name.length() < 2 || this.name.length() > 50) return false;
 		return true;
 	}
 	
 	public boolean isAddressValid() {
-		if(this.address == "" || this.address.length() < 2 || this.address.length() > 30) return false;
+		if(this.address == "" || this.address.length() < 2 || this.address.length() > 50) return false;
 		return true;
 	}
 	
 	public boolean isDescriptionValid() {
-		if(this.description == "" || this.description.length() < 2 || this.description.length() > 30) return false;
+		if(this.description == "" || this.description.length() < 2 || this.description.length() > 1000) return false;
 		return true;
 	}
 }

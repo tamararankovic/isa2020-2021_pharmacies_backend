@@ -1,7 +1,7 @@
 insert into users(id, name, surname, email, password, role, active, loged) values (1, 'Tamara', 'Rankovic', 'milijana.djordjevic1998@gmail.com', '1234', 0, TRUE, TRUE);
 insert into users(id, name, surname, email, password, role, active, loged) values (2, 'Tamara', 'Rankovic', 'email2@gmail.com', '1234', 1, TRUE, TRUE);
 insert into users(id, name, surname, email, password, role, active, loged) values (3, 'Tamara', 'Rankovic', 'email3@gmail.com', '1234', 2, TRUE, TRUE);
-insert into users(id, name, surname, email, password, role, active, loged) values (4, 'Tamara', 'Rankovic', 'email4@gmail.com', '1234', 3, TRUE, FALSE);
+insert into users(id, name, surname, email, password, role, active, loged) values (4, 'Tamara', 'Rankovic', 'rankovictamaraa@gmail.com', '1234', 3, TRUE, FALSE);
 insert into users(id, name, surname, email, password, role, active, loged) values (5, 'Tamara', 'Rankovic', 'email5@gmail.com', '1234', 4, TRUE, TRUE);
 insert into users(id, name, surname, email, password, role, active, loged) values (6, 'Tamara', 'Rankovic', 'email6@gmail.com', '1234', 5, TRUE, TRUE);
 insert into users(id, name, surname, email, password, role, active, loged) values (7, 'Milijana', 'Djordjevic', 'email7@gmail.com', '1234', 0, TRUE, TRUE);
@@ -22,8 +22,6 @@ insert into daily_engagement(id, day_of_week, end_time, start_time) values(2, 1,
 insert into daily_engagement(id, day_of_week, end_time, start_time) values(3, 2, '13:00:00.000000', '08:00:00.000000');
 insert into daily_engagement(id, day_of_week, end_time, start_time) values(4, 3, '13:00:00.000000', '08:00:00.000000');
 insert into daily_engagement(id, day_of_week, end_time, start_time) values(5, 4, '13:00:00.000000', '08:00:00.000000');
-
-
 insert into daily_engagement(id, day_of_week, end_time, start_time) values(6, 0, '13:00:00.000000', '08:00:00.000000');
 insert into daily_engagement(id, day_of_week, end_time, start_time) values(7, 1, '13:00:00.000000', '08:00:00.000000');
 insert into daily_engagement(id, day_of_week, end_time, start_time) values(8, 2, '13:00:00.000000', '08:00:00.000000');
@@ -36,7 +34,6 @@ insert into engagement_in_pharmacy_daily_engagements(engagement_in_pharmacy_id, 
 insert into engagement_in_pharmacy_daily_engagements(engagement_in_pharmacy_id, daily_engagements_id) values(1, 3);
 insert into engagement_in_pharmacy_daily_engagements(engagement_in_pharmacy_id, daily_engagements_id) values(1, 4);
 insert into engagement_in_pharmacy_daily_engagements(engagement_in_pharmacy_id, daily_engagements_id) values(1, 5);
-
 insert into engagement_in_pharmacy_daily_engagements(engagement_in_pharmacy_id, daily_engagements_id) values(2, 6);
 insert into engagement_in_pharmacy_daily_engagements(engagement_in_pharmacy_id, daily_engagements_id) values(2, 7);
 insert into engagement_in_pharmacy_daily_engagements(engagement_in_pharmacy_id, daily_engagements_id) values(2, 8);
@@ -87,7 +84,8 @@ insert into medicine_quantity(id, quantity, medicine_id) values (1, 5, 1);
 insert into medicine_quantity(id, quantity, medicine_id) values (2, 5, 2);
 insert into medicine_quantity(id, quantity, medicine_id) values (3, 0, 3);
 insert into medicine_quantity(id, quantity, medicine_id) values (4, 5, 4);
-alter sequence medicine_quantity_id_seq restart with 5;
+insert into medicine_quantity(id, quantity, medicine_id) values (5, 5, 4);
+alter sequence medicine_quantity_id_seq restart with 6;
 
 insert into medicine_compatible_medicine_codes(medicine_id, compatible_medicine_codes) values(3, 'LEK4');
 insert into medicine_compatible_medicine_codes(medicine_id, compatible_medicine_codes) values(3, 'LEK2');
@@ -104,4 +102,16 @@ insert into reservation(id, due_date, received, medicine_id, patient_id, pharmac
 insert into reservation(id, due_date, received, medicine_id, patient_id, pharmacy_id) values(2, '2021-02-04 08:00:00.000000', '0', 2, 1, 1);
 insert into reservation(id, due_date, received, medicine_id, patient_id, pharmacy_id) values(3, '2021-02-25 08:00:00.000000', '1', 3, 1, 1);
 alter sequence reservation_id_seq restart with 4;
+
+insert into supplier(id, user_id) values (1, 4);
+alter sequence supplier_id_seq restart with 2;
+
+insert into orders(id, deadline, admin_creator_id) values (1, '2021-02-04 20:21:00.000000', 1);
+alter sequence orders_id_seq restart with 2;
+
+insert into offer(id, accepted, supplier_id, total_price) values (1, FALSE, 1, 5000);
+alter sequence offer_id_seq restart with 2;
+
+insert into orders_offers(order_id, offers_id) values (1, 1);
+insert into orders_medicine_quantities(order_id, medicine_quantities_id) values (1, 5);
 

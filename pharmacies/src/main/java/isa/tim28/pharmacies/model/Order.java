@@ -2,6 +2,7 @@ package isa.tim28.pharmacies.model;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 
 import javax.persistence.CascadeType;
@@ -13,6 +14,9 @@ import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
+
+import isa.tim28.pharmacies.exceptions.ForbiddenOperationException;
+import isa.tim28.pharmacies.exceptions.NewOrderInvalidException;
 
 @Entity
 @Table(name = "orders")
@@ -30,7 +34,7 @@ public class Order {
 	@OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
 	private Set<Offer> offers = new HashSet<Offer>();
 	
-	@ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+	@ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
 	private PharmacyAdmin adminCreator;
 	
 	public Order() {
@@ -44,6 +48,19 @@ public class Order {
 		this.medicineQuantities = medicineQuantities;
 		this.deadline = deadline;
 		this.offers = offers;
+		this.adminCreator = adminCreator;
+	}
+	
+	public Order(Set<MedicineQuantity> medicineQuantities, LocalDateTime deadline,
+			PharmacyAdmin adminCreator) throws NewOrderInvalidException {
+		if (deadline.isBefore(LocalDateTime.now()))
+			throw new NewOrderInvalidException("Deadline set in the past!");
+		for (MedicineQuantity mq : medicineQuantities) {
+			if(mq.getQuantity() <= 0 || mq.getQuantity() >= 1000)
+				throw new NewOrderInvalidException("Quantity must be a number between 1 and 999!");
+		}
+		this.medicineQuantities = medicineQuantities;
+		this.deadline = deadline;
 		this.adminCreator = adminCreator;
 	}
 
@@ -86,4 +103,31 @@ public class Order {
 	public void setAdminCreator(PharmacyAdmin adminCreator) {
 		this.adminCreator = adminCreator;
 	}
+	
+	public boolean hasOffers() {
+		return offers.size() > 0;
+	}
+	
+	public boolean isWaitingOffers() {
+		return deadline.isAfter(LocalDateTime.now());
+	}
+	
+	public boolean hasWinner() {
+		return offers.stream().anyMatch(offer -> offer.isAccepted());
+	}
+	
+	public Offer getWinningOffer() {
+		Optional<Offer> o = offers.stream().filter(offer -> offer.isAccepted()).findFirst();
+		if(o.isEmpty()) return null;
+		return o.get();
+	}
+	
+	public void SetWinner(long offerId) throws ForbiddenOperationException {
+		Optional<Offer> offerOpt = offers.stream().filter(o -> o.getId() == offerId).findFirst();
+		if (offerOpt.isEmpty())
+			throw new ForbiddenOperationException("Order doesn't have an offer with provided id!");
+		Offer offer = offerOpt.get();
+		offer.setAccepted(true);
+	}
 }
+
