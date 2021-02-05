@@ -1,7 +1,5 @@
 package isa.tim28.pharmacies.model;
 
-import java.time.LocalDate;
-
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -23,20 +21,22 @@ public class MedicinePrice {
 	
 	@Column(name = "price", nullable = false)
 	private double price;
-	
-	@Column(name = "startDate", nullable = false)
-	private LocalDate startDate;
 
 	public MedicinePrice() {
 		super();
 	}
 	
-	public MedicinePrice(long id, Medicine medicine, double price, LocalDate startDate) {
+	public MedicinePrice(long id, Medicine medicine, double price) {
 		super();
 		this.id = id;
 		this.medicine = medicine;
 		this.price = price;
-		this.startDate = startDate;
+	}
+	
+	public MedicinePrice(Medicine medicine, double price) {
+		super();
+		this.medicine = medicine;
+		this.price = price;
 	}
 
 	public long getId() {
@@ -62,14 +62,4 @@ public class MedicinePrice {
 	public void setPrice(double price) {
 		this.price = price;
 	}
-
-	public LocalDate getStartDate() {
-		return startDate;
-	}
-
-	public void setStartDate(LocalDate startDate) {
-		this.startDate = startDate;
-	}
-	
-	
 }
