@@ -1,5 +1,6 @@
 package isa.tim28.pharmacies.service;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -11,20 +12,25 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import isa.tim28.pharmacies.dtos.DermatologistExaminationForPatientDTO;
+import isa.tim28.pharmacies.dtos.ItemPriceDTO;
 import isa.tim28.pharmacies.dtos.PharmacyAddAdminDTO;
 import isa.tim28.pharmacies.dtos.PharmacyBasicInfoDTO;
 import isa.tim28.pharmacies.dtos.PharmacyInfoForPatientDTO;
+import isa.tim28.pharmacies.dtos.PriceListDTO;
 import isa.tim28.pharmacies.exceptions.ForbiddenOperationException;
 import isa.tim28.pharmacies.exceptions.MedicineDoesNotExistException;
 import isa.tim28.pharmacies.exceptions.PharmacyDataInvalidException;
 import isa.tim28.pharmacies.exceptions.PharmacyNotFoundException;
+import isa.tim28.pharmacies.exceptions.PriceInvalidException;
 import isa.tim28.pharmacies.model.Dermatologist;
 import isa.tim28.pharmacies.model.DermatologistAppointment;
 import isa.tim28.pharmacies.model.Medicine;
+import isa.tim28.pharmacies.model.MedicinePrice;
 import isa.tim28.pharmacies.model.MedicineQuantity;
 import isa.tim28.pharmacies.model.Pharmacist;
 import isa.tim28.pharmacies.model.Pharmacy;
 import isa.tim28.pharmacies.model.PharmacyAdmin;
+import isa.tim28.pharmacies.model.PriceList;
 import isa.tim28.pharmacies.model.Rating;
 import isa.tim28.pharmacies.model.Reservation;
 import isa.tim28.pharmacies.repository.PharmacyRepository;
@@ -250,5 +256,86 @@ public class PharmacyService implements IPharmacyService {
 			if(r.isActive())
 				return true;
 		return false;
+	}
+
+	@Override
+	public PriceListDTO getCurrentPriceList(Pharmacy pharmacy) {
+		PriceListDTO priceList = new PriceListDTO();
+		Set<Medicine> allMedicines = pharmacy.getAllOfferedMedicines();
+		for(Medicine m : allMedicines) {
+			if(pharmacy.isPriceDefined(m))
+				priceList.getMedicinePrices().add(new ItemPriceDTO(m.getId(), m.getName(), pharmacy.getCurrentPrice(m), false));
+			else
+				priceList.getMedicinePrices().add(new ItemPriceDTO(m.getId(), m.getName(), 0, true));
+		}
+		if (pharmacy.isDermatologistAppointmentPriceDefined())
+			priceList.setDermatologistAppointmentPrice(new ItemPriceDTO(0, "", pharmacy.getDermatologistAppointmentCurrentPrice(), false));
+		else
+			priceList.setDermatologistAppointmentPrice(new ItemPriceDTO(0, "", 0, true));
+		if (pharmacy.isPharmacistAppointmentPriceDefined())
+			priceList.setPharmacistAppointmentPrice(new ItemPriceDTO(0, "", pharmacy.getPharmacistAppointmentCurrentPrice(), false));
+		else priceList.setPharmacistAppointmentPrice(new ItemPriceDTO(0, "", 0, true));
+		return priceList;
+	}
+
+	@Override
+	public void updatePriceLists(PriceListDTO dto, Pharmacy pharmacy) throws MedicineDoesNotExistException, ForbiddenOperationException, PriceInvalidException {
+		if(dto.getStartDate().isBefore(LocalDate.now()))
+			throw new ForbiddenOperationException("You can't set price list with start date in the past");
+		if (pharmacy.hasPriceListDefinedOnDate(dto.getStartDate())) {
+			updatePriceList(dto, pharmacy);
+		} else {
+			createPriceList(dto, pharmacy);
+		}
+	}
+	
+	private void updatePriceList(PriceListDTO dto, Pharmacy pharmacy) throws MedicineDoesNotExistException, PriceInvalidException {
+		if (!dto.getDermatologistAppointmentPrice().isUndefined()) {
+			pharmacy.getPriceListDefinedOnDate(dto.getStartDate()).setDermAppPriceDefined(true);
+			pharmacy.getPriceListDefinedOnDate(dto.getStartDate()).setDefaultDermatologistAppointmentPrice(dto.getDermatologistAppointmentPrice().getPrice());
+		}
+		
+		if(!dto.getPharmacistAppointmentPrice().isUndefined()) {
+			pharmacy.getPriceListDefinedOnDate(dto.getStartDate()).setPharmAppPriceDefined(true);
+			pharmacy.getPriceListDefinedOnDate(dto.getStartDate()).setPharmacistAppointmentPrice(dto.getPharmacistAppointmentPrice().getPrice());
+		}
+		
+		for(ItemPriceDTO mp : dto.getMedicinePrices()) {
+			Medicine m = medicineService.findById(mp.getItemId());
+			if (m != null) {
+				pharmacy.getPriceListDefinedOnDate(dto.getStartDate()).setPrice(m, mp.getPrice());
+			} else throw new MedicineDoesNotExistException("You are trying to add price to a medicine that doesn't exist!");
+		}
+		
+		pharmacyRepository.save(pharmacy);
+	}
+	
+	private void createPriceList(PriceListDTO dto, Pharmacy pharmacy) throws MedicineDoesNotExistException, PriceInvalidException {
+		PriceList pl = new PriceList();
+		pl.setStartDate(dto.getStartDate());
+		
+		if (dto.getDermatologistAppointmentPrice().isUndefined()) {
+			pl.setDermAppPriceDefined(false);
+		} else {
+			pl.setDermAppPriceDefined(true);
+			pl.setDefaultDermatologistAppointmentPrice(dto.getDermatologistAppointmentPrice().getPrice());
+		}
+		
+		if(dto.getPharmacistAppointmentPrice().isUndefined()) {
+			pl.setPharmAppPriceDefined(false);
+		} else {
+			pl.setPharmAppPriceDefined(true);
+			pl.setPharmacistAppointmentPrice(dto.getPharmacistAppointmentPrice().getPrice());
+		}
+		
+		for(ItemPriceDTO mp : dto.getMedicinePrices()) {
+			Medicine m = medicineService.findById(mp.getItemId());
+			if (m != null) {
+				pl.getMedicinePrices().add(new MedicinePrice(m, mp.getPrice()));
+			} else throw new MedicineDoesNotExistException("You are trying to add price to a medicine that doesn't exist!");
+		}
+		
+		pharmacy.getPriceLists().add(pl);
+		pharmacyRepository.save(pharmacy);
 	}
 }
