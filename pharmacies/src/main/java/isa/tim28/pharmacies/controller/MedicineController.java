@@ -2,6 +2,7 @@ package isa.tim28.pharmacies.controller;
 
 import java.util.List;
 import java.util.Set;
+
 import javax.servlet.http.HttpSession;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +16,8 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 import isa.tim28.pharmacies.dtos.MedicineForPharmacyAdminDTO;
+import isa.tim28.pharmacies.dtos.MedicineInPharmacyDTO;
+import isa.tim28.pharmacies.dtos.MedicineInfoDTO;
 import isa.tim28.pharmacies.dtos.SearchMedicineDTO;
 import isa.tim28.pharmacies.exceptions.UserDoesNotExistException;
 import isa.tim28.pharmacies.model.PharmacyAdmin;
@@ -22,7 +25,6 @@ import isa.tim28.pharmacies.model.Role;
 import isa.tim28.pharmacies.model.User;
 import isa.tim28.pharmacies.service.interfaces.IMedicineService;
 import isa.tim28.pharmacies.service.interfaces.IPharmacyAdminService;
-import isa.tim28.pharmacies.dtos.MedicineInfoDTO;
 
 @RestController
 @RequestMapping(value = "medicine")
@@ -56,7 +58,7 @@ public class MedicineController {
 	}
 	
 	@GetMapping(value = "offered-by-pharmacy")
-	public ResponseEntity<Set<MedicineForPharmacyAdminDTO>> getAllOffered(HttpSession session) {
+	public ResponseEntity<Set<MedicineInPharmacyDTO>> getAllOffered(HttpSession session) {
 		User user = (User)session.getAttribute("loggedInUser");
 		if (user == null) {
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not logged in!");
@@ -90,7 +92,7 @@ public class MedicineController {
 	}
 
 	@PostMapping(value = "search")
-	public ResponseEntity<Set<MedicineForPharmacyAdminDTO>> search(@RequestBody SearchMedicineDTO dto, HttpSession session) {
+	public ResponseEntity<Set<MedicineInPharmacyDTO>> search(@RequestBody SearchMedicineDTO dto, HttpSession session) {
 		User user = (User)session.getAttribute("loggedInUser");
 		if (user == null) {
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not logged in!");
