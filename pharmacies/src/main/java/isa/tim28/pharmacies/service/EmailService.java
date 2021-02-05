@@ -104,7 +104,7 @@ public class EmailService {
 		System.out.println("Slanje emaila za zakazivanje...");
 		String content = "Pozdrav " + name + ",<br>"
 	            + "Novi pregled je zakazan." + "<br>"
-	            + "Vreme pregleda: " + startDateTime.format(DateTimeFormatter.ofPattern("HH:MM, dd.MM.yyyy.")) + "<br>"
+	            + "Vreme pregleda: " + startDateTime.format(DateTimeFormatter.ofPattern("HH:mm, dd.MM.yyyy.")) + "<br>"
 	            + "Hvala Vam,<br>"
 	            + "ISA, TIM 28.";
 		

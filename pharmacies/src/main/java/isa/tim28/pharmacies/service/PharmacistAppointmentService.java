@@ -214,7 +214,7 @@ public class PharmacistAppointmentService implements IPharmacistAppointmentServi
 			else {
 				reservation.setReceived(true);
 				reservationRepository.save(reservation);
-				updateMedicineQuantityAfterReservation(reservation.getMedicine().getId(), reservation.getPharmacy());
+				//updateMedicineQuantityAfterReservation(reservation.getMedicine().getId(), reservation.getPharmacy());
 				return reservation;
 			}
 		} catch(Exception e) {
@@ -242,15 +242,19 @@ public class PharmacistAppointmentService implements IPharmacistAppointmentServi
 
 	@Override
 	public PharmacistAppointment savePharmacistAppointment(long lastAppointmentId, LocalDateTime startDateTime) {
-		PharmacistAppointment lastAppointment = appointmentRepository.findById(lastAppointmentId).get();
-		if(lastAppointment == null) return null;
-		PharmacistAppointment newAppointment = new PharmacistAppointment();
-		newAppointment.setPatient(lastAppointment.getPatient());
-		newAppointment.setPatientWasPresent(false);
-		newAppointment.setPharmacist(lastAppointment.getPharmacist());
-		newAppointment.setStartDateTime(startDateTime);
-		appointmentRepository.save(newAppointment);
-		return newAppointment;
+		try {
+			PharmacistAppointment lastAppointment = appointmentRepository.findById(lastAppointmentId).get();
+			if(lastAppointment == null) return null;
+			PharmacistAppointment newAppointment = new PharmacistAppointment();
+			newAppointment.setPatient(lastAppointment.getPatient());
+			newAppointment.setPatientWasPresent(false);
+			newAppointment.setPharmacist(lastAppointment.getPharmacist());
+			newAppointment.setStartDateTime(startDateTime);
+			appointmentRepository.save(newAppointment);
+			return newAppointment;
+		} catch(Exception e) {
+			return null;
+		}
 	}
 
 	@Override
@@ -298,7 +302,7 @@ public class PharmacistAppointmentService implements IPharmacistAppointmentServi
 		Set<DermatologistAppointment> dermAppointments = dermatologistAppointmentRepository.findAllByPatient_Id(patient.getId());
 		for(DermatologistAppointment appointment : dermAppointments) {
 			if(appointment.getStartDateTime().toLocalDate().equals(startDateTime.toLocalDate())) {
-				if(isTimeInInterval(startDateTime.toLocalTime(), appointment.getStartDateTime().toLocalTime(), appointment.getStartDateTime().toLocalTime().plusMinutes(30)))
+				if(isTimeInInterval(startDateTime.toLocalTime(), appointment.getStartDateTime().toLocalTime(), appointment.getStartDateTime().toLocalTime().plusMinutes(appointment.getDurationInMinutes())))
 					return false;
 			}
 		}

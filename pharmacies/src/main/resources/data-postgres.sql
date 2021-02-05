@@ -22,13 +22,26 @@ insert into daily_engagement(id, day_of_week, end_time, start_time) values(2, 1,
 insert into daily_engagement(id, day_of_week, end_time, start_time) values(3, 2, '13:00:00.000000', '08:00:00.000000');
 insert into daily_engagement(id, day_of_week, end_time, start_time) values(4, 3, '13:00:00.000000', '08:00:00.000000');
 insert into daily_engagement(id, day_of_week, end_time, start_time) values(5, 4, '13:00:00.000000', '08:00:00.000000');
-alter sequence daily_engagement_id_seq restart with 6;
+
+
+insert into daily_engagement(id, day_of_week, end_time, start_time) values(6, 0, '13:00:00.000000', '08:00:00.000000');
+insert into daily_engagement(id, day_of_week, end_time, start_time) values(7, 1, '13:00:00.000000', '08:00:00.000000');
+insert into daily_engagement(id, day_of_week, end_time, start_time) values(8, 2, '13:00:00.000000', '08:00:00.000000');
+insert into daily_engagement(id, day_of_week, end_time, start_time) values(9, 3, '13:00:00.000000', '08:00:00.000000');
+insert into daily_engagement(id, day_of_week, end_time, start_time) values(10, 4, '13:00:00.000000', '08:00:00.000000');
+alter sequence daily_engagement_id_seq restart with 11;
 
 insert into engagement_in_pharmacy_daily_engagements(engagement_in_pharmacy_id, daily_engagements_id) values(1, 1);
 insert into engagement_in_pharmacy_daily_engagements(engagement_in_pharmacy_id, daily_engagements_id) values(1, 2);
 insert into engagement_in_pharmacy_daily_engagements(engagement_in_pharmacy_id, daily_engagements_id) values(1, 3);
 insert into engagement_in_pharmacy_daily_engagements(engagement_in_pharmacy_id, daily_engagements_id) values(1, 4);
 insert into engagement_in_pharmacy_daily_engagements(engagement_in_pharmacy_id, daily_engagements_id) values(1, 5);
+
+insert into engagement_in_pharmacy_daily_engagements(engagement_in_pharmacy_id, daily_engagements_id) values(2, 6);
+insert into engagement_in_pharmacy_daily_engagements(engagement_in_pharmacy_id, daily_engagements_id) values(2, 7);
+insert into engagement_in_pharmacy_daily_engagements(engagement_in_pharmacy_id, daily_engagements_id) values(2, 8);
+insert into engagement_in_pharmacy_daily_engagements(engagement_in_pharmacy_id, daily_engagements_id) values(2, 9);
+insert into engagement_in_pharmacy_daily_engagements(engagement_in_pharmacy_id, daily_engagements_id) values(2, 10);
 
 insert into pharmacist(id, engegement_in_pharmacy_id, user_id) values (1, 1, 2);
 
@@ -52,8 +65,10 @@ alter sequence dermatologist_id_seq restart with 2;
 alter sequence medicine_id_seq restart with 3;
 alter sequence patient_id_seq restart with 3;
 
-insert into dermatologist_appointment(id, default_duration_in_minutes, duration_in_minutes, patient_was_present, price, scheduled, start_date_time, dermatologist_id, patient_id, pharmacy_id) values (1, 30, 30, '0', 2000, '0', '2021-02-08 08:30:00.000000', 1, 1, 1);
-alter sequence dermatologist_appointment_id_seq restart with 2;
+insert into dermatologist_appointment(id, default_duration_in_minutes, duration_in_minutes, patient_was_present, price, scheduled, start_date_time, dermatologist_id, patient_id, pharmacy_id) values (1, 30, 30, '0', 2000, '1', '2021-02-08 08:30:00.000000', 1, 1, 1);
+insert into dermatologist_appointment(id, default_duration_in_minutes, duration_in_minutes, patient_was_present, price, scheduled, start_date_time, dermatologist_id, patient_id, pharmacy_id) values (2, 30, 30, '0', 2000, '0', '2021-02-23 08:30:00.000000', 1, null, 1);
+insert into dermatologist_appointment(id, default_duration_in_minutes, duration_in_minutes, patient_was_present, price, scheduled, start_date_time, dermatologist_id, patient_id, pharmacy_id) values (3, 30, 30, '0', 2000, '0', '2021-02-24 08:30:00.000000', 1, null, 1);
+alter sequence dermatologist_appointment_id_seq restart with 4;
 
 insert into pharmacist_appointment(id, default_duration_in_minutes, patient_was_present, start_date_time, patient_id, pharmacist_id) values (1, 30, '0', '2021-02-08 08:00:00.000000', 1, 1);
 insert into pharmacist_appointment(id, default_duration_in_minutes, patient_was_present, start_date_time, patient_id, pharmacist_id) values (2, 30, '0', '2021-02-08 09:00:00.000000', 2, 1);

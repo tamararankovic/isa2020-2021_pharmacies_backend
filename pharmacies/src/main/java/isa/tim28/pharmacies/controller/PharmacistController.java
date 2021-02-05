@@ -434,7 +434,7 @@ public class PharmacistController {
 	*/
 	@PostMapping(value = "/saveAppointment", produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<String> saveAppointment(@RequestBody PharmacistSaveAppointmentDTO dto, HttpSession session){
-		/*
+		
 		User loggedInUser = (User) session.getAttribute("loggedInUser");
 		if(loggedInUser == null) {
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No logged in user!");
@@ -442,7 +442,7 @@ public class PharmacistController {
 		if(loggedInUser.getRole() != Role.PHARMACIST) {
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only pharmacist can schedule appointments.");
 		}
-		*/
+		
 		PharmacistAppointment appointment = pharmacistAppointmentService.savePharmacistAppointment(dto.getLastAppointmentId(), dto.getStartDateTime());
 		if(appointment != null) {
 			String patientName = appointment.getPatient().getUser().getName();
@@ -466,14 +466,14 @@ public class PharmacistController {
 	@PostMapping(value = "/appointment", produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<IsAppointmentAvailableDTO> isAppointmentAvailable(@RequestBody PharmacistSaveAppointmentDTO dto, HttpSession session){
 		
-		/*
+		
 		User loggedInUser = (User) session.getAttribute("loggedInUser");
 		if(loggedInUser == null) {
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No logged in user!");
 		}
 		if(loggedInUser.getRole() != Role.PHARMACIST) {
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only pharmacist can schedule appointments.");
-		}*/
+		}
 		
 		IsAppointmentAvailableDTO available = new IsAppointmentAvailableDTO(pharmacistAppointmentService.checkIfFreeAppointmentExists(dto.getLastAppointmentId(), dto.getStartDateTime()));
 		return new ResponseEntity<>(available, HttpStatus.OK);

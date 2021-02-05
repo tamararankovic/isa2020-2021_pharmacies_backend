@@ -1,8 +1,11 @@
 package isa.tim28.pharmacies.controller;
 
 import java.util.Set;
+import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.List;
 
+import javax.mail.MessagingException;
 import javax.servlet.http.HttpSession;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,7 +22,9 @@ import org.springframework.web.server.ResponseStatusException;
 import isa.tim28.pharmacies.dtos.DermatologistAppointmentDTO;
 import isa.tim28.pharmacies.dtos.DermatologistProfileDTO;
 import isa.tim28.pharmacies.dtos.DermatologistReportDTO;
+import isa.tim28.pharmacies.dtos.DermatologistSaveAppointmentDTO;
 import isa.tim28.pharmacies.dtos.IsAllergicDTO;
+import isa.tim28.pharmacies.dtos.IsAppointmentAvailableDTO;
 import isa.tim28.pharmacies.dtos.MedicineDTOM;
 import isa.tim28.pharmacies.dtos.MedicineDetailsDTO;
 import isa.tim28.pharmacies.dtos.MedicineQuantityCheckDTO;
@@ -27,6 +32,7 @@ import isa.tim28.pharmacies.dtos.PasswordChangeDTO;
 import isa.tim28.pharmacies.dtos.PatientReportAllergyDTO;
 import isa.tim28.pharmacies.dtos.DermatologistDTO;
 import isa.tim28.pharmacies.dtos.DermatologistToEmployDTO;
+import isa.tim28.pharmacies.dtos.ExistingDermatologistAppointmentDTO;
 import isa.tim28.pharmacies.dtos.NewDermatologistInPharmacyDTO;
 import isa.tim28.pharmacies.exceptions.AddingDermatologistToPharmacyException;
 import isa.tim28.pharmacies.dtos.PatientSearchDTO;
@@ -36,6 +42,7 @@ import isa.tim28.pharmacies.exceptions.BadSurnameException;
 import isa.tim28.pharmacies.exceptions.InvalidDeleteUserAttemptException;
 import isa.tim28.pharmacies.exceptions.PasswordIncorrectException;
 import isa.tim28.pharmacies.exceptions.UserDoesNotExistException;
+import isa.tim28.pharmacies.model.DermatologistAppointment;
 import isa.tim28.pharmacies.model.PharmacyAdmin;
 import isa.tim28.pharmacies.model.Role;
 import isa.tim28.pharmacies.model.User;
@@ -402,6 +409,106 @@ public class DermatologistController {
 		return new ResponseEntity<>(dermatologistAppointmentService.medicineDetails(medicineId), HttpStatus.OK);
 	}
 	
+	/*
+	 url: POST localhost:8081/derm/saveAppointment
+	 HTTP request for saving new appointment
+	 returns ResponseEntity object
+	*/
+	@PostMapping(value = "/saveAppointment", produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<String> saveAppointment(@RequestBody DermatologistSaveAppointmentDTO dto, HttpSession session){
+		
+		User loggedInUser = (User) session.getAttribute("loggedInUser");
+		if(loggedInUser == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No logged in user!");
+		}
+		if(loggedInUser.getRole() != Role.DERMATOLOGIST) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only dermatologist can schedule appointments.");
+		}
+		
+		DermatologistAppointment appointment = dermatologistAppointmentService.saveDermatologistAppointment(dto.getLastAppointmentId(), dto.getPrice(), dto.getStartDateTime());
+		if(appointment != null) {
+			String patientName = appointment.getPatient().getUser().getName();
+			String patientEmail = appointment.getPatient().getUser().getEmail();
+			LocalDateTime startDateTime = appointment.getStartDateTime();
+			try {
+				emailService.sendAppointmnetConfirmationAsync(patientName, patientEmail, startDateTime);
+				return new ResponseEntity<>("", HttpStatus.OK);
+			} catch (MessagingException e) {
+				throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email not sent.");
+			}
+		}
+		else throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No appointment.");
+	}
 	
+	/*
+	 url: POST localhost:8081/derm/appointment
+	 HTTP request for saving new appointment
+	 returns ResponseEntity object
+	*/
+	@PostMapping(value = "/appointment", produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<IsAppointmentAvailableDTO> isAppointmentAvailable(@RequestBody DermatologistSaveAppointmentDTO dto, HttpSession session){
+		
+		
+		User loggedInUser = (User) session.getAttribute("loggedInUser");
+		if(loggedInUser == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No logged in user!");
+		}
+		if(loggedInUser.getRole() != Role.DERMATOLOGIST) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only dermatologist can schedule appointments.");
+		}
+		IsAppointmentAvailableDTO available = new IsAppointmentAvailableDTO(dermatologistAppointmentService.checkIfFreeAppointmentExists(dto.getLastAppointmentId(), dto.getStartDateTime()));
+		return new ResponseEntity<>(available, HttpStatus.OK);
+	}
 	
+	/*
+	 url: GET localhost:8081/derm/appointments/{lastAppointmentId}
+	 HTTP request for existing appointment
+	 returns ResponseEntity object
+	*/
+	@GetMapping(value = "/appointments/{lastAppointmentId}", produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<Set<ExistingDermatologistAppointmentDTO>> existingAppointments(@PathVariable Long lastAppointmentId, HttpSession session){
+		
+		
+		User loggedInUser = (User) session.getAttribute("loggedInUser");
+		if(loggedInUser == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No logged in user!");
+		}
+		if(loggedInUser.getRole() != Role.DERMATOLOGIST) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only dermatologist can schedule appointments.");
+		}
+		Set<ExistingDermatologistAppointmentDTO> dtos = dermatologistAppointmentService.getExistingDermatologistAppointments(lastAppointmentId);
+		if(dtos == null) return new ResponseEntity<>(new HashSet<ExistingDermatologistAppointmentDTO>(), HttpStatus.NOT_FOUND);
+		return new ResponseEntity<>(dtos, HttpStatus.OK);
+	}
+	
+	/*
+	 url: GET localhost:8081/derm/appointments/{lastAppointmentId}
+	 HTTP request for existing appointment
+	 returns ResponseEntity object
+	*/
+	@GetMapping(value = "/saveExistingAppointment/{lastAppointmentId}/{newAppointmentId}", produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<String> existingAppointments(@PathVariable Long lastAppointmentId, @PathVariable Long newAppointmentId, HttpSession session){
+		
+		
+		User loggedInUser = (User) session.getAttribute("loggedInUser");
+		if(loggedInUser == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No logged in user!");
+		}
+		if(loggedInUser.getRole() != Role.DERMATOLOGIST) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only dermatologist can schedule appointments.");
+		}
+		DermatologistAppointment appointment = dermatologistAppointmentService.saveExistingDermatologistAppointment(lastAppointmentId, newAppointmentId);
+		if(appointment != null) {
+			String patientName = appointment.getPatient().getUser().getName();
+			String patientEmail = appointment.getPatient().getUser().getEmail();
+			LocalDateTime startDateTime = appointment.getStartDateTime();
+			try {
+				emailService.sendAppointmnetConfirmationAsync(patientName, patientEmail, startDateTime);
+				return new ResponseEntity<>("", HttpStatus.OK);
+			} catch (MessagingException e) {
+				throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email not sent.");
+			}
+		}
+		else throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No appointment.");
+	}
 }

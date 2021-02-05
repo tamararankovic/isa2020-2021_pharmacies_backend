@@ -9,5 +9,7 @@ import isa.tim28.pharmacies.model.DermatologistAppointment;
 public interface DermatologistAppointmentRepository extends JpaRepository<DermatologistAppointment, Long>{
 
 	Set<DermatologistAppointment> findAllByPatient_Id(long patient_Id);
+
+	Set<DermatologistAppointment> findAllByDermatologist_Id(long dermatologist_Id);
 	
 }
