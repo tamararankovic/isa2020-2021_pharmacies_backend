@@ -1,6 +1,5 @@
 package isa.tim28.pharmacies.controller;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import javax.servlet.http.HttpSession;
@@ -24,8 +23,6 @@ import isa.tim28.pharmacies.model.User;
 import isa.tim28.pharmacies.service.interfaces.IMedicineService;
 import isa.tim28.pharmacies.service.interfaces.IPharmacyAdminService;
 import isa.tim28.pharmacies.dtos.MedicineInfoDTO;
-import isa.tim28.pharmacies.dtos.PharmacyInfoForPatientDTO;
-import isa.tim28.pharmacies.exceptions.PharmacyNotFoundException;
 
 @RestController
 @RequestMapping(value = "medicine")

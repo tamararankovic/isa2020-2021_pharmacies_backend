@@ -7,6 +7,7 @@ import isa.tim28.pharmacies.dtos.PharmacyAddAdminDTO;
 import isa.tim28.pharmacies.dtos.PharmacyBasicInfoDTO;
 import isa.tim28.pharmacies.dtos.PharmacyInfoForPatientDTO;
 import isa.tim28.pharmacies.exceptions.ForbiddenOperationException;
+import isa.tim28.pharmacies.exceptions.MedicineDoesNotExistException;
 import isa.tim28.pharmacies.exceptions.PharmacyDataInvalidException;
 import isa.tim28.pharmacies.exceptions.PharmacyNotFoundException;
 import isa.tim28.pharmacies.model.Medicine;
@@ -34,5 +35,9 @@ public interface IPharmacyService {
 
 	void addNewmedicine(Pharmacy pharmacy, Medicine medicine);
 	
+	void addNewMedicines(Pharmacy pharmacy, Set<Long> medicineIds) throws MedicineDoesNotExistException;
+	
 	void addMedicines(Pharmacy pharmacy, Set<MedicineQuantity> medicines) throws ForbiddenOperationException;
+	
+	void deleteMedicine(Pharmacy pharmacy, long medicineId) throws MedicineDoesNotExistException, ForbiddenOperationException;
 }
