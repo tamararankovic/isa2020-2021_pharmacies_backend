@@ -29,4 +29,6 @@ public interface IPharmacyService {
 	
 	void update(PharmacyAdmin admin, PharmacyBasicInfoDTO dto) throws PharmacyNotFoundException, PharmacyDataInvalidException;
 
+	List<PharmacyInfoForPatientDTO> getPharmacyByMedicineId(long medicineId) throws PharmacyNotFoundException;
+
 }

@@ -18,6 +18,7 @@ import org.springframework.web.server.ResponseStatusException;
 import isa.tim28.pharmacies.dtos.MedicineInfoDTO;
 import isa.tim28.pharmacies.dtos.PharmacyInfoForPatientDTO;
 import isa.tim28.pharmacies.exceptions.PharmacyNotFoundException;
+import isa.tim28.pharmacies.model.Role;
 import isa.tim28.pharmacies.model.User;
 import isa.tim28.pharmacies.service.MedicineService;
 
@@ -37,12 +38,18 @@ public class MedicineController {
 	public ResponseEntity<List<MedicineInfoDTO>> getAllMedicine(@RequestBody MedicineInfoDTO dto, HttpSession session) {
 
 		User user = (User) session.getAttribute("loggedInUser");
-		if (user != null) {
-			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are logged in!");
+		if (user == null) {
+				return new ResponseEntity<>(medicineService.getAllMedicineInfo(dto.getName(), dto.getForm(),
+						dto.getType(), dto.getManufacturer()), HttpStatus.OK);
+
+			
+		} else if (user.getRole() == Role.PATIENT) {
+			
+				return new ResponseEntity<>(medicineService.getAllMedicineInfo(dto.getName(), dto.getForm(),
+						dto.getType(), dto.getManufacturer()), HttpStatus.OK);
+		} else {
+			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You don't have required permissions!");
 		}
-
-		return new ResponseEntity<>(medicineService.getAllMedicineInfo(dto.getName(),dto.getForm(),dto.getType(),dto.getManufacturer()), HttpStatus.OK);
-
 	}
-	
+
 }

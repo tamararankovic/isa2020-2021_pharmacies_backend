@@ -38,7 +38,7 @@ public class MedicineService implements IMedicineService {
 		List<MedicineInfoDTO> res = new ArrayList<MedicineInfoDTO>();
 		if (name.equals("") && form.equals("") && type.equals("") && manu.equals("")) {
 		for (Medicine m : getAllMedicine()) {
-			MedicineInfoDTO dto = new MedicineInfoDTO(m.getName(), m.getAdditionalInfo(), m.getAdvisedDailyDose(),
+			MedicineInfoDTO dto = new MedicineInfoDTO(m.getId(),m.getName(), m.getAdditionalInfo(), m.getAdvisedDailyDose(),
 					m.getForm().toString(), m.getManufacturer(), m.getType().toString(), m.getPoints());
 			res.add(dto);
 		}
@@ -46,7 +46,7 @@ public class MedicineService implements IMedicineService {
 		
 		}else {
 			for (Medicine m : findAllMedicineByCriteria(name, form,type, manu)) {
-				MedicineInfoDTO dto = new MedicineInfoDTO(m.getName(), m.getAdditionalInfo(), m.getAdvisedDailyDose(),
+				MedicineInfoDTO dto = new MedicineInfoDTO(m.getId(),m.getName(), m.getAdditionalInfo(), m.getAdvisedDailyDose(),
 						m.getForm().toString(), m.getManufacturer(), m.getType().toString(), m.getPoints());
 				res.add(dto);
 			}

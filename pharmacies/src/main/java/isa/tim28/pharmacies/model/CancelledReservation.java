@@ -12,20 +12,20 @@ import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 
 @Entity
-public class CancelledReservations {
+public class CancelledReservation {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private long id;
 	
-	@ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+	@ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
 	private Patient patient;
 	
-	@ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-	private Pharmacy pharmacy;
+	@Column(name = "pharmacy", nullable = false)
+	private String pharmacy;
 	
-	@ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-	private Medicine medicine;
+	@Column(name = "medicine", nullable = false)
+	private String medicine;
 	
 	@Column(name = "dueDate", nullable = false)
 	private LocalDateTime dueDate;
@@ -36,11 +36,11 @@ public class CancelledReservations {
 	@Column(name = "received", nullable = false)
 	private boolean received;
 	
-	public CancelledReservations() {
+	public CancelledReservation() {
 		super();
 	}
 
-	public CancelledReservations(long id, Patient patient, Pharmacy pharmacy, Medicine medicine, LocalDateTime dueDate,
+	public CancelledReservation(long id, Patient patient, String pharmacy, String medicine, LocalDateTime dueDate,
 			ReservationStatus status, boolean received) {
 		super();
 		this.id = id;
@@ -68,19 +68,19 @@ public class CancelledReservations {
 		this.patient = patient;
 	}
 
-	public Pharmacy getPharmacy() {
+	public String getPharmacy() {
 		return pharmacy;
 	}
 
-	public void setPharmacy(Pharmacy pharmacy) {
-		this.pharmacy = pharmacy;
+	public void setPharmacy(String string) {
+		this.pharmacy = string;
 	}
 
-	public Medicine getMedicine() {
+	public String getMedicine() {
 		return medicine;
 	}
 
-	public void setMedicine(Medicine medicine) {
+	public void setMedicine(String medicine) {
 		this.medicine = medicine;
 	}
 

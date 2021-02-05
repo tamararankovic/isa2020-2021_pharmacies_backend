@@ -92,15 +92,6 @@ public class PatientController {
 		} catch (UserDoesNotExistException e) {
 			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Patient with given id doesn't exist!");
 		}
-		/*
-		 * } catch (BadNameException e1) { throw new
-		 * ResponseStatusException(HttpStatus.BAD_REQUEST, "Bad name!"); } catch
-		 * (BadSurnameException e2) { throw new
-		 * ResponseStatusException(HttpStatus.BAD_REQUEST, "Bad surname!"); } catch
-		 * (BadNewEmailException e3) { throw new
-		 * ResponseStatusException(HttpStatus.BAD_REQUEST, "Bad email!"); }
-		 */
-
 		return new ResponseEntity<>(HttpStatus.OK);
 
 	}
