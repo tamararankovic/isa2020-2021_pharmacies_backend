@@ -275,7 +275,7 @@ public class PharmacyService implements IPharmacyService {
 		if (pharmacy.isPharmacistAppointmentPriceDefined())
 			priceList.setPharmacistAppointmentPrice(new ItemPriceDTO(0, "", pharmacy.getPharmacistAppointmentCurrentPrice(), false));
 		else priceList.setPharmacistAppointmentPrice(new ItemPriceDTO(0, "", 0, true));
-		return null;
+		return priceList;
 	}
 
 	@Override
