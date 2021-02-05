@@ -1,10 +1,12 @@
 package isa.tim28.pharmacies.service.interfaces;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 
 import isa.tim28.pharmacies.dtos.DermatologistAppointmentDTO;
 import isa.tim28.pharmacies.dtos.DermatologistReportDTO;
+import isa.tim28.pharmacies.dtos.ExistingDermatologistAppointmentDTO;
 import isa.tim28.pharmacies.dtos.MedicineDTOM;
 import isa.tim28.pharmacies.dtos.MedicineDetailsDTO;
 import isa.tim28.pharmacies.dtos.MedicineQuantityCheckDTO;
@@ -38,4 +40,13 @@ public interface IDermatologistAppointmentService {
 	boolean dermatologistHasIncomingAppointmentsInPharmacy(Dermatologist dermatologist, Pharmacy pharmacy);
 	
 	void deleteUnscheduledAppointments(Dermatologist dermatologist);
+	
+	DermatologistAppointment saveDermatologistAppointment(long lastAppointmentId, long price, LocalDateTime startDateTime);
+	
+	boolean checkIfFreeAppointmentExists(long lastAppointmentId, LocalDateTime startDateTime);
+	
+	Set<ExistingDermatologistAppointmentDTO> getExistingDermatologistAppointments(long lastAppointmentId);
+	
+	DermatologistAppointment saveExistingDermatologistAppointment(long lastAppointmentId, long newAppointmentId);
+	
 }

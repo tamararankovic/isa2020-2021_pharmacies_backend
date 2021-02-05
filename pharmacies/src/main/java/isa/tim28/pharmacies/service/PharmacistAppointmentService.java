@@ -4,7 +4,10 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -16,21 +19,26 @@ import isa.tim28.pharmacies.dtos.MedicineQuantityCheckDTO;
 import isa.tim28.pharmacies.dtos.ReservationValidDTO;
 import isa.tim28.pharmacies.dtos.TherapyDTO;
 import isa.tim28.pharmacies.exceptions.UserDoesNotExistException;
+import isa.tim28.pharmacies.model.DailyEngagement;
+import isa.tim28.pharmacies.model.DermatologistAppointment;
 import isa.tim28.pharmacies.model.Medicine;
 import isa.tim28.pharmacies.model.MedicineMissingNotification;
 import isa.tim28.pharmacies.model.MedicineQuantity;
 import isa.tim28.pharmacies.model.Patient;
 import isa.tim28.pharmacies.model.Pharmacist;
 import isa.tim28.pharmacies.model.PharmacistAppointment;
+import isa.tim28.pharmacies.model.PharmacistLeaveRequest;
 import isa.tim28.pharmacies.model.PharmacistReport;
 import isa.tim28.pharmacies.model.Pharmacy;
 import isa.tim28.pharmacies.model.Reservation;
 import isa.tim28.pharmacies.model.Therapy;
+import isa.tim28.pharmacies.repository.DermatologistAppointmentRepository;
 import isa.tim28.pharmacies.repository.MedicineMissingNotificationRepository;
 import isa.tim28.pharmacies.repository.MedicineQuantityRepository;
 import isa.tim28.pharmacies.repository.MedicineRepository;
 import isa.tim28.pharmacies.repository.PatientRepository;
 import isa.tim28.pharmacies.repository.PharmacistAppointmentRepository;
+import isa.tim28.pharmacies.repository.PharmacistLeaveRequestRepository;
 import isa.tim28.pharmacies.repository.PharmacistReportRepository;
 import isa.tim28.pharmacies.repository.ReservationRepository;
 import isa.tim28.pharmacies.service.interfaces.IPharmacistAppointmentService;
@@ -39,17 +47,21 @@ import isa.tim28.pharmacies.service.interfaces.IPharmacistAppointmentService;
 public class PharmacistAppointmentService implements IPharmacistAppointmentService  {
 
 	private PharmacistAppointmentRepository appointmentRepository;
+	private DermatologistAppointmentRepository dermatologistAppointmentRepository;
 	private PatientRepository patientRepository;
 	private MedicineRepository medicineRepository;
 	private PharmacistReportRepository pharmacistReportRepository;
 	private MedicineQuantityRepository medicineQuantityRepository;
 	private ReservationRepository reservationRepository;
 	private MedicineMissingNotificationRepository medicineMissingNotificationRepository;
+	private PharmacistLeaveRequestRepository pharmacistLeaveRequestRepository;
+	
 	
 	@Autowired
 	public PharmacistAppointmentService(PharmacistAppointmentRepository appointmentRepository, MedicineRepository medicineRepository, 
 			PharmacistReportRepository pharmacistReportRepository, PatientRepository patientRepository, MedicineQuantityRepository medicineQuantityRepository,
-			ReservationRepository reservationRepository, MedicineMissingNotificationRepository medicineMissingNotificationRepository) {
+			ReservationRepository reservationRepository, MedicineMissingNotificationRepository medicineMissingNotificationRepository,
+			PharmacistLeaveRequestRepository pharmacistLeaveRequestRepository, DermatologistAppointmentRepository dermatologistAppointmentRepository) {
 		super();
 		this.appointmentRepository = appointmentRepository;
 		this.medicineRepository = medicineRepository;
@@ -58,6 +70,8 @@ public class PharmacistAppointmentService implements IPharmacistAppointmentServi
 		this.medicineQuantityRepository = medicineQuantityRepository;
 		this.reservationRepository = reservationRepository;
 		this.medicineMissingNotificationRepository = medicineMissingNotificationRepository;
+		this.pharmacistLeaveRequestRepository = pharmacistLeaveRequestRepository;
+		this.dermatologistAppointmentRepository = dermatologistAppointmentRepository;
 	}
 	
 	@Override
@@ -200,7 +214,7 @@ public class PharmacistAppointmentService implements IPharmacistAppointmentServi
 			else {
 				reservation.setReceived(true);
 				reservationRepository.save(reservation);
-				updateMedicineQuantityAfterReservation(reservation.getMedicine().getId(), reservation.getPharmacy());
+				//updateMedicineQuantityAfterReservation(reservation.getMedicine().getId(), reservation.getPharmacy());
 				return reservation;
 			}
 		} catch(Exception e) {
@@ -225,4 +239,97 @@ public class PharmacistAppointmentService implements IPharmacistAppointmentServi
 				.filter(a -> a.getPharmacist().getId() == pharmacist.getId() 
 				&& a.getStartDateTime().isAfter(LocalDateTime.now())).count() > 0;
 	}
+
+	@Override
+	public PharmacistAppointment savePharmacistAppointment(long lastAppointmentId, LocalDateTime startDateTime) {
+		try {
+			PharmacistAppointment lastAppointment = appointmentRepository.findById(lastAppointmentId).get();
+			if(lastAppointment == null) return null;
+			PharmacistAppointment newAppointment = new PharmacistAppointment();
+			newAppointment.setPatient(lastAppointment.getPatient());
+			newAppointment.setPatientWasPresent(false);
+			newAppointment.setPharmacist(lastAppointment.getPharmacist());
+			newAppointment.setStartDateTime(startDateTime);
+			appointmentRepository.save(newAppointment);
+			return newAppointment;
+		} catch(Exception e) {
+			return null;
+		}
+	}
+
+	@Override
+	public boolean checkIfFreeAppointmentExists(long lastAppointmentId, LocalDateTime startDateTime) {
+		try {
+			PharmacistAppointment lastAppointment = appointmentRepository.findById(lastAppointmentId).get();
+			if(lastAppointment == null) return false;
+			if(!isPharmacistInPharmacy(lastAppointment.getPharmacist(), startDateTime)) return false;
+			if(!isPharmacistAvailable(lastAppointment.getPharmacist(), startDateTime)) return false;
+			if(!isPatientAvailable(lastAppointment.getPatient(), startDateTime)) return false;
+			if(!startDateTime.isAfter(LocalDateTime.now().plusMinutes(1))) return false;
+			return true;
+		} catch(Exception e) {
+			return false;
+		}
+	}
+	
+	private boolean isPharmacistInPharmacy(Pharmacist pharmacist, LocalDateTime startDateTime) {
+		DayOfWeek dayOfWeek = startDateTime.getDayOfWeek();
+		boolean isWorkingThatDay = false;
+		if (pharmacist.getEngegementInPharmacy().getDailyEngagements().isEmpty()) return false;
+		for (DailyEngagement dailyEngagement : pharmacist.getEngegementInPharmacy().getDailyEngagements()) {
+			if (dailyEngagement.getDayOfWeek().equals(dayOfWeek)) {
+				isWorkingThatDay = true;
+				if (!isTimeInInterval(startDateTime.toLocalTime(), dailyEngagement.getStartTime(), dailyEngagement.getEndTime()))
+					return false;
+			}
+		}
+		if(!isWorkingThatDay) return false;
+		for (PharmacistLeaveRequest request : pharmacistLeaveRequestRepository.findAllByPharmacist_Id(pharmacist.getId())) {
+			if (isDateInInterval(startDateTime.toLocalDate(), request.getStartDate(), request.getEndDate()) && request.isConfirmed()) 
+				return false;
+		}
+		return true;
+	}
+	
+	private boolean isPatientAvailable(Patient patient, LocalDateTime startDateTime) {
+		Set<PharmacistAppointment> pharmAppointments = appointmentRepository.findAllByPatient_Id(patient.getId());
+		for(PharmacistAppointment appointment : pharmAppointments) {
+			if(appointment.getStartDateTime().toLocalDate().equals(startDateTime.toLocalDate())) {
+				if(isTimeInInterval(startDateTime.toLocalTime(), appointment.getStartDateTime().toLocalTime(), appointment.getStartDateTime().toLocalTime().plusMinutes(30)))
+					return false;
+			}
+		}
+		Set<DermatologistAppointment> dermAppointments = dermatologistAppointmentRepository.findAllByPatient_Id(patient.getId());
+		for(DermatologistAppointment appointment : dermAppointments) {
+			if(appointment.getStartDateTime().toLocalDate().equals(startDateTime.toLocalDate())) {
+				if(isTimeInInterval(startDateTime.toLocalTime(), appointment.getStartDateTime().toLocalTime(), appointment.getStartDateTime().toLocalTime().plusMinutes(appointment.getDurationInMinutes())))
+					return false;
+			}
+		}
+		return true;
+	}
+	
+	private boolean isPharmacistAvailable(Pharmacist pharmacist, LocalDateTime startDateTime) {
+		Set<PharmacistAppointment> pharmAppointments = appointmentRepository.findAllByPharmacist_Id(pharmacist.getId());
+		for(PharmacistAppointment appointment : pharmAppointments) {
+			if(appointment.getStartDateTime().toLocalDate().equals(startDateTime.toLocalDate())) {
+				if(isTimeInInterval(startDateTime.toLocalTime(), appointment.getStartDateTime().toLocalTime(), appointment.getStartDateTime().toLocalTime().plusMinutes(30)))
+					return false;
+			}
+		}
+		return true;
+	}
+	
+	private boolean isTimeInInterval(LocalTime time, LocalTime startTime, LocalTime endTime) {
+		if(!time.isBefore(startTime) && !time.plusMinutes(30).isAfter(endTime)) return true;
+		if(time.isAfter(startTime) && time.isBefore(endTime)) return true;
+		if(time.plusMinutes(30).isAfter(startTime) && time.plusMinutes(30).isBefore(endTime)) return true;
+		return false;
+	}
+	
+	private boolean isDateInInterval(LocalDate date, LocalDate startDate, LocalDate endDate) {
+		if(!date.isBefore(startDate) && !date.isAfter(endDate)) return false;
+		return true;
+	}
+	
 }
