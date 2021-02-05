@@ -62,7 +62,7 @@ alter sequence engagement_in_pharmacy_id_seq restart with 4;
 alter sequence pharmacist_id_seq restart with 2;
 alter sequence pharmacy_admin_id_seq restart with 2;
 alter sequence dermatologist_id_seq restart with 2;
-alter sequence medicine_id_seq restart with 3;
+alter sequence medicine_id_seq restart with 5;
 alter sequence patient_id_seq restart with 3;
 
 insert into dermatologist_appointment(id, default_duration_in_minutes, duration_in_minutes, patient_was_present, price, scheduled, start_date_time, dermatologist_id, patient_id, pharmacy_id) values (1, 30, 30, '0', 2000, '1', '2021-02-08 08:30:00.000000', 1, 1, 1);
@@ -104,3 +104,4 @@ insert into reservation(id, due_date, received, medicine_id, patient_id, pharmac
 insert into reservation(id, due_date, received, medicine_id, patient_id, pharmacy_id) values(2, '2021-02-04 08:00:00.000000', '0', 2, 1, 1);
 insert into reservation(id, due_date, received, medicine_id, patient_id, pharmacy_id) values(3, '2021-02-25 08:00:00.000000', '1', 3, 1, 1);
 alter sequence reservation_id_seq restart with 4;
+

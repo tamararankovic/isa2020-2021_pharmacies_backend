@@ -148,4 +148,28 @@ public class Patient {
 		this.penalties = penalties;
 	}
 	
+	public boolean isAddressValid() {
+		if(this.address == "" || this.address.length() < 2 || this.address.length() > 30) return false;
+		return true;
+	}
+	
+	public boolean isCityValid() {
+		if(this.city == "" || this.city.length() < 2 || this.city.length() > 30) return false;
+		return true;
+	}
+	
+	public boolean isCountryValid() {
+		if(this.country == "" || this.country.length() < 2 || this.country.length() > 30) return false;
+		return true;
+	}
+	
+	public boolean isPhoneValid() {
+		if(this.phone == "" || this.phone.length() < 7 || this.phone.length() > 15) return false;
+		return true;
+	}
+	
+	
+	
+	
+	
 }

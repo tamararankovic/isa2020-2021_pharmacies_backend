@@ -5,6 +5,7 @@ import java.util.Set;
 
 public class PharmacyInfoForPatientDTO {
 
+	private long id;
 	private String name;
 	private String description;
 	private String address;
@@ -19,10 +20,11 @@ public class PharmacyInfoForPatientDTO {
 		// TODO Auto-generated constructor stub
 	}
 
-	public PharmacyInfoForPatientDTO(String name, String description, String address, double avgRating,
+	public PharmacyInfoForPatientDTO(long id,String name, String description, String address, double avgRating,
 			Set<String> pharmacists, Set<String> dermatologists, Set<String> medicines,
 			Set<DermatologistExaminationForPatientDTO> examinations) {
 		super();
+		this.id = id;
 		this.name = name;
 		this.description = description;
 		this.address = address;
@@ -33,6 +35,14 @@ public class PharmacyInfoForPatientDTO {
 		this.examinations = examinations;
 	}
 
+	
+	public long getId() {
+		return id;
+	}
+
+	public void setId(long id) {
+		this.id = id;
+	}
 	public String getName() {
 		return name;
 	}

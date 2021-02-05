@@ -80,6 +80,7 @@ public class PharmacyService implements IPharmacyService {
 			throw new PharmacyNotFoundException();
 		Pharmacy pharmacy = pharmacyRepository.findById(pharmacyId).get();
 		PharmacyInfoForPatientDTO dto = new PharmacyInfoForPatientDTO();
+		dto.setId(pharmacyId);
 		dto.setName(pharmacy.getName());
 		dto.setDescription(pharmacy.getDescription());
 		dto.setAddress(pharmacy.getAddress());
