@@ -45,5 +45,5 @@ public interface IPharmacyService {
 	
 	PriceListDTO getCurrentPriceList(Pharmacy pharmacy);
 	
-	void updatePriceLists(PriceListDTO dto, Pharmacy pharmacy) throws MedicineDoesNotExistException;
+	void updatePriceLists(PriceListDTO dto, Pharmacy pharmacy) throws MedicineDoesNotExistException, ForbiddenOperationException;
 }

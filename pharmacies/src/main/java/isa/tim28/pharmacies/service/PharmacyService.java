@@ -1,5 +1,6 @@
 package isa.tim28.pharmacies.service;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -277,7 +278,9 @@ public class PharmacyService implements IPharmacyService {
 	}
 
 	@Override
-	public void updatePriceLists(PriceListDTO dto, Pharmacy pharmacy) throws MedicineDoesNotExistException {
+	public void updatePriceLists(PriceListDTO dto, Pharmacy pharmacy) throws MedicineDoesNotExistException, ForbiddenOperationException {
+		if(dto.getStartDate().isBefore(LocalDate.now()))
+			throw new ForbiddenOperationException("You can't set price list with start date in the past");
 		if (pharmacy.hasPriceListDefinedOnDate(dto.getStartDate())) {
 			updatePriceList(dto, pharmacy);
 		} else {
