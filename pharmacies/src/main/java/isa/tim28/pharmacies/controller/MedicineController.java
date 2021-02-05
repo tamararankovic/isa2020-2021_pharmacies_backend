@@ -1,9 +1,11 @@
 package isa.tim28.pharmacies.controller;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
-
 import javax.servlet.http.HttpSession;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,6 +23,9 @@ import isa.tim28.pharmacies.model.Role;
 import isa.tim28.pharmacies.model.User;
 import isa.tim28.pharmacies.service.interfaces.IMedicineService;
 import isa.tim28.pharmacies.service.interfaces.IPharmacyAdminService;
+import isa.tim28.pharmacies.dtos.MedicineInfoDTO;
+import isa.tim28.pharmacies.dtos.PharmacyInfoForPatientDTO;
+import isa.tim28.pharmacies.exceptions.PharmacyNotFoundException;
 
 @RestController
 @RequestMapping(value = "medicine")
@@ -29,6 +34,7 @@ public class MedicineController {
 	private IMedicineService medicineService;
 	private IPharmacyAdminService pharmacyAdminService;
 	
+	@Autowired
 	public MedicineController(IMedicineService medicineService, IPharmacyAdminService pharmacyAdminService) {
 		super();
 		this.medicineService = medicineService;
@@ -101,5 +107,17 @@ public class MedicineController {
 		} catch(UserDoesNotExistException e1) {
 			throw new ResponseStatusException(HttpStatus.NOT_FOUND, e1.getMessage());
 		}
+	}
+
+	@PostMapping(value = "/all")
+	public ResponseEntity<List<MedicineInfoDTO>> getAllMedicine(@RequestBody MedicineInfoDTO dto, HttpSession session) {
+
+		User user = (User) session.getAttribute("loggedInUser");
+		if (user != null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not logged in!");
+		}
+
+		return new ResponseEntity<>(medicineService.getAllMedicineInfo(dto.getName(),dto.getForm(),dto.getType(),dto.getManufacturer()), HttpStatus.OK);
+
 	}
 }

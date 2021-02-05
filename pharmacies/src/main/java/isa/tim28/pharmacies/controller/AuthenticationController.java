@@ -16,6 +16,7 @@ import org.springframework.web.server.ResponseStatusException;
 import isa.tim28.pharmacies.dtos.PatientDTO;
 import isa.tim28.pharmacies.dtos.UserLoginDTO;
 import isa.tim28.pharmacies.dtos.UserPasswordChangeDTO;
+import isa.tim28.pharmacies.exceptions.CreatePatientException;
 import isa.tim28.pharmacies.exceptions.PasswordIncorrectException;
 import isa.tim28.pharmacies.exceptions.UserDoesNotExistException;
 import isa.tim28.pharmacies.model.Patient;
@@ -100,16 +101,16 @@ public class AuthenticationController {
 	}
 	
 	
-	@PostMapping(value = "/register", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<PatientDTO> registerPatient(@RequestBody PatientDTO patientDto, HttpSession session, HttpServletRequest request) throws Exception {
+	@PostMapping(value = "/register", consumes = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<String> registerPatient(@RequestBody PatientDTO patientDto, HttpSession session, HttpServletRequest request) throws Exception {
 		
 		if (session.getAttribute("loggedInUser") != null) {
-			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Cannot register while user is loged in!");
+			return new ResponseEntity<>("Cannot register while user is loged in!", HttpStatus.FORBIDDEN);
 		}
 		
 		User user = authenticationService.getUserByEmail(patientDto.getEmail());
 		if(user != null) {
-			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User with specified email address already exists!");
+			return new ResponseEntity<>("User with specified email address already exists!", HttpStatus.BAD_REQUEST);
 		}
 		User newUser = new User();
 		newUser.setName(patientDto.getName());
@@ -120,12 +121,24 @@ public class AuthenticationController {
 		newUser.setLoged(true);
 		newUser.setActive(false);
 		
+
+		if(!newUser.isNameValid()) throw new CreatePatientException("Name must have between 2 and 30 characters. Try again.");
+		if(!newUser.isSurnameValid()) throw new CreatePatientException("Surname must have between 2 and 30 characters. Try again.");
+		if(!newUser.isEmailValid()) throw new CreatePatientException("Email must have between 3 and 30 characters and contain @. Try again.");
+		if(!newUser.isPasswordValid()) throw new CreatePatientException("Password must have between 4 and 30 characters. Try again.");
+		
+		
 		Patient newPatient = new Patient();
 		newPatient.setAddress(patientDto.getAddress());
 		newPatient.setCity(patientDto.getCity());
 		newPatient.setCountry(patientDto.getCountry());
 		newPatient.setPhone(patientDto.getPhone());
 		newPatient.setUser(newUser);
+		
+		if(!newPatient.isAddressValid()) throw new CreatePatientException("Address must have between 2 and 30 characters. Try again.");
+		if(!newPatient.isCityValid()) throw new CreatePatientException("City must have between 2 and 30 characters. Try again.");
+		if(!newPatient.isCountryValid()) throw new CreatePatientException("Country must have between 2 and 30 characters. Try again.");
+		if(!newPatient.isPhoneValid()) throw new CreatePatientException("Phone must have between 7 and 15 characters. Try again.");
 		
 		try {
 			userService.save(newUser);
@@ -141,7 +154,7 @@ public class AuthenticationController {
 		
 		emailService.sendMailAsync(newUser, getSiteURL(request));
 		
-		return new ResponseEntity<>(patientDto, HttpStatus.CREATED);
+		return new ResponseEntity<>("", HttpStatus.CREATED);
 
 	}
 	

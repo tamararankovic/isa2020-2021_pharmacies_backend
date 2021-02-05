@@ -131,4 +131,19 @@ public class Pharmacy {
 			throw new ForbiddenOperationException("Can't add quantity to medicine that is not offered!");
 		mq.get().setQuantity(mq.get().getQuantity() + medicine.getQuantity());
 	}
+
+	public boolean isNameValid() {
+		if(this.name == "" || this.name.length() < 2 || this.name.length() > 50) return false;
+		return true;
+	}
+	
+	public boolean isAddressValid() {
+		if(this.address == "" || this.address.length() < 2 || this.address.length() > 50) return false;
+		return true;
+	}
+	
+	public boolean isDescriptionValid() {
+		if(this.description == "" || this.description.length() < 2 || this.description.length() > 1000) return false;
+		return true;
+	}
 }

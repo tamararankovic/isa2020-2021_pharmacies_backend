@@ -1,5 +1,6 @@
 package isa.tim28.pharmacies.service.interfaces;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import isa.tim28.pharmacies.dtos.DermatologistAppointmentDTO;
@@ -35,5 +36,9 @@ public interface IPharmacistAppointmentService {
 	Reservation reservationTaken(long reservationId);
 	
 	boolean pharmacistHasIncomingAppointments(Pharmacist pharmacist);
+	
+	PharmacistAppointment savePharmacistAppointment(long lastAppointmentId, LocalDateTime startDateTime);
+	
+	boolean checkIfFreeAppointmentExists(long lastAppointmentId, LocalDateTime startDateTime);
 
 }

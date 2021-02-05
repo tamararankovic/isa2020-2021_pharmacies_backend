@@ -26,13 +26,13 @@ public class Medicine {
 	private String code;
 	
 	@Column(name = "type", nullable = false)
-	private MedicineType type;
+	private MedicineType type = MedicineType.ANESTHETIC;
 	
 	@Column(name = "form", nullable = false)
-	private MedicineForm form;
+	private MedicineForm form= MedicineForm.CREAM;
 	
 	@Column(name = "withPrescription", nullable = false)
-	private boolean withPrescription;
+	private boolean withPrescription = true;
 	
 	@ElementCollection(fetch = FetchType.LAZY)
 	private Set<String> ingredients = new HashSet<String>();
@@ -47,7 +47,7 @@ public class Medicine {
 	private String additionalInfo;
 	
 	@Column(name = "points", nullable = false)
-	private int points;
+	private int points = 0;
 	
 	@OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
 	private Set<Rating> ratings = new HashSet<Rating>();
@@ -193,5 +193,32 @@ public class Medicine {
 	public void setAdvisedDailyDose(int advisedDailyDose) {
 		this.advisedDailyDose = advisedDailyDose;
 	}
+	public boolean isNameValid() {
+		if(this.name == "" || this.name.length() < 2 || this.name.length() > 30) return false;
+		return true;
+	}
+	public boolean isCodeValid() {
+		if(this.code == "" || this.code.length() < 2 || this.code.length() > 30) return false;
+		return true;
+	}
+	public boolean isManufacturerValid() {
+		if(this.manufacturer == "" || this.manufacturer.length() < 2 || this.manufacturer.length() > 30) return false;
+		return true;
+	}
+	public boolean isAdditionalInfoValid() {
+		if(this.code == "" || this.additionalInfo.length() < 2 || this.additionalInfo.length() > 30) return false;
+		return true;
+	}
+	public boolean isSideEffectsValid() {
+		if(this.sideEffects == "" || this.sideEffects.length() < 2 || this.sideEffects.length() > 30) return false;
+		return true;
+	}
+	public boolean isAdvisedDailyDose() {
+		if(this.advisedDailyDose >=1 && this.advisedDailyDose <=10) return true;
+		return false;
+	}
+	
+	
+	
 	
 }

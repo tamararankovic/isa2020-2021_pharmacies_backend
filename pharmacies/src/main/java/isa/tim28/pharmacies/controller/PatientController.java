@@ -1,6 +1,7 @@
 package isa.tim28.pharmacies.controller;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import javax.servlet.http.HttpSession;
 
@@ -9,34 +10,38 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
-
-
 import isa.tim28.pharmacies.dtos.PasswordChangeDTO;
 import isa.tim28.pharmacies.dtos.PatientProfileDTO;
+import isa.tim28.pharmacies.dtos.PharmacyAddAdminDTO;
 import isa.tim28.pharmacies.exceptions.BadNameException;
 import isa.tim28.pharmacies.exceptions.BadSurnameException;
 import isa.tim28.pharmacies.exceptions.PasswordIncorrectException;
+import isa.tim28.pharmacies.exceptions.PharmacyNotFoundException;
 import isa.tim28.pharmacies.exceptions.UserDoesNotExistException;
 import isa.tim28.pharmacies.model.Patient;
 import isa.tim28.pharmacies.model.Role;
 import isa.tim28.pharmacies.model.User;
 import isa.tim28.pharmacies.service.PatientService;
+import isa.tim28.pharmacies.service.SubscriptionService;
 
 @RestController
 @RequestMapping(value = "patient")
 public class PatientController {
 
 	private PatientService patientService;
+	private SubscriptionService subscriptionService;
 
 	@Autowired
-	public PatientController(PatientService patientService) {
+	public PatientController(PatientService patientService, SubscriptionService subscriptionService) {
 		super();
 		this.patientService = patientService;
+		this.subscriptionService = subscriptionService;
 	}
 
 	/*
@@ -169,5 +174,76 @@ public class PatientController {
 
 		return new ResponseEntity<ArrayList<String>>(medicine, HttpStatus.OK);
 	}
-
+	
+	@GetMapping(value = "benefits/{id}")
+	public ResponseEntity<String> subscribeToPharmacy(@PathVariable long id, HttpSession session) {
+		
+		User user = (User) session.getAttribute("loggedInUser");
+		if (user == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not logged in!");
+		}
+		if (user.getRole() != Role.PATIENT) {
+			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+		}
+		try {
+			if(subscriptionService.alreadySubscribed(user.getId(), id)==false) {
+				return new ResponseEntity<>("You have already subscribed to this pharmacy's actions and benefits", HttpStatus.BAD_REQUEST);
+			}
+		} catch (UserDoesNotExistException e) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
+		} catch (PharmacyNotFoundException e) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Pharmacy not found");
+		}
+		
+		try {
+			subscriptionService.subscribe(user.getId(), id);
+		} catch (UserDoesNotExistException e) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
+		} catch (PharmacyNotFoundException e) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Pharmacy not found");
+		}
+		return new ResponseEntity<>("", HttpStatus.OK);
+	}
+	
+	@GetMapping(value = "/getSubscribedPharmacies", produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<List<PharmacyAddAdminDTO>> getAllSubscribedPharmacies(HttpSession session){
+		
+		User user = (User) session.getAttribute("loggedInUser");
+		if (user == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not logged in!");
+		}
+		if (user.getRole() != Role.PATIENT) {
+			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+		}
+		List<PharmacyAddAdminDTO> pharmacies;
+		try {
+			pharmacies = subscriptionService.getAllSubscribedPharmacies(user.getId());
+		} catch (UserDoesNotExistException e) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
+		}
+		
+		return new ResponseEntity<>(pharmacies, HttpStatus.OK);
+	
+	}
+	@GetMapping(value = "cancel/{id}")
+	public ResponseEntity<String> cancelSubscription(@PathVariable long id, HttpSession session) {
+		
+		User user = (User) session.getAttribute("loggedInUser");
+		if (user == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not logged in!");
+		}
+		if (user.getRole() != Role.PATIENT) {
+			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+		}
+		try {
+			subscriptionService.cancelSubscription(user.getId(), id);
+		} catch (UserDoesNotExistException e) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
+		} catch (PharmacyNotFoundException e) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Pharmacy not found");
+		}
+		
+		return new ResponseEntity<>("", HttpStatus.OK);
+	}
+	
 }

@@ -16,7 +16,6 @@ import isa.tim28.pharmacies.exceptions.UserDoesNotExistException;
 import isa.tim28.pharmacies.model.Medicine;
 import isa.tim28.pharmacies.model.Patient;
 import isa.tim28.pharmacies.model.User;
-import isa.tim28.pharmacies.repository.MedicineRepository;
 import isa.tim28.pharmacies.repository.PatientRepository;
 import isa.tim28.pharmacies.repository.UserRepository;
 import isa.tim28.pharmacies.service.interfaces.IPatientService;
@@ -26,15 +25,15 @@ public class PatientService implements IPatientService {
 
 	private PatientRepository patientRepository;
 	private UserRepository userRepository;
-	private MedicineRepository medicineRepository;
+	private MedicineService medicineService;
 
 	@Autowired
 	public PatientService(PatientRepository patientRepository, UserRepository userRepository,
-			MedicineRepository medicineRepository) {
+			MedicineService medicineService) {
 		super();
 		this.patientRepository = patientRepository;
 		this.userRepository = userRepository;
-		this.medicineRepository = medicineRepository;
+		this.medicineService = medicineService;
 	}
 
 	@Override
@@ -71,7 +70,7 @@ public class PatientService implements IPatientService {
 		ArrayList<String> allergies = newPatient.getAllergies();
 		Set<Medicine> medicine = new HashSet<Medicine>();
 		for (String s : allergies) {
-			medicine.add(medicineRepository.findByName(s));
+			medicine.add(medicineService.getByName(s));
 		}
 		patient.setAllergies(medicine);
 
@@ -102,7 +101,7 @@ public class PatientService implements IPatientService {
 
 	@Override
 	public ArrayList<String> getAllMedicine(Patient patient) {
-		List<Medicine> medicine = medicineRepository.findAll();
+		List<Medicine> medicine = medicineService.getAllMedicine();
 		ArrayList<String> allergies = getAllAllergies(patient);
 
 		boolean medExistsInAllergies = false;

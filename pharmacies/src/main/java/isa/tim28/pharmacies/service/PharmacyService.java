@@ -3,15 +3,21 @@ package isa.tim28.pharmacies.service;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+
 import java.util.Optional;
+
 import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import isa.tim28.pharmacies.dtos.DermatologistExaminationForPatientDTO;
+
+
+
 import isa.tim28.pharmacies.dtos.PharmacyAddAdminDTO;
 import isa.tim28.pharmacies.dtos.PharmacyBasicInfoDTO;
+
 import isa.tim28.pharmacies.dtos.PharmacyInfoForPatientDTO;
 import isa.tim28.pharmacies.exceptions.ForbiddenOperationException;
 import isa.tim28.pharmacies.exceptions.PharmacyDataInvalidException;
@@ -20,6 +26,7 @@ import isa.tim28.pharmacies.model.Dermatologist;
 import isa.tim28.pharmacies.model.DermatologistAppointment;
 import isa.tim28.pharmacies.model.Medicine;
 import isa.tim28.pharmacies.model.MedicineQuantity;
+
 import isa.tim28.pharmacies.model.Pharmacist;
 import isa.tim28.pharmacies.model.Pharmacy;
 import isa.tim28.pharmacies.model.PharmacyAdmin;
@@ -32,12 +39,12 @@ import isa.tim28.pharmacies.service.interfaces.IPharmacyService;
 
 @Service
 public class PharmacyService implements IPharmacyService {
-	
+
 	private PharmacyRepository pharmacyRepository;
 	private IPharmacistService pharmacistService;
 	private IDermatologistService dermatologistService;
 	private IDermatologistAppointmentService appointmentService;
-	
+
 	@Autowired
 	public PharmacyService(PharmacyRepository pharmacyRepository, IPharmacistService pharmacistService,
 			IDermatologistService dermatologistService, IDermatologistAppointmentService appointmentService) {
@@ -49,49 +56,71 @@ public class PharmacyService implements IPharmacyService {
 	}
 
 	@Override
+	public ArrayList<PharmacyInfoForPatientDTO> getAllPharmacies(String name, String address)throws PharmacyNotFoundException {
+		
+		ArrayList<PharmacyInfoForPatientDTO> pharmacies = new ArrayList<PharmacyInfoForPatientDTO>();
+
+		if (name.equals("") && address.equals("")) {
+			List<Pharmacy> pharm = pharmacyRepository.findAll();
+			for (Pharmacy p : pharm) {
+				pharmacies.add(getPharmacyInfo(p.getId()));
+			}
+			return pharmacies;
+		}else {
+			List<Pharmacy> pharm = findAllPharmaciesWithCriteria(name, address);
+			for (Pharmacy p : pharm) {
+				pharmacies.add(getPharmacyInfo(p.getId()));
+			}
+			return pharmacies;
+		}
+	}
+
+	@Override
 	public PharmacyInfoForPatientDTO getPharmacyInfo(long pharmacyId) throws PharmacyNotFoundException {
 		if (pharmacyRepository.findById(pharmacyId).isEmpty())
 			throw new PharmacyNotFoundException();
 		Pharmacy pharmacy = pharmacyRepository.findById(pharmacyId).get();
 		PharmacyInfoForPatientDTO dto = new PharmacyInfoForPatientDTO();
+		dto.setId(pharmacyId);
 		dto.setName(pharmacy.getName());
 		dto.setDescription(pharmacy.getDescription());
 		dto.setAddress(pharmacy.getAddress());
 		double sumOfRatings = 0;
-		for(Rating r : pharmacy.getRatings())
+		for (Rating r : pharmacy.getRatings())
 			sumOfRatings += r.getRating();
 		dto.setAvgRating(pharmacy.getRatings().size() > 0 ? sumOfRatings / pharmacy.getRatings().size() : 0);
-		
+
 		Set<Pharmacist> pharmacists = pharmacistService.findAllByPharmacyId(pharmacyId);
 		Set<String> dtoPharmacists = new HashSet<String>();
 		for (Pharmacist p : pharmacists)
 			dtoPharmacists.add(p.getUser().getName() + " " + p.getUser().getSurname());
 		dto.setPharmacists(dtoPharmacists);
-		
+
 		Set<Dermatologist> dermatologists = dermatologistService.findAllByPharmacyId(pharmacyId);
 		Set<String> dtoDermatologists = new HashSet<String>();
 		for (Dermatologist d : dermatologists)
 			dtoDermatologists.add(d.getUser().getName() + " " + d.getUser().getSurname());
 		dto.setDermatologists(dtoDermatologists);
-		
+
 		Set<Medicine> medicines = findAllInStockByPharmacyId(pharmacyId);
 		Set<String> dtoMedicines = new HashSet<String>();
 		for (Medicine m : medicines)
 			dtoMedicines.add(m.getName());
 		dto.setMedicines(dtoMedicines);
-		
+
 		Set<DermatologistAppointment> appointments = appointmentService.findAllAvailableByPharmacyId(pharmacyId);
 		Set<DermatologistExaminationForPatientDTO> appDtos = new HashSet<DermatologistExaminationForPatientDTO>();
 		for (DermatologistAppointment a : appointments) {
 			DermatologistExaminationForPatientDTO appDto = new DermatologistExaminationForPatientDTO();
 			appDto.setStartDateTime(a.getStartDateTime());
-			appDto.setDermatologist(a.getDermatologist().getUser().getName() + " " + a.getDermatologist().getUser().getSurname());
+			appDto.setDermatologist(
+					a.getDermatologist().getUser().getName() + " " + a.getDermatologist().getUser().getSurname());
 			appDto.setDuration(a.getDurationInMinutes());
 			appDto.setPrice(a.getPrice());
 			appDtos.add(appDto);
 		}
 		dto.setExaminations(appDtos);
-		
+
 		return dto;
 	}
 
@@ -101,11 +130,25 @@ public class PharmacyService implements IPharmacyService {
 			throw new PharmacyNotFoundException();
 		Pharmacy pharmacy = pharmacyRepository.findById(pharmacyId).get();
 		Set<Medicine> ret = new HashSet<Medicine>();
-		for(MedicineQuantity mq : pharmacy.getMedicines())
-			if(mq.getQuantity() > 0)
+		for (MedicineQuantity mq : pharmacy.getMedicines()){
+			if (mq.getQuantity() > 0) {
 				ret.add(mq.getMedicine());
+				}
+			}
 		return ret;
 	}
+
+
+	private List<Pharmacy> findAllPharmaciesWithCriteria(String name, String address) {
+		List<Pharmacy> ret = new ArrayList<Pharmacy>();
+		for (Pharmacy p : pharmacyRepository.findAll()) {
+			if (p.getName().toLowerCase().contains(name.toLowerCase())
+					&& p.getAddress().toLowerCase().contains(address.toLowerCase()))
+				ret.add(p);
+		}
+		return ret;
+	}
+
 
 	@Override
 	public PharmacyBasicInfoDTO getBasicInfo(PharmacyAdmin admin) throws PharmacyNotFoundException {
