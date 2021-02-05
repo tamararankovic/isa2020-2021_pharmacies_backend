@@ -16,7 +16,7 @@ public class MedicineQuantity {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private long id;
 	
-	@ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+	@ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
 	private Medicine medicine;
 	
 	@Column(name = "quantity", nullable = false)
