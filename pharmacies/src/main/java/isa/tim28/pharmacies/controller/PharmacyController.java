@@ -3,6 +3,7 @@ package isa.tim28.pharmacies.controller;
 import java.util.ArrayList;
 import java.util.Set;
 
+import javax.mail.MessagingException;
 import javax.servlet.http.HttpSession;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+import isa.tim28.pharmacies.dtos.DealPromotionDTO;
 import isa.tim28.pharmacies.dtos.PharmacyBasicInfoDTO;
 import isa.tim28.pharmacies.dtos.PharmacyInfoForPatientDTO;
 import isa.tim28.pharmacies.dtos.PriceListDTO;
@@ -30,6 +32,7 @@ import isa.tim28.pharmacies.model.Role;
 import isa.tim28.pharmacies.model.User;
 import isa.tim28.pharmacies.service.interfaces.IPharmacyAdminService;
 import isa.tim28.pharmacies.service.interfaces.IPharmacyService;
+import isa.tim28.pharmacies.service.interfaces.ISubscriptionService;
 
 @RestController
 @RequestMapping("pharmacy")
@@ -37,12 +40,14 @@ public class PharmacyController {
 
 	private IPharmacyService pharmacyService;
 	private IPharmacyAdminService pharmacyAdminService;
+	private ISubscriptionService subscriptionService;
 
 	@Autowired
-	public PharmacyController(IPharmacyService pharmacyService, IPharmacyAdminService pharmacyAdminService) {
+	public PharmacyController(IPharmacyService pharmacyService, IPharmacyAdminService pharmacyAdminService, ISubscriptionService subscriptionService) {
 		super();
 		this.pharmacyService = pharmacyService;
 		this.pharmacyAdminService = pharmacyAdminService;
+		this.subscriptionService = subscriptionService;
 	}
 
 	@GetMapping(value = "info/{id}")
@@ -203,6 +208,26 @@ public class PharmacyController {
 		} catch (ForbiddenOperationException e) {
 			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
 		} catch (PriceInvalidException e) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+		}
+	}
+	
+	@PostMapping(value = "send-deals-promotions")
+	public void sendDealsPromotions(@RequestBody DealPromotionDTO dto, HttpSession session) {
+		User user = (User) session.getAttribute("loggedInUser");
+		if (user == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not logged in!");
+		}
+		if (user.getRole() != Role.PHARMACY_ADMIN) {
+			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You don't have required permissions!");
+		}
+		try {
+			PharmacyAdmin admin = pharmacyAdminService.findByUser(user);
+			subscriptionService.sendDealOrPromotionToAllSubscribed(dto, admin.getPharmacy());
+		} catch (UserDoesNotExistException e) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+		} catch (MessagingException e) {
+		} catch (ForbiddenOperationException e) {
 			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
 		}
 	}
