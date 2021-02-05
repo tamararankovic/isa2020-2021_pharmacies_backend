@@ -44,7 +44,7 @@ public class Patient {
 	@Column(name = "penalties", nullable = false)
 	private int penalties = 0;
 	
-	@ManyToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+	@ManyToMany(fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
 	private Set<Medicine> allergies = new HashSet<Medicine>();
 	
 	public Patient() {
