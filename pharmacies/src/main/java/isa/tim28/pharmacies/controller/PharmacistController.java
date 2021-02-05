@@ -29,6 +29,10 @@ import isa.tim28.pharmacies.dtos.PatientReportAllergyDTO;
 import isa.tim28.pharmacies.dtos.NewPharmacistDTO;
 import isa.tim28.pharmacies.dtos.PharmacistDTO;
 import isa.tim28.pharmacies.dtos.PatientSearchDTO;
+import isa.tim28.pharmacies.dtos.PharmAppByMonthDTO;
+import isa.tim28.pharmacies.dtos.PharmAppByWeekDTO;
+import isa.tim28.pharmacies.dtos.PharmAppByYearDTO;
+import isa.tim28.pharmacies.dtos.PharmAppDTO;
 import isa.tim28.pharmacies.dtos.PharmacistProfileDTO;
 import isa.tim28.pharmacies.dtos.PharmacistSaveAppointmentDTO;
 import isa.tim28.pharmacies.dtos.ReservationValidDTO;
@@ -477,5 +481,84 @@ public class PharmacistController {
 		
 		IsAppointmentAvailableDTO available = new IsAppointmentAvailableDTO(pharmacistAppointmentService.checkIfFreeAppointmentExists(dto.getLastAppointmentId(), dto.getStartDateTime()));
 		return new ResponseEntity<>(available, HttpStatus.OK);
+	}
+	
+	/*
+	 url: POST localhost:8081/pharm/week
+	 HTTP request for appointments for selected week
+	 returns ResponseEntity object
+	*/
+	@PostMapping(value = "/week", produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<List<PharmAppDTO>> getAppointmentsByWeek(@RequestBody PharmAppByWeekDTO dto, HttpSession session){
+		
+		User loggedInUser = (User) session.getAttribute("loggedInUser");
+		if(loggedInUser == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No logged in user!");
+		}
+		if(loggedInUser.getRole() != Role.PHARMACIST) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only pharmacist can schedule appointments.");
+		}
+		
+		List<PharmAppDTO> appointments = pharmacistAppointmentService.getAppointmentsByWeek(dto, loggedInUser.getId());
+		return new ResponseEntity<>(appointments, HttpStatus.OK);
+	}
+	
+	/*
+	 url: POST localhost:8081/pharm/month
+	 HTTP request for appointments for selected week
+	 returns ResponseEntity object
+	*/
+	@PostMapping(value = "/month", produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<List<PharmAppDTO>> getAppointmentsByMonth(@RequestBody PharmAppByMonthDTO dto, HttpSession session){
+		
+		User loggedInUser = (User) session.getAttribute("loggedInUser");
+		if(loggedInUser == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No logged in user!");
+		}
+		if(loggedInUser.getRole() != Role.PHARMACIST) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only pharmacist can schedule appointments.");
+		}
+		
+		List<PharmAppDTO> appointments = pharmacistAppointmentService.getAppointmentsByMonth(dto, loggedInUser.getId());
+		return new ResponseEntity<>(appointments, HttpStatus.OK);
+	}
+	
+	/*
+	 url: POST localhost:8081/pharm/year
+	 HTTP request for appointments for selected week
+	 returns ResponseEntity object
+	*/
+	@PostMapping(value = "/year", produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<List<PharmAppDTO>> getAppointmentsByYear(@RequestBody PharmAppByYearDTO dto, HttpSession session){
+		
+		User loggedInUser = (User) session.getAttribute("loggedInUser");
+		if(loggedInUser == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No logged in user!");
+		}
+		if(loggedInUser.getRole() != Role.PHARMACIST) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only pharmacist can schedule appointments.");
+		}
+		
+		List<PharmAppDTO> appointments = pharmacistAppointmentService.getAppointmentsByYear(dto, loggedInUser.getId());
+		return new ResponseEntity<>(appointments, HttpStatus.OK);
+	}
+	
+	/*
+	 url: GET localhost:8081/pharm/notPresent/{appointmentId}
+	 HTTP request for appointment
+	 returns ResponseEntity object
+	*/
+	@GetMapping(value = "/notPresent/{appointmentId}", produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<String> patientNotPresent(@PathVariable Long appointmentId, HttpSession session){
+		
+		User loggedInUser = (User) session.getAttribute("loggedInUser");
+		if(loggedInUser == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No logged in user!");
+		}
+		if(loggedInUser.getRole() != Role.PHARMACIST) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only pharmacist can get appointment.");
+		}
+		pharmacistAppointmentService.patientWasNotPresent(appointmentId);
+		return new ResponseEntity<>("", HttpStatus.OK);
 	}
 }

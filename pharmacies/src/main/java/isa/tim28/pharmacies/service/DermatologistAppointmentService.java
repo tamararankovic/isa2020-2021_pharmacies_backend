@@ -130,6 +130,8 @@ public class DermatologistAppointmentService implements IDermatologistAppointmen
 		}
 		report.setTherapies(therapies);
 		dermatologistReportRepository.save(report);
+		app.setDone(true);
+		appointmentRepository.save(app);
 		
 		/*
 		Set<Reservation> reservations = reservationRepository.findAllByAppointment(app.getId());
