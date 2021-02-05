@@ -1,26 +1,19 @@
 package isa.tim28.pharmacies.service;
 
-import java.io.Console;
-import java.sql.Date;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.Period;
-import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-
-import javax.servlet.WriteListener;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
-
 import isa.tim28.pharmacies.dtos.ReservationDTO;
 import isa.tim28.pharmacies.exceptions.UserDoesNotExistException;
-import isa.tim28.pharmacies.model.Patient;
+import isa.tim28.pharmacies.model.Pharmacy;
 import isa.tim28.pharmacies.model.Reservation;
 import isa.tim28.pharmacies.repository.ReservationRepository;
 import isa.tim28.pharmacies.service.interfaces.IReservationService;
@@ -80,6 +73,11 @@ public class ReservationService implements IReservationService {
 			return true;
 		}
 		return false;
+	}
+
+	@Override
+	public Set<Reservation> getAllByPharamcy(Pharmacy pharmacy) {
+		return reservationRepository.findAll().stream().filter(r -> r.getPharmacy().getId() == pharmacy.getId()).collect(Collectors.toSet());
 	}
 	
 	
