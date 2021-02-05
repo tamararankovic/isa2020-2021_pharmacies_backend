@@ -290,22 +290,20 @@ public class PharmacyService implements IPharmacyService {
 	}
 	
 	private void updatePriceList(PriceListDTO dto, Pharmacy pharmacy) throws MedicineDoesNotExistException, PriceInvalidException {
-		PriceList pl = pharmacy.getPriceListDefinedOnDate(dto.getStartDate());
-		
 		if (!dto.getDermatologistAppointmentPrice().isUndefined()) {
-			pl.setDermAppPriceDefined(true);
-			pl.setDefaultDermatologistAppointmentPrice(dto.getDermatologistAppointmentPrice().getPrice());
+			pharmacy.getPriceListDefinedOnDate(dto.getStartDate()).setDermAppPriceDefined(true);
+			pharmacy.getPriceListDefinedOnDate(dto.getStartDate()).setDefaultDermatologistAppointmentPrice(dto.getDermatologistAppointmentPrice().getPrice());
 		}
 		
 		if(!dto.getPharmacistAppointmentPrice().isUndefined()) {
-			pl.setPharmAppPriceDefined(true);
-			pl.setPharmacistAppointmentPrice(dto.getPharmacistAppointmentPrice().getPrice());
+			pharmacy.getPriceListDefinedOnDate(dto.getStartDate()).setPharmAppPriceDefined(true);
+			pharmacy.getPriceListDefinedOnDate(dto.getStartDate()).setPharmacistAppointmentPrice(dto.getPharmacistAppointmentPrice().getPrice());
 		}
 		
 		for(ItemPriceDTO mp : dto.getMedicinePrices()) {
 			Medicine m = medicineService.findById(mp.getItemId());
 			if (m != null) {
-				pl.setPrice(m, mp.getPrice());
+				pharmacy.getPriceListDefinedOnDate(dto.getStartDate()).setPrice(m, mp.getPrice());
 			} else throw new MedicineDoesNotExistException("You are trying to add price to a medicine that doesn't exist!");
 		}
 		
