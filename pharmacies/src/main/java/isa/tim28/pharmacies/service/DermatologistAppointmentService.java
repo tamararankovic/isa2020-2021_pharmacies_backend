@@ -179,6 +179,7 @@ public class DermatologistAppointmentService implements IDermatologistAppointmen
 					MedicineMissingNotification notification = new MedicineMissingNotification();
 					notification.setMedicine(mq.getMedicine());
 					notification.setPharmacy(pharmacy);
+					notification.setTimestamp(LocalDateTime.now());
 					medicineMissingNotificationRepository.save(notification);
 				}
 				return dto;
