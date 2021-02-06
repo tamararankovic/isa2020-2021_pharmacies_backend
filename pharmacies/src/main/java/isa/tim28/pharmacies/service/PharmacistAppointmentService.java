@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -20,7 +21,9 @@ import isa.tim28.pharmacies.dtos.ReservationValidDTO;
 import isa.tim28.pharmacies.dtos.TherapyDTO;
 import isa.tim28.pharmacies.exceptions.UserDoesNotExistException;
 import isa.tim28.pharmacies.model.DailyEngagement;
+import isa.tim28.pharmacies.model.Dermatologist;
 import isa.tim28.pharmacies.model.DermatologistAppointment;
+import isa.tim28.pharmacies.model.LeaveRequestState;
 import isa.tim28.pharmacies.model.Medicine;
 import isa.tim28.pharmacies.model.MedicineMissingNotification;
 import isa.tim28.pharmacies.model.MedicineQuantity;
@@ -328,8 +331,19 @@ public class PharmacistAppointmentService implements IPharmacistAppointmentServi
 	}
 	
 	private boolean isDateInInterval(LocalDate date, LocalDate startDate, LocalDate endDate) {
-		if(!date.isBefore(startDate) && !date.isAfter(endDate)) return false;
-		return true;
+		if(!date.isBefore(startDate) && !date.isAfter(endDate)) return true;
+		return false;
+	}
+	
+	@Override
+	public boolean pharmacisttHasAppointmentsInTimInterval(Pharmacist pharmacist, LocalDate startDate,
+			LocalDate endDate) {
+		Set<PharmacistAppointment> appointments = appointmentRepository.findAll().stream().filter(a -> a.getPharmacist().getId() == pharmacist.getId()).collect(Collectors.toSet());
+		for(PharmacistAppointment a : appointments) {
+			if (isDateInInterval(a.getStartDateTime().toLocalDate(), startDate, endDate))
+				return true;
+		}
+		return false;
 	}
 	
 }

@@ -1,5 +1,6 @@
 package isa.tim28.pharmacies.service.interfaces;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
@@ -49,4 +50,5 @@ public interface IDermatologistAppointmentService {
 	
 	DermatologistAppointment saveExistingDermatologistAppointment(long lastAppointmentId, long newAppointmentId);
 	
+	boolean dermatologistHasAppointmentsInTimInterval(Dermatologist dermatologist, LocalDate startDate, LocalDate endDate);
 }

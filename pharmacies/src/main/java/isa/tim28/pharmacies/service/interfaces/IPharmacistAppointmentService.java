@@ -1,5 +1,6 @@
 package isa.tim28.pharmacies.service.interfaces;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -40,5 +41,7 @@ public interface IPharmacistAppointmentService {
 	PharmacistAppointment savePharmacistAppointment(long lastAppointmentId, LocalDateTime startDateTime);
 	
 	boolean checkIfFreeAppointmentExists(long lastAppointmentId, LocalDateTime startDateTime);
+
+	boolean pharmacisttHasAppointmentsInTimInterval(Pharmacist pharmacist, LocalDate startDate, LocalDate endDate);
 
 }

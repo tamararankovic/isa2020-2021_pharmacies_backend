@@ -158,4 +158,43 @@ public class EmailService {
 	    
 		javaMailSender.send(message);
 	}
+	
+	@Async
+	public void notifyEmployeeLeaveRequestIsDeclined(String email, String fullName, String type, LocalDate startDate, LocalDate endDate, String reasonDeclined) throws MessagingException {
+		String content = "Poštovani/Poštovana " + fullName + ",<br>" +
+				"Vaš zahtev za " + type +
+				" od " + startDate.format(DateTimeFormatter.ofPattern("dd.MM.yyyy.")) + 
+				" do " + endDate.format(DateTimeFormatter.ofPattern("dd.MM.yyyy.")) 
+				+ " je odbijen." + "<br>" +
+				"Razlog zbog kog je zahtev obijen: " + reasonDeclined;
+				
+		MimeMessage message = javaMailSender.createMimeMessage();
+	    MimeMessageHelper helper = new MimeMessageHelper(message);
+	    helper.setFrom(env.getProperty("spring.mail.username"));
+		
+		helper.setTo(email);
+	    helper.setSubject("Odgovor na zahtev za " + type);
+	    helper.setText(content, true);
+	    
+		javaMailSender.send(message);
+	}
+	
+	@Async
+	public void notifyEmployeeLeaveRequestIsAccepted(String email, String fullName, String type, LocalDate startDate, LocalDate endDate) throws MessagingException {
+		String content = "Poštovani/Poštovana " + fullName + ",<br>" +
+				"Vaš zahtev za " + type +
+				" od " + startDate.format(DateTimeFormatter.ofPattern("dd.MM.yyyy.")) + 
+				" do " + endDate.format(DateTimeFormatter.ofPattern("dd.MM.yyyy.")) 
+				+ " je prihvaćen.";
+				
+		MimeMessage message = javaMailSender.createMimeMessage();
+	    MimeMessageHelper helper = new MimeMessageHelper(message);
+	    helper.setFrom(env.getProperty("spring.mail.username"));
+		
+		helper.setTo(email);
+	    helper.setSubject("Odgovor na zahtev za " + type);
+	    helper.setText(content, true);
+	    
+		javaMailSender.send(message);
+	}
 }
