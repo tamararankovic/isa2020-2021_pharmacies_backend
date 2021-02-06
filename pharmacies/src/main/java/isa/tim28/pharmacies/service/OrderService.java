@@ -11,11 +11,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import isa.tim28.pharmacies.dtos.MedicineForPharmacyAdminDTO;
+import isa.tim28.pharmacies.dtos.MedicineForSupplierDTO;
 import isa.tim28.pharmacies.dtos.NewMedicineQuantityDTO;
 import isa.tim28.pharmacies.dtos.NewOrderDTO;
 import isa.tim28.pharmacies.dtos.OfferDTO;
 import isa.tim28.pharmacies.dtos.OrderForPharmacyAdminDTO;
+import isa.tim28.pharmacies.dtos.OrderForSupplierDTO;
 import isa.tim28.pharmacies.dtos.OrderedMedicineDTO;
+import isa.tim28.pharmacies.dtos.OrderedMedicineForSupplierDTO;
 import isa.tim28.pharmacies.dtos.UpdateOrderDTO;
 import isa.tim28.pharmacies.exceptions.ForbiddenOperationException;
 import isa.tim28.pharmacies.exceptions.NewOrderInvalidException;
@@ -48,6 +51,15 @@ public class OrderService implements IOrderService {
 		this.emailService = emailService;
 	}
 
+
+	@Override
+	public Order getOrderById(long id) {
+		Optional<Order> order = orderRepository.findById(id);
+		if(order.isEmpty())
+			return null;
+		return order.get();
+	}
+	
 	@Override
 	public void create(NewOrderDTO order, PharmacyAdmin admin) throws NewOrderInvalidException {
 		Set<MedicineQuantity> medicines = new HashSet<MedicineQuantity>();
@@ -65,6 +77,35 @@ public class OrderService implements IOrderService {
 				pharmacyService.addNewmedicine(admin.getPharmacy(), mq.getMedicine());
 	}
 
+	@Override
+	public Set<Order> getAllOrdersForSupplier(){
+		return orderRepository.findAll().stream().collect(Collectors.toSet());
+	}
+	
+	@Override
+	public Set<OrderForSupplierDTO> getAllOrders(){
+		Set<Order> allOrders = orderRepository.findAll().stream().collect(Collectors.toSet());
+		Set<OrderForSupplierDTO> orders = new HashSet<OrderForSupplierDTO>();
+		for(Order o : allOrders) {
+			String state;
+			if(o.isWaitingOffers())
+				state = "WAITING OFFERS";
+			else if (o.hasWinner())
+				state = "PROCESSED";
+			else
+				state = "WAITING ON THE WINNER OFFER";
+			
+			Set<OrderedMedicineForSupplierDTO> medicines = new HashSet<OrderedMedicineForSupplierDTO>();
+			for(MedicineQuantity mq : o.getMedicineQuantities()) {
+				medicines.add(new OrderedMedicineForSupplierDTO(new MedicineForSupplierDTO(mq.getMedicine().getId(), mq.getMedicine().getCode(), mq.getMedicine().getName(), mq.getMedicine().getType().toString(), mq.getMedicine().getManufacturer()), mq.getQuantity()));
+			}
+			
+			String pharmacyName = o.getAdminCreator().getPharmacy().getName();
+			
+			orders.add(new OrderForSupplierDTO(o.getId(), medicines, o.getDeadline(), state, pharmacyName));
+		}
+		return orders;
+	}
 	@Override
 	public Set<OrderForPharmacyAdminDTO> get(PharmacyAdmin admin) {
 		Set<Order> allOrders = getByPharmacy(admin.getPharmacy());
@@ -168,4 +209,11 @@ public class OrderService implements IOrderService {
 			throw new ForbiddenOperationException("You can't delete orders that you hadn't made!");
 		orderRepository.delete(order);
 	}
+	
+	@Override
+	public Order save(Order order) {
+		Order newOrder = orderRepository.save(order);
+		return newOrder;
+	}
+
 }

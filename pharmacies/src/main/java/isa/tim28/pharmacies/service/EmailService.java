@@ -1,5 +1,6 @@
 package isa.tim28.pharmacies.service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
@@ -97,6 +98,7 @@ public class EmailService {
 		System.out.println("Email poslat!");
 	}
 	
+	@Async
 	public void sendEmailToSupplier(String email, String name, String text, long offerId) throws MessagingException {
 		String content = "Poštovani/Poštovana " + name + ",<br>"
 	            + "Vaša ponuda je " + text + "<br>"
@@ -137,5 +139,23 @@ public class EmailService {
 
 		System.out.println("Email za zakazivanje poslat!");
 	}
-
+	
+	@Async
+	public void sendEmailDealPromotion(String email, String pharmacyName, String type, String text, LocalDate startDateTIme, LocalDate endDateTime) throws MessagingException {
+		String content = text + "<br>" +
+				"Datum početka ponude: " + 
+				startDateTIme.format(DateTimeFormatter.ofPattern("dd.MM.yyyy.")) +"<br>" + 
+				"Datum isteka ponude: " +
+				endDateTime.format(DateTimeFormatter.ofPattern("dd.MM.yyyy."));
+				
+		MimeMessage message = javaMailSender.createMimeMessage();
+	    MimeMessageHelper helper = new MimeMessageHelper(message);
+	    helper.setFrom(env.getProperty("spring.mail.username"));
+		
+		helper.setTo(email);
+	    helper.setSubject(type + " iz apoteke " + pharmacyName);
+	    helper.setText(content, true);
+	    
+		javaMailSender.send(message);
+	}
 }

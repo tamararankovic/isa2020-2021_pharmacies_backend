@@ -95,5 +95,9 @@ public class Reservation {
 	public void setReceived(boolean received) {
 		this.received = received;
 	}
+	
+	public boolean isActive() {
+		return dueDate.isAfter(LocalDateTime.now()) && !received;
+	}
 
 }
