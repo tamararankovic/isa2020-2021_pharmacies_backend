@@ -199,19 +199,25 @@ public class PharmacyService implements IPharmacyService {
 	}
 	
 	@Override
-	public List<PharmacyInfoForPatientDTO> getPharmacyByMedicineId(long medicineId) throws PharmacyNotFoundException {
-		List<PharmacyInfoForPatientDTO> res = new ArrayList<PharmacyInfoForPatientDTO>();
+	public List<PharmacyBasicInfoDTO> getPharmacyByMedicineId(long medicineId) throws PharmacyNotFoundException {
+		List<PharmacyBasicInfoDTO> res = new ArrayList<PharmacyBasicInfoDTO>();
 		List<Pharmacy> pharmacies = pharmacyRepository.findAll();
 		for(Pharmacy p : pharmacies) {
 			Set<Medicine> allMedicine = findAllInStockByPharmacyId(p.getId());
 			for(Medicine m : allMedicine) {
 				if(medicineId ==m.getId()) {
-					res.add(getPharmacyInfo(p.getId()));
+					PharmacyBasicInfoDTO pharm = new PharmacyBasicInfoDTO(p.getName(),p.getDescription(),p.getAddress());
+					res.add(pharm);
 					continue;
 				}
 			}
 		}
 		return res;
+	}
+
+	@Override
+	public Pharmacy getByName(String name) {
+		return pharmacyRepository.findByName(name);
 	}
 
 }

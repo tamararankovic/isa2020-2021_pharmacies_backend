@@ -6,4 +6,5 @@ import isa.tim28.pharmacies.model.Pharmacy;
 
 public interface PharmacyRepository extends JpaRepository<Pharmacy, Long> {
 
+	Pharmacy findByName(String name);
 }

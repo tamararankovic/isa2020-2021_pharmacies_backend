@@ -128,7 +128,7 @@ public class PharmacyController {
 	}
 
 	@PostMapping(value = "/getByMedicine",  produces = MediaType.APPLICATION_JSON_VALUE,consumes = MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<List<PharmacyInfoForPatientDTO>> getPharmacyByMedicine(@RequestBody MedicineInfoDTO dto, HttpSession session) {
+	public ResponseEntity<List<PharmacyBasicInfoDTO>> getPharmacyByMedicine(@RequestBody MedicineInfoDTO dto, HttpSession session) {
 		User loggedInUser = (User) session.getAttribute("loggedInUser");
 		if (loggedInUser == null) {
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No logged in user!");
@@ -137,7 +137,7 @@ public class PharmacyController {
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only patient can view his profile data.");
 		}
 		
-		List<PharmacyInfoForPatientDTO> res = new ArrayList<PharmacyInfoForPatientDTO>();
+		List<PharmacyBasicInfoDTO> res = new ArrayList<PharmacyBasicInfoDTO>();
 		try {
 			res = pharmacyService.getPharmacyByMedicineId(dto.getId());
 		} catch (PharmacyNotFoundException e) {

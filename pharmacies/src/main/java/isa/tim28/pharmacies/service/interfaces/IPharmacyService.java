@@ -22,13 +22,19 @@ public interface IPharmacyService {
 	ArrayList<PharmacyInfoForPatientDTO> getAllPharmacies(String name, String address) throws PharmacyNotFoundException;
 
 	Pharmacy save(Pharmacy pharmacy);
+	
 	List<PharmacyAddAdminDTO> getAllPharmacies();
+	
 	Pharmacy getPharmacyById(long pharmacyId) throws PharmacyNotFoundException;
 	
 	PharmacyBasicInfoDTO getBasicInfo(PharmacyAdmin admin) throws PharmacyNotFoundException;
 	
 	void update(PharmacyAdmin admin, PharmacyBasicInfoDTO dto) throws PharmacyNotFoundException, PharmacyDataInvalidException;
 
-	List<PharmacyInfoForPatientDTO> getPharmacyByMedicineId(long medicineId) throws PharmacyNotFoundException;
+	List<PharmacyBasicInfoDTO> getPharmacyByMedicineId(long medicineId) throws PharmacyNotFoundException;
+	
+	Pharmacy getByName(String name);
+	
+	
 
 }
