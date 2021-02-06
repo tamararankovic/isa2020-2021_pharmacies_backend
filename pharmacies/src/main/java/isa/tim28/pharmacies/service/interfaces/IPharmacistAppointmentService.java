@@ -1,5 +1,6 @@
 package isa.tim28.pharmacies.service.interfaces;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -52,5 +53,7 @@ public interface IPharmacistAppointmentService {
 	List<PharmAppDTO> getAppointmentsByYear(PharmAppByYearDTO dto, long userId);
 	
 	void patientWasNotPresent(long appointmentId);
+
+	boolean pharmacisttHasAppointmentsInTimInterval(Pharmacist pharmacist, LocalDate startDate, LocalDate endDate);
 
 }

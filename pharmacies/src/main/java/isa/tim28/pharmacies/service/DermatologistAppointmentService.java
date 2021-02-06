@@ -30,6 +30,7 @@ import isa.tim28.pharmacies.model.DermatologistAppointment;
 import isa.tim28.pharmacies.model.DermatologistLeaveRequest;
 import isa.tim28.pharmacies.model.DermatologistReport;
 import isa.tim28.pharmacies.model.EngagementInPharmacy;
+import isa.tim28.pharmacies.model.LeaveRequestState;
 import isa.tim28.pharmacies.model.Medicine;
 import isa.tim28.pharmacies.model.MedicineMissingNotification;
 import isa.tim28.pharmacies.model.MedicineQuantity;
@@ -214,6 +215,7 @@ public class DermatologistAppointmentService implements IDermatologistAppointmen
 		else return new MedicineDetailsDTO();
 	}
 	
+	@Override
 	public boolean dermatologistHasIncomingAppointmentsInPharmacy(Dermatologist dermatologist, Pharmacy pharmacy) {
 		return appointmentRepository.findAll().stream().filter(a -> a.getDermatologist().getId() == dermatologist.getId()
 				&& a.getPharmacy().getId() == pharmacy.getId()
@@ -328,7 +330,7 @@ public class DermatologistAppointmentService implements IDermatologistAppointmen
 		}
 		if(!isWorkingThatDay) return false;
 		for (DermatologistLeaveRequest request : dermatologistLeaveRequestRepository.findAllByDermatologist_Id(dermatologist.getId())) {
-			if (isDateInInterval(startDateTime.toLocalDate(), request.getStartDate(), request.getEndDate()) && request.isConfirmed()) 
+			if (isDateInInterval(startDateTime.toLocalDate(), request.getStartDate(), request.getEndDate()) && request.getState() == LeaveRequestState.ACCEPTED) 
 				return false;
 		}
 		return true;
@@ -371,8 +373,19 @@ public class DermatologistAppointmentService implements IDermatologistAppointmen
 	}
 	
 	private boolean isDateInInterval(LocalDate date, LocalDate startDate, LocalDate endDate) {
-		if(!date.isBefore(startDate) && !date.isAfter(endDate)) return false;
-		return true;
+		if(!date.isBefore(startDate) && !date.isAfter(endDate)) return true;
+		return false;
+	}
+
+	@Override
+	public boolean dermatologistHasAppointmentsInTimInterval(Dermatologist dermatologist, LocalDate startDate,
+			LocalDate endDate) {
+		Set<DermatologistAppointment> appointments = appointmentRepository.findAll().stream().filter(a -> a.getDermatologist().getId() == dermatologist.getId()).collect(Collectors.toSet());
+		for(DermatologistAppointment a : appointments) {
+			if (isDateInInterval(a.getStartDateTime().toLocalDate(), startDate, endDate))
+				return true;
+		}
+		return false;
 	}
 
 	@Override
