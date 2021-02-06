@@ -1,13 +1,18 @@
 package isa.tim28.pharmacies.controller;
 
 import java.util.ArrayList;
+
+import java.util.List;
+
 import java.util.Set;
+
 
 import javax.mail.MessagingException;
 import javax.servlet.http.HttpSession;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -17,7 +22,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+import isa.tim28.pharmacies.dtos.MedicineInfoDTO;
+
 import isa.tim28.pharmacies.dtos.DealPromotionDTO;
+
 import isa.tim28.pharmacies.dtos.PharmacyBasicInfoDTO;
 import isa.tim28.pharmacies.dtos.PharmacyInfoForPatientDTO;
 import isa.tim28.pharmacies.dtos.PriceListDTO;
@@ -32,6 +40,7 @@ import isa.tim28.pharmacies.model.Role;
 import isa.tim28.pharmacies.model.User;
 import isa.tim28.pharmacies.service.interfaces.IPharmacyAdminService;
 import isa.tim28.pharmacies.service.interfaces.IPharmacyService;
+import isa.tim28.pharmacies.service.interfaces.IReservationService;
 import isa.tim28.pharmacies.service.interfaces.ISubscriptionService;
 
 @RestController
@@ -41,13 +50,15 @@ public class PharmacyController {
 	private IPharmacyService pharmacyService;
 	private IPharmacyAdminService pharmacyAdminService;
 	private ISubscriptionService subscriptionService;
+	private IReservationService reservationService;
 
 	@Autowired
-	public PharmacyController(IPharmacyService pharmacyService, IPharmacyAdminService pharmacyAdminService, ISubscriptionService subscriptionService) {
+	public PharmacyController( IReservationService reservationService, IPharmacyService pharmacyService, IPharmacyAdminService pharmacyAdminService, ISubscriptionService subscriptionService) {
 		super();
 		this.pharmacyService = pharmacyService;
 		this.pharmacyAdminService = pharmacyAdminService;
 		this.subscriptionService = subscriptionService;
+		this.reservationService = reservationService;
 	}
 
 	@GetMapping(value = "info/{id}")
@@ -78,16 +89,14 @@ public class PharmacyController {
 			} catch (PharmacyNotFoundException e) {
 				throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Pharmacy not found");
 			}
-		}
-		else if (user.getRole() == Role.PATIENT) {
+		} else if (user.getRole() == Role.PATIENT) {
 			try {
 				return new ResponseEntity<>(pharmacyService.getAllPharmacies(dto.getName(), dto.getAddress()),
 						HttpStatus.OK);
 			} catch (PharmacyNotFoundException e) {
 				throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Pharmacy not found");
 			}
-		}
-		else {
+		} else {
 			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You don't have required permissions!");
 		}
 	}
@@ -131,6 +140,30 @@ public class PharmacyController {
 			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e2.getMessage());
 		}
 	}
+
+
+	@PostMapping(value = "/getByMedicine",  produces = MediaType.APPLICATION_JSON_VALUE,consumes = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<List<PharmacyBasicInfoDTO>> getPharmacyByMedicine(@RequestBody MedicineInfoDTO dto, HttpSession session) {
+		User loggedInUser = (User) session.getAttribute("loggedInUser");
+		if (loggedInUser == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No logged in user!");
+		}
+		if (loggedInUser.getRole() != Role.PATIENT) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only patient can view his profile data.");
+		}
+		
+		List<PharmacyBasicInfoDTO> res = new ArrayList<PharmacyBasicInfoDTO>();
+		try {
+			res = pharmacyService.getPharmacyByMedicineId(dto.getId());
+		} catch (PharmacyNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		return new ResponseEntity<>(res,HttpStatus.OK);
+	}
+
+
 	
 	@PostMapping(value = "add-medicines")
 	public void addMedicines(@RequestBody Set<Long> medicineIds, HttpSession session) {
@@ -162,7 +195,7 @@ public class PharmacyController {
 		}
 		try {
 			PharmacyAdmin admin = pharmacyAdminService.findByUser(user);
-			pharmacyService.deleteMedicine(admin.getPharmacy(), id);
+			reservationService.deleteMedicine(admin.getPharmacy(), id);
 		} catch (UserDoesNotExistException e) {
 			throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
 		} catch (MedicineDoesNotExistException e) {
@@ -231,4 +264,5 @@ public class PharmacyController {
 			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
 		}
 	}
+
 }
