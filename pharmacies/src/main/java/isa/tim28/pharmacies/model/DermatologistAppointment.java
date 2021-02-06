@@ -44,10 +44,29 @@ public class DermatologistAppointment {
 	@Column(name = "defaultDurationInMinutes", nullable = false)
 	private final int defaultDurationInMinutes = 30;
 	
+	@Column(name = "done", nullable = false)
+	private boolean done = false;
+	
 	public DermatologistAppointment() {
 		super();
 	}
 	
+	public DermatologistAppointment(long id, Patient patient, Dermatologist dermatologist, Pharmacy pharmacy,
+			LocalDateTime startDateTime, int durationInMinutes, boolean scheduled, long price,
+			boolean patientWasPresent, boolean done) {
+		super();
+		this.id = id;
+		this.patient = patient;
+		this.dermatologist = dermatologist;
+		this.pharmacy = pharmacy;
+		this.startDateTime = startDateTime;
+		this.durationInMinutes = durationInMinutes;
+		this.scheduled = scheduled;
+		this.price = price;
+		this.patientWasPresent = patientWasPresent;
+		this.done = done;
+	}
+
 	public DermatologistAppointment(long id, Patient patient, Dermatologist dermatologist, Pharmacy pharmacy,
 			LocalDateTime startDateTime, int durationInMinutes, boolean scheduled, long price,
 			boolean patientWasPresent) {
@@ -137,6 +156,14 @@ public class DermatologistAppointment {
 	
 	public int getDefaultDurationInMinutes() {
 		return defaultDurationInMinutes;
+	}
+
+	public boolean isDone() {
+		return done;
+	}
+
+	public void setDone(boolean done) {
+		this.done = done;
 	}
 	
 }

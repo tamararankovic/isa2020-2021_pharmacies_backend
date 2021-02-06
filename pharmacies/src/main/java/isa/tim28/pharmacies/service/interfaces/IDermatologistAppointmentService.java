@@ -1,5 +1,6 @@
 package isa.tim28.pharmacies.service.interfaces;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
@@ -10,6 +11,10 @@ import isa.tim28.pharmacies.dtos.ExistingDermatologistAppointmentDTO;
 import isa.tim28.pharmacies.dtos.MedicineDTOM;
 import isa.tim28.pharmacies.dtos.MedicineDetailsDTO;
 import isa.tim28.pharmacies.dtos.MedicineQuantityCheckDTO;
+import isa.tim28.pharmacies.dtos.PharmAppByMonthDTO;
+import isa.tim28.pharmacies.dtos.PharmAppByWeekDTO;
+import isa.tim28.pharmacies.dtos.PharmAppByYearDTO;
+import isa.tim28.pharmacies.dtos.PharmAppDTO;
 import isa.tim28.pharmacies.exceptions.UserDoesNotExistException;
 import isa.tim28.pharmacies.model.Dermatologist;
 import isa.tim28.pharmacies.model.DermatologistAppointment;
@@ -48,5 +53,15 @@ public interface IDermatologistAppointmentService {
 	Set<ExistingDermatologistAppointmentDTO> getExistingDermatologistAppointments(long lastAppointmentId);
 	
 	DermatologistAppointment saveExistingDermatologistAppointment(long lastAppointmentId, long newAppointmentId);
+	
+	boolean dermatologistHasAppointmentsInTimInterval(Dermatologist dermatologist, LocalDate startDate, LocalDate endDate);
+	
+	List<PharmAppDTO> getAppointmentsByWeek(PharmAppByWeekDTO dto, long pharmacyId, long userId);
+	
+	List<PharmAppDTO> getAppointmentsByMonth(PharmAppByMonthDTO dto, long pharmacyId, long userId);
+	
+	List<PharmAppDTO> getAppointmentsByYear(PharmAppByYearDTO dto, long pharmacyId, long userId);
+	
+	void patientWasNotPresent(long appointmentId);
 	
 }

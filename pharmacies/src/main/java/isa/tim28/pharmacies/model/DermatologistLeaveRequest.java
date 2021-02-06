@@ -30,26 +30,33 @@ public class DermatologistLeaveRequest {
 	@Column(name = "type", nullable = false)
 	private LeaveType type;
 	
-	@Column(name = "confirmed", nullable = false)
-	private boolean confirmed;
-	
-	@Column(name = "reasonDenied", nullable = false)
-	private String reasonDenied;
+	@Column(name = "state", nullable = false)
+	private LeaveRequestState state = LeaveRequestState.WAITING_REVIEW;
 
 	public DermatologistLeaveRequest() {
 		super();
 	}
 	
 	public DermatologistLeaveRequest(long id, Dermatologist dermatologist, LocalDate startDate, LocalDate endDate,
-			LeaveType type, boolean confirmed, String reasonDenied) {
+			LeaveType type, LeaveRequestState state) {
 		super();
 		this.id = id;
 		this.dermatologist = dermatologist;
 		this.startDate = startDate;
 		this.endDate = endDate;
 		this.type = type;
-		this.confirmed = confirmed;
-		this.reasonDenied = reasonDenied;
+		this.state = state;
+	}
+
+	public DermatologistLeaveRequest(long id, Dermatologist dermatologist, LocalDate startDate, LocalDate endDate,
+			LeaveType type) {
+		super();
+		this.id = id;
+		this.dermatologist = dermatologist;
+		this.startDate = startDate;
+		this.endDate = endDate;
+		this.type = type;
+		this.state = LeaveRequestState.WAITING_REVIEW;
 	}
 
 	public long getId() {
@@ -92,19 +99,27 @@ public class DermatologistLeaveRequest {
 		this.type = type;
 	}
 
+	public LeaveRequestState getState() {
+		return state;
+	}
+
+	public void setState(LeaveRequestState state) {
+		this.state = state;
+	}
+	
 	public boolean isConfirmed() {
-		return confirmed;
+		return state == LeaveRequestState.ACCEPTED;
 	}
-
-	public void setConfirmed(boolean confirmed) {
-		this.confirmed = confirmed;
+	
+	public boolean isWaitingOnReview() {
+		return state == LeaveRequestState.WAITING_REVIEW && startDate.isAfter(LocalDate.now());
 	}
-
-	public String getReasonDenied() {
-		return reasonDenied;
+	
+	public void decline() {
+		state = LeaveRequestState.DECLINED;
 	}
-
-	public void setReasonDenied(String reasonDenied) {
-		this.reasonDenied = reasonDenied;
+	
+	public void accept() {
+		state = LeaveRequestState.ACCEPTED;
 	}
 }

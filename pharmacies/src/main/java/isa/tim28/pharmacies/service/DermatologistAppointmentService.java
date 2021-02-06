@@ -20,12 +20,17 @@ import isa.tim28.pharmacies.dtos.ExistingDermatologistAppointmentDTO;
 import isa.tim28.pharmacies.dtos.MedicineDTOM;
 import isa.tim28.pharmacies.dtos.MedicineDetailsDTO;
 import isa.tim28.pharmacies.dtos.MedicineQuantityCheckDTO;
+import isa.tim28.pharmacies.dtos.PharmAppByMonthDTO;
+import isa.tim28.pharmacies.dtos.PharmAppByWeekDTO;
+import isa.tim28.pharmacies.dtos.PharmAppByYearDTO;
+import isa.tim28.pharmacies.dtos.PharmAppDTO;
 import isa.tim28.pharmacies.dtos.TherapyDTO;
 import isa.tim28.pharmacies.exceptions.UserDoesNotExistException;
 import isa.tim28.pharmacies.model.DermatologistAppointment;
 import isa.tim28.pharmacies.model.DermatologistLeaveRequest;
 import isa.tim28.pharmacies.model.DermatologistReport;
 import isa.tim28.pharmacies.model.EngagementInPharmacy;
+import isa.tim28.pharmacies.model.LeaveRequestState;
 import isa.tim28.pharmacies.model.Medicine;
 import isa.tim28.pharmacies.model.MedicineMissingNotification;
 import isa.tim28.pharmacies.model.MedicineQuantity;
@@ -38,12 +43,12 @@ import isa.tim28.pharmacies.model.Dermatologist;
 import isa.tim28.pharmacies.repository.DermatologistAppointmentRepository;
 import isa.tim28.pharmacies.repository.DermatologistLeaveRequestRepository;
 import isa.tim28.pharmacies.repository.DermatologistReportRepository;
+import isa.tim28.pharmacies.repository.DermatologistRepository;
 import isa.tim28.pharmacies.repository.MedicineMissingNotificationRepository;
 import isa.tim28.pharmacies.repository.MedicineQuantityRepository;
 import isa.tim28.pharmacies.repository.MedicineRepository;
 import isa.tim28.pharmacies.repository.PatientRepository;
 import isa.tim28.pharmacies.repository.PharmacistAppointmentRepository;
-import isa.tim28.pharmacies.repository.ReservationRepository;
 import isa.tim28.pharmacies.service.interfaces.IDermatologistAppointmentService;
 
 @Service
@@ -54,15 +59,15 @@ public class DermatologistAppointmentService implements IDermatologistAppointmen
 	private MedicineRepository medicineRepository;
 	private DermatologistReportRepository dermatologistReportRepository;
 	private MedicineQuantityRepository medicineQuantityRepository;
-	private ReservationRepository reservationRepository;
 	private MedicineMissingNotificationRepository medicineMissingNotificationRepository;
 	private DermatologistLeaveRequestRepository dermatologistLeaveRequestRepository;
 	private PharmacistAppointmentRepository pharmacistAppointmentRepository;
+	private DermatologistRepository dermatologistRepository;
 	
 	@Autowired
 	public DermatologistAppointmentService(DermatologistAppointmentRepository appointmentRepository, MedicineRepository medicineRepository, 
 			DermatologistReportRepository dermatologistReportRepository, PatientRepository patientRepository, MedicineQuantityRepository medicineQuantityRepository,
-			ReservationRepository reservationRepository, MedicineMissingNotificationRepository medicineMissingNotificationRepository,
+			MedicineMissingNotificationRepository medicineMissingNotificationRepository, DermatologistRepository dermatologistRepository,
 			DermatologistLeaveRequestRepository dermatologistLeaveRequestRepository, PharmacistAppointmentRepository pharmacistAppointmentRepository) {
 		super();
 		this.appointmentRepository = appointmentRepository;
@@ -70,10 +75,10 @@ public class DermatologistAppointmentService implements IDermatologistAppointmen
 		this.dermatologistReportRepository = dermatologistReportRepository;
 		this.patientRepository = patientRepository;
 		this.medicineQuantityRepository = medicineQuantityRepository;
-		this.reservationRepository = reservationRepository;
 		this.medicineMissingNotificationRepository = medicineMissingNotificationRepository;
 		this.dermatologistLeaveRequestRepository = dermatologistLeaveRequestRepository;
 		this.pharmacistAppointmentRepository = pharmacistAppointmentRepository;
+		this.dermatologistRepository = dermatologistRepository;
 	}
 
 	@Override
@@ -130,6 +135,8 @@ public class DermatologistAppointmentService implements IDermatologistAppointmen
 		}
 		report.setTherapies(therapies);
 		dermatologistReportRepository.save(report);
+		app.setDone(true);
+		appointmentRepository.save(app);
 		
 		/*
 		Set<Reservation> reservations = reservationRepository.findAllByAppointment(app.getId());
@@ -208,6 +215,7 @@ public class DermatologistAppointmentService implements IDermatologistAppointmen
 		else return new MedicineDetailsDTO();
 	}
 	
+	@Override
 	public boolean dermatologistHasIncomingAppointmentsInPharmacy(Dermatologist dermatologist, Pharmacy pharmacy) {
 		return appointmentRepository.findAll().stream().filter(a -> a.getDermatologist().getId() == dermatologist.getId()
 				&& a.getPharmacy().getId() == pharmacy.getId()
@@ -322,7 +330,7 @@ public class DermatologistAppointmentService implements IDermatologistAppointmen
 		}
 		if(!isWorkingThatDay) return false;
 		for (DermatologistLeaveRequest request : dermatologistLeaveRequestRepository.findAllByDermatologist_Id(dermatologist.getId())) {
-			if (isDateInInterval(startDateTime.toLocalDate(), request.getStartDate(), request.getEndDate()) && request.isConfirmed()) 
+			if (isDateInInterval(startDateTime.toLocalDate(), request.getStartDate(), request.getEndDate()) && request.getState() == LeaveRequestState.ACCEPTED) 
 				return false;
 		}
 		return true;
@@ -365,7 +373,95 @@ public class DermatologistAppointmentService implements IDermatologistAppointmen
 	}
 	
 	private boolean isDateInInterval(LocalDate date, LocalDate startDate, LocalDate endDate) {
-		if(!date.isBefore(startDate) && !date.isAfter(endDate)) return false;
-		return true;
+		if(!date.isBefore(startDate) && !date.isAfter(endDate)) return true;
+		return false;
+	}
+
+	@Override
+	public boolean dermatologistHasAppointmentsInTimInterval(Dermatologist dermatologist, LocalDate startDate,
+			LocalDate endDate) {
+		Set<DermatologistAppointment> appointments = appointmentRepository.findAll().stream().filter(a -> a.getDermatologist().getId() == dermatologist.getId()).collect(Collectors.toSet());
+		for(DermatologistAppointment a : appointments) {
+			if (isDateInInterval(a.getStartDateTime().toLocalDate(), startDate, endDate))
+				return true;
+		}
+		return false;
+	}
+
+	@Override
+	public List<PharmAppDTO> getAppointmentsByWeek(PharmAppByWeekDTO dto, long pharmacyId, long userId) {
+		try {
+			Dermatologist dermatologist = dermatologistRepository.findOneByUser_Id(userId);
+			Set<DermatologistAppointment> dermAppointments = appointmentRepository.findAllByDermatologist_Id(dermatologist.getId());
+			List<PharmAppDTO> dtos = new ArrayList<PharmAppDTO>();
+			for (DermatologistAppointment app : dermAppointments) {
+				if(!isDateInInterval(app.getStartDateTime().toLocalDate(), dto.getStartDate(), dto.getEndDate()) && !app.isDone() && app.getPharmacy().getId() == pharmacyId) {
+					String startTime = app.getStartDateTime().format(DateTimeFormatter.ofPattern("HH:mm, dd.MM.yyyy."));
+					String patientName = "";
+					if(app.isScheduled()) patientName = app.getPatient().getUser().getFullName();
+					dtos.add(new PharmAppDTO(app.getId(), startTime, app.getDefaultDurationInMinutes(), patientName));
+				}
+			}
+			return dtos;
+		} catch(Exception e) {
+			return new ArrayList<PharmAppDTO>();
+		}
+	}
+
+	@Override
+	public List<PharmAppDTO> getAppointmentsByMonth(PharmAppByMonthDTO dto, long pharmacyId, long userId) {
+		try {
+			Dermatologist dermatologist = dermatologistRepository.findOneByUser_Id(userId);
+			Set<DermatologistAppointment> dermAppointments = appointmentRepository.findAllByDermatologist_Id(dermatologist.getId());
+			List<PharmAppDTO> dtos = new ArrayList<PharmAppDTO>();
+			for (DermatologistAppointment app : dermAppointments) {
+				if(app.getStartDateTime().getYear() == dto.getYear() && app.getStartDateTime().getMonthValue() == dto.getMonth() && !app.isDone() && app.getPharmacy().getId() == pharmacyId) {
+					String startTime = app.getStartDateTime().format(DateTimeFormatter.ofPattern("HH:mm, dd.MM.yyyy."));
+					String patientName = "";
+					if(app.isScheduled()) patientName = app.getPatient().getUser().getFullName();
+					dtos.add(new PharmAppDTO(app.getId(), startTime, app.getDefaultDurationInMinutes(), patientName));
+				}
+			}
+			return dtos;
+		} catch(Exception e) {
+			return new ArrayList<PharmAppDTO>();
+		}
+	}
+
+	@Override
+	public List<PharmAppDTO> getAppointmentsByYear(PharmAppByYearDTO dto, long pharmacyId, long userId) {
+		try {
+			Dermatologist dermatologist = dermatologistRepository.findOneByUser_Id(userId);
+			Set<DermatologistAppointment> dermAppointments = appointmentRepository.findAllByDermatologist_Id(dermatologist.getId());
+			List<PharmAppDTO> dtos = new ArrayList<PharmAppDTO>();
+			for (DermatologistAppointment app : dermAppointments) {
+				if(app.getStartDateTime().getYear() == dto.getYear() && !app.isDone() && app.getPharmacy().getId() == pharmacyId) {
+					String startTime = app.getStartDateTime().format(DateTimeFormatter.ofPattern("HH:mm, dd.MM.yyyy."));
+					String patientName = "";
+					if(app.isScheduled()) patientName = app.getPatient().getUser().getFullName();
+					dtos.add(new PharmAppDTO(app.getId(), startTime, app.getDefaultDurationInMinutes(), patientName));
+				}
+			}
+			return dtos;
+		} catch(Exception e) {
+			return new ArrayList<PharmAppDTO>();
+		}
+	}
+
+	@Override
+	public void patientWasNotPresent(long appointmentId) {
+		try {
+			DermatologistAppointment app = appointmentRepository.findById(appointmentId).get();
+			app.setDone(true);
+			app.setPatientWasPresent(false);
+			appointmentRepository.save(app);
+			
+			Patient p = app.getPatient();
+			p.setPenalties(p.getPenalties() + 1);
+			patientRepository.save(p);
+		} catch(Exception e) {
+			return;
+		}
+		
 	}
 }

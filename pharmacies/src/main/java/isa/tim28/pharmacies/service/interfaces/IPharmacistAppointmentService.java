@@ -1,5 +1,6 @@
 package isa.tim28.pharmacies.service.interfaces;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -7,6 +8,10 @@ import isa.tim28.pharmacies.dtos.DermatologistAppointmentDTO;
 import isa.tim28.pharmacies.dtos.DermatologistReportDTO;
 import isa.tim28.pharmacies.dtos.MedicineDTOM;
 import isa.tim28.pharmacies.dtos.MedicineQuantityCheckDTO;
+import isa.tim28.pharmacies.dtos.PharmAppByMonthDTO;
+import isa.tim28.pharmacies.dtos.PharmAppByWeekDTO;
+import isa.tim28.pharmacies.dtos.PharmAppByYearDTO;
+import isa.tim28.pharmacies.dtos.PharmAppDTO;
 import isa.tim28.pharmacies.dtos.ReservationValidDTO;
 import isa.tim28.pharmacies.exceptions.UserDoesNotExistException;
 import isa.tim28.pharmacies.model.Pharmacist;
@@ -40,5 +45,15 @@ public interface IPharmacistAppointmentService {
 	PharmacistAppointment savePharmacistAppointment(long lastAppointmentId, LocalDateTime startDateTime);
 	
 	boolean checkIfFreeAppointmentExists(long lastAppointmentId, LocalDateTime startDateTime);
+	
+	List<PharmAppDTO> getAppointmentsByWeek(PharmAppByWeekDTO dto, long userId);
+	
+	List<PharmAppDTO> getAppointmentsByMonth(PharmAppByMonthDTO dto, long userId);
+	
+	List<PharmAppDTO> getAppointmentsByYear(PharmAppByYearDTO dto, long userId);
+	
+	void patientWasNotPresent(long appointmentId);
+
+	boolean pharmacisttHasAppointmentsInTimInterval(Pharmacist pharmacist, LocalDate startDate, LocalDate endDate);
 
 }
