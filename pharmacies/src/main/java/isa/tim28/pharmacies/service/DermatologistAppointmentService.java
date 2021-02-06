@@ -25,7 +25,10 @@ import isa.tim28.pharmacies.dtos.PharmAppByWeekDTO;
 import isa.tim28.pharmacies.dtos.PharmAppByYearDTO;
 import isa.tim28.pharmacies.dtos.PharmAppDTO;
 import isa.tim28.pharmacies.dtos.TherapyDTO;
+import isa.tim28.pharmacies.exceptions.ForbiddenOperationException;
 import isa.tim28.pharmacies.exceptions.UserDoesNotExistException;
+import isa.tim28.pharmacies.model.DailyEngagement;
+import isa.tim28.pharmacies.model.Dermatologist;
 import isa.tim28.pharmacies.model.DermatologistAppointment;
 import isa.tim28.pharmacies.model.DermatologistLeaveRequest;
 import isa.tim28.pharmacies.model.DermatologistReport;
@@ -38,8 +41,6 @@ import isa.tim28.pharmacies.model.Patient;
 import isa.tim28.pharmacies.model.PharmacistAppointment;
 import isa.tim28.pharmacies.model.Pharmacy;
 import isa.tim28.pharmacies.model.Therapy;
-import isa.tim28.pharmacies.model.DailyEngagement;
-import isa.tim28.pharmacies.model.Dermatologist;
 import isa.tim28.pharmacies.repository.DermatologistAppointmentRepository;
 import isa.tim28.pharmacies.repository.DermatologistLeaveRequestRepository;
 import isa.tim28.pharmacies.repository.DermatologistReportRepository;
@@ -336,6 +337,10 @@ public class DermatologistAppointmentService implements IDermatologistAppointmen
 		return true;
 	}
 	
+	private boolean isDermatologistInPharmacy(Dermatologist dermatologist, LocalDateTime startDateTime, LocalDateTime endDateTime, Pharmacy pharmacy) {
+		return isDermatologistInPharmacy(dermatologist, startDateTime, pharmacy) && isDermatologistInPharmacy(dermatologist, endDateTime, pharmacy);
+	}
+	
 	private boolean isPatientAvailable(Patient patient, LocalDateTime startDateTime) {
 		Set<PharmacistAppointment> pharmAppointments = pharmacistAppointmentRepository.findAllByPatient_Id(patient.getId());
 		for(PharmacistAppointment appointment : pharmAppointments) {
@@ -463,5 +468,23 @@ public class DermatologistAppointmentService implements IDermatologistAppointmen
 			return;
 		}
 		
+	}
+
+	@Override
+	public void createPredefinedAppointment(Dermatologist dermatologist, LocalDateTime startDateTime, int durationInMinutes,
+			long price, Pharmacy pharmacy) throws ForbiddenOperationException {
+		if(!isDermatologistInPharmacy(dermatologist, startDateTime, startDateTime.plusMinutes(durationInMinutes), pharmacy))
+			throw new ForbiddenOperationException("Dermatologist is not present at the pharmacy at the selected date and time. He is either on leave or doesn't have working hours set at the selected time");
+		if(!isDermatologistAvailable(dermatologist, startDateTime) || !isDermatologistAvailable(dermatologist, startDateTime.plusMinutes(durationInMinutes)))
+			throw new ForbiddenOperationException("Dermatologist has an examination in the pharmacy that is overlapping with the one you want to create!");
+		DermatologistAppointment predefined = new DermatologistAppointment();
+		predefined.setDermatologist(dermatologist);
+		predefined.setDone(false);
+		predefined.setDurationInMinutes(durationInMinutes);
+		predefined.setPharmacy(pharmacy);
+		predefined.setPrice(price);
+		predefined.setScheduled(false);
+		predefined.setStartDateTime(startDateTime);
+		appointmentRepository.save(predefined);
 	}
 }
