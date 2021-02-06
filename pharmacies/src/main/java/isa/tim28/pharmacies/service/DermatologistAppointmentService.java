@@ -325,7 +325,7 @@ public class DermatologistAppointmentService implements IDermatologistAppointmen
 		for (DailyEngagement dailyEngagement : engagement.getDailyEngagements()) {
 			if (dailyEngagement.getDayOfWeek().equals(dayOfWeek)) {
 				isWorkingThatDay = true;
-				if (!isTimeInInterval(startDateTime.toLocalTime(), dailyEngagement.getStartTime(), dailyEngagement.getEndTime()))
+				if (!isTimeInInterval(startDateTime.toLocalTime(), 30, dailyEngagement.getStartTime(), dailyEngagement.getEndTime()))
 					return false;
 			}
 		}
@@ -345,14 +345,14 @@ public class DermatologistAppointmentService implements IDermatologistAppointmen
 		Set<PharmacistAppointment> pharmAppointments = pharmacistAppointmentRepository.findAllByPatient_Id(patient.getId());
 		for(PharmacistAppointment appointment : pharmAppointments) {
 			if(appointment.getStartDateTime().toLocalDate().equals(startDateTime.toLocalDate())) {
-				if(isTimeInInterval(startDateTime.toLocalTime(), appointment.getStartDateTime().toLocalTime(), appointment.getStartDateTime().toLocalTime().plusMinutes(30)))
+				if(isTimeInInterval(startDateTime.toLocalTime(), 30, appointment.getStartDateTime().toLocalTime(), appointment.getStartDateTime().toLocalTime().plusMinutes(30)))
 					return false;
 			}
 		}
 		Set<DermatologistAppointment> dermAppointments = appointmentRepository.findAllByPatient_Id(patient.getId());
 		for(DermatologistAppointment appointment : dermAppointments) {
 			if(appointment.getStartDateTime().toLocalDate().equals(startDateTime.toLocalDate())) {
-				if(isTimeInInterval(startDateTime.toLocalTime(), appointment.getStartDateTime().toLocalTime(), appointment.getStartDateTime().toLocalTime().plusMinutes(appointment.getDurationInMinutes())))
+				if(isTimeInInterval(startDateTime.toLocalTime(), 30, appointment.getStartDateTime().toLocalTime(), appointment.getStartDateTime().toLocalTime().plusMinutes(appointment.getDurationInMinutes())))
 					return false;
 			}
 		}
@@ -363,17 +363,18 @@ public class DermatologistAppointmentService implements IDermatologistAppointmen
 		Set<DermatologistAppointment> dermAppointments = appointmentRepository.findAllByDermatologist_Id(dermatologist.getId());
 		for(DermatologistAppointment appointment : dermAppointments) {
 			if(appointment.getStartDateTime().toLocalDate().equals(startDateTime.toLocalDate())) {
-				if(isTimeInInterval(startDateTime.toLocalTime(), appointment.getStartDateTime().toLocalTime(), appointment.getStartDateTime().toLocalTime().plusMinutes(appointment.getDurationInMinutes())))
+				if(isTimeInInterval(startDateTime.toLocalTime(), 30, appointment.getStartDateTime().toLocalTime(), appointment.getStartDateTime().toLocalTime().plusMinutes(appointment.getDurationInMinutes())))
 					return false;
 			}
 		}
 		return true;
 	}
 	
-	private boolean isTimeInInterval(LocalTime time, LocalTime startTime, LocalTime endTime) {
-		if(!time.isBefore(startTime) && !time.plusMinutes(30).isAfter(endTime)) return true;
+	private boolean isTimeInInterval(LocalTime time, int duration, LocalTime startTime, LocalTime endTime) {
+		if(!time.isBefore(startTime) && !time.plusMinutes(duration).isAfter(endTime)) return true;
 		if(time.isAfter(startTime) && time.isBefore(endTime)) return true;
-		if(time.plusMinutes(30).isAfter(startTime) && time.plusMinutes(30).isBefore(endTime)) return true;
+		if(time.plusMinutes(duration).isAfter(startTime) && time.plusMinutes(duration).isBefore(endTime)) return true;
+		if(time.equals(startTime)) return true;
 		return false;
 	}
 	

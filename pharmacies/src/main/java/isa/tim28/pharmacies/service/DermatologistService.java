@@ -322,7 +322,7 @@ public class DermatologistService implements IDermatologistService {
 	@Override
 	public void createPredefinedAppointment(long dermatologistId, LocalDateTime startDateTime, int durationInMinutes,
 			long price, Pharmacy pharmacy) throws UserDoesNotExistException, ForbiddenOperationException {
-		if (startDateTime.isAfter(LocalDateTime.now()))
+		if (startDateTime.isBefore(LocalDateTime.now()))
 			throw new ForbiddenOperationException("You can't create an examination that has time set in the past!");
 		if (findAllByPharmacyId(pharmacy.getId()).stream().noneMatch(d -> d.getId() == dermatologistId))
 			throw new ForbiddenOperationException("You can't create an examination for dermatologist that is not employed in your pharmacy!");
