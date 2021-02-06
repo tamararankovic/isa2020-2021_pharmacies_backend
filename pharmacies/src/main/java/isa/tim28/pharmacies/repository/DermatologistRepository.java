@@ -6,4 +6,5 @@ import isa.tim28.pharmacies.model.Dermatologist;
 
 public interface DermatologistRepository extends JpaRepository<Dermatologist, Long> {
 
+	Dermatologist findOneByUser_Id(long user_id);
 }

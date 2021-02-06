@@ -32,11 +32,25 @@ public class PharmacistAppointment {
 	
 	@Column(name = "defaultDurationInMinutes", nullable = false)
 	private final int defaultDurationMinutes = 30;
+	
+	@Column(name = "done", nullable = false)
+	private boolean done = false;
 
 	public PharmacistAppointment() {
 		super();
 	}
 	
+	public PharmacistAppointment(long id, Patient patient, Pharmacist pharmacist, LocalDateTime startDateTime,
+			boolean patientWasPresent, boolean done) {
+		super();
+		this.id = id;
+		this.patient = patient;
+		this.pharmacist = pharmacist;
+		this.startDateTime = startDateTime;
+		this.patientWasPresent = patientWasPresent;
+		this.done = done;
+	}
+
 	public PharmacistAppointment(long id, Patient patient, Pharmacist pharmacist, LocalDateTime startDateTime,
 			boolean patientWasPresent) {
 		super();
@@ -90,4 +104,13 @@ public class PharmacistAppointment {
 	public int getDefaultDurationInMinutes() {
 		return defaultDurationMinutes;
 	}
+
+	public boolean isDone() {
+		return done;
+	}
+
+	public void setDone(boolean done) {
+		this.done = done;
+	}
+
 }

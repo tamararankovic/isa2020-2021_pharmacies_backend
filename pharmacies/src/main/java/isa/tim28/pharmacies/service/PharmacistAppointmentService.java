@@ -9,6 +9,7 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -17,6 +18,10 @@ import isa.tim28.pharmacies.dtos.DermatologistAppointmentDTO;
 import isa.tim28.pharmacies.dtos.DermatologistReportDTO;
 import isa.tim28.pharmacies.dtos.MedicineDTOM;
 import isa.tim28.pharmacies.dtos.MedicineQuantityCheckDTO;
+import isa.tim28.pharmacies.dtos.PharmAppByMonthDTO;
+import isa.tim28.pharmacies.dtos.PharmAppByWeekDTO;
+import isa.tim28.pharmacies.dtos.PharmAppByYearDTO;
+import isa.tim28.pharmacies.dtos.PharmAppDTO;
 import isa.tim28.pharmacies.dtos.ReservationValidDTO;
 import isa.tim28.pharmacies.dtos.TherapyDTO;
 import isa.tim28.pharmacies.exceptions.UserDoesNotExistException;
@@ -43,6 +48,7 @@ import isa.tim28.pharmacies.repository.PatientRepository;
 import isa.tim28.pharmacies.repository.PharmacistAppointmentRepository;
 import isa.tim28.pharmacies.repository.PharmacistLeaveRequestRepository;
 import isa.tim28.pharmacies.repository.PharmacistReportRepository;
+import isa.tim28.pharmacies.repository.PharmacistRepository;
 import isa.tim28.pharmacies.repository.ReservationRepository;
 import isa.tim28.pharmacies.service.interfaces.IPharmacistAppointmentService;
 
@@ -58,13 +64,15 @@ public class PharmacistAppointmentService implements IPharmacistAppointmentServi
 	private ReservationRepository reservationRepository;
 	private MedicineMissingNotificationRepository medicineMissingNotificationRepository;
 	private PharmacistLeaveRequestRepository pharmacistLeaveRequestRepository;
+	private PharmacistRepository pharmacistRepository;
 	
 	
 	@Autowired
 	public PharmacistAppointmentService(PharmacistAppointmentRepository appointmentRepository, MedicineRepository medicineRepository, 
 			PharmacistReportRepository pharmacistReportRepository, PatientRepository patientRepository, MedicineQuantityRepository medicineQuantityRepository,
 			ReservationRepository reservationRepository, MedicineMissingNotificationRepository medicineMissingNotificationRepository,
-			PharmacistLeaveRequestRepository pharmacistLeaveRequestRepository, DermatologistAppointmentRepository dermatologistAppointmentRepository) {
+			PharmacistLeaveRequestRepository pharmacistLeaveRequestRepository, DermatologistAppointmentRepository dermatologistAppointmentRepository, 
+			PharmacistRepository pharmacistRepository) {
 		super();
 		this.appointmentRepository = appointmentRepository;
 		this.medicineRepository = medicineRepository;
@@ -75,6 +83,7 @@ public class PharmacistAppointmentService implements IPharmacistAppointmentServi
 		this.medicineMissingNotificationRepository = medicineMissingNotificationRepository;
 		this.pharmacistLeaveRequestRepository = pharmacistLeaveRequestRepository;
 		this.dermatologistAppointmentRepository = dermatologistAppointmentRepository;
+		this.pharmacistRepository = pharmacistRepository;
 	}
 	
 	@Override
@@ -124,6 +133,8 @@ public class PharmacistAppointmentService implements IPharmacistAppointmentServi
 		}
 		report.setTherapies(therapies);
 		pharmacistReportRepository.save(report);
+		app.setDone(true);
+		appointmentRepository.save(app);
 		
 		/*
 		Set<Reservation> reservations = reservationRepository.findAllByAppointment(app.getId());
@@ -217,22 +228,10 @@ public class PharmacistAppointmentService implements IPharmacistAppointmentServi
 			else {
 				reservation.setReceived(true);
 				reservationRepository.save(reservation);
-				//updateMedicineQuantityAfterReservation(reservation.getMedicine().getId(), reservation.getPharmacy());
 				return reservation;
 			}
 		} catch(Exception e) {
 			return null;
-		}
-	}
-	
-	private void updateMedicineQuantityAfterReservation(long medicineId, Pharmacy pharmacy) {
-		Set<MedicineQuantity> medicines = pharmacy.getMedicines();
-		for (MedicineQuantity mq : medicines) {
-			if (mq.getMedicine().getId() == medicineId) {
-				mq.setQuantity(mq.getQuantity() - 1);
-				medicineQuantityRepository.save(mq);
-				return;
-			}
 		}
 	}
 
@@ -345,5 +344,74 @@ public class PharmacistAppointmentService implements IPharmacistAppointmentServi
 		}
 		return false;
 	}
-	
+
+	@Override
+	public List<PharmAppDTO> getAppointmentsByWeek(PharmAppByWeekDTO dto, long userId) {
+		try {
+			Pharmacist pharmacist = pharmacistRepository.findOneByUser_Id(userId);
+			Set<PharmacistAppointment> pharmAppointments = appointmentRepository.findAllByPharmacist_Id(pharmacist.getId());
+			List<PharmAppDTO> dtos = new ArrayList<PharmAppDTO>();
+			for (PharmacistAppointment app : pharmAppointments) {
+				if(!isDateInInterval(app.getStartDateTime().toLocalDate(), dto.getStartDate(), dto.getEndDate()) && !app.isDone()) {
+					String startTime = app.getStartDateTime().format(DateTimeFormatter.ofPattern("HH:mm, dd.MM.yyyy."));
+					dtos.add(new PharmAppDTO(app.getId(), startTime, app.getDefaultDurationInMinutes(), app.getPatient().getUser().getFullName()));
+				}
+			}
+			return dtos;
+		} catch(Exception e) {
+			return new ArrayList<PharmAppDTO>();
+		}
+	}
+
+	@Override
+	public List<PharmAppDTO> getAppointmentsByMonth(PharmAppByMonthDTO dto, long userId) {
+		try {
+			Pharmacist pharmacist = pharmacistRepository.findOneByUser_Id(userId);
+			Set<PharmacistAppointment> pharmAppointments = appointmentRepository.findAllByPharmacist_Id(pharmacist.getId());
+			List<PharmAppDTO> dtos = new ArrayList<PharmAppDTO>();
+			for (PharmacistAppointment app : pharmAppointments) {
+				if(app.getStartDateTime().getYear() == dto.getYear() && app.getStartDateTime().getMonthValue() == dto.getMonth() && !app.isDone()) {
+					String startTime = app.getStartDateTime().format(DateTimeFormatter.ofPattern("HH:mm, dd.MM.yyyy."));
+					dtos.add(new PharmAppDTO(app.getId(), startTime, app.getDefaultDurationInMinutes(), app.getPatient().getUser().getFullName()));
+				}
+			}
+			return dtos;
+		} catch(Exception e) {
+			return new ArrayList<PharmAppDTO>();
+		}
+	}
+
+	@Override
+	public List<PharmAppDTO> getAppointmentsByYear(PharmAppByYearDTO dto, long userId) {
+		try {
+			Pharmacist pharmacist = pharmacistRepository.findOneByUser_Id(userId);
+			Set<PharmacistAppointment> pharmAppointments = appointmentRepository.findAllByPharmacist_Id(pharmacist.getId());
+			List<PharmAppDTO> dtos = new ArrayList<PharmAppDTO>();
+			for (PharmacistAppointment app : pharmAppointments) {
+				if(app.getStartDateTime().getYear() == dto.getYear() && !app.isDone()) {
+					String startTime = app.getStartDateTime().format(DateTimeFormatter.ofPattern("HH:mm, dd.MM.yyyy."));
+					dtos.add(new PharmAppDTO(app.getId(), startTime, app.getDefaultDurationInMinutes(), app.getPatient().getUser().getFullName()));
+				}
+			}
+			return dtos;
+		} catch(Exception e) {
+			return new ArrayList<PharmAppDTO>();
+		}
+	}
+
+	@Override
+	public void patientWasNotPresent(long appointmentId) {
+		try {
+			PharmacistAppointment app = appointmentRepository.findById(appointmentId).get();
+			app.setDone(true);
+			app.setPatientWasPresent(false);
+			appointmentRepository.save(app);
+			
+			Patient p = app.getPatient();
+			p.setPenalties(p.getPenalties() + 1);
+			patientRepository.save(p);
+		} catch(Exception e) {
+			return;
+		}
+	}
 }
