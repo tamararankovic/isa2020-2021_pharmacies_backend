@@ -9,6 +9,8 @@ import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import isa.tim28.pharmacies.dtos.DermPharmacyDTO;
 import isa.tim28.pharmacies.dtos.DermatologistDTO;
 import isa.tim28.pharmacies.dtos.DermatologistProfileDTO;
 import isa.tim28.pharmacies.dtos.DermatologistToEmployDTO;
@@ -297,6 +299,22 @@ public class DermatologistService implements IDermatologistService {
 	public Dermatologist save(Dermatologist dermatologist) {
 		Dermatologist newDermatoligist = dermatologistRepository.save(dermatologist);
 		return newDermatoligist;
+	}
+
+	@Override
+	public List<DermPharmacyDTO> getAllPharmaciesByDermatologist(long userId) {
+		try {
+			List<DermPharmacyDTO> dtos = new ArrayList<DermPharmacyDTO>();
+			Dermatologist derm = dermatologistRepository.findOneByUser_Id(userId);
+			for(EngagementInPharmacy ep : derm.getEngegementInPharmacies()) {
+				Pharmacy pharmacy = ep.getPharmacy();
+				DermPharmacyDTO dto = new DermPharmacyDTO(pharmacy.getId(), pharmacy.getName());
+				dtos.add(dto);
+			}
+			return dtos;
+		} catch(Exception e) {
+			return new ArrayList<DermPharmacyDTO>();
+		}
 	}
 
 }
