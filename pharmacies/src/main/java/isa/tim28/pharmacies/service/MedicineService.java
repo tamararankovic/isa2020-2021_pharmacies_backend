@@ -1,15 +1,22 @@
 package isa.tim28.pharmacies.service;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
-
+import java.util.Optional;
+import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import isa.tim28.pharmacies.dtos.MedicineInfoDTO;
-import isa.tim28.pharmacies.model.Medicine;
 import isa.tim28.pharmacies.dtos.MedicineCodeDTO;
+import isa.tim28.pharmacies.dtos.MedicineForPharmacyAdminDTO;
+import isa.tim28.pharmacies.dtos.MedicineInPharmacyDTO;
+import isa.tim28.pharmacies.dtos.MedicineInfoDTO;
+import isa.tim28.pharmacies.dtos.SearchMedicineDTO;
+import isa.tim28.pharmacies.model.Medicine;
+import isa.tim28.pharmacies.model.MedicineQuantity;
+import isa.tim28.pharmacies.model.Pharmacy;
 import isa.tim28.pharmacies.repository.MedicineRepository;
 import isa.tim28.pharmacies.service.interfaces.IMedicineService;
 
@@ -34,6 +41,7 @@ public class MedicineService implements IMedicineService {
 		return this.medicineRepository.findByName(name);
 	}
 
+	@Override
 	public List<MedicineInfoDTO> getAllMedicineInfo(String name, String form, String type, String manu) {
 		List<MedicineInfoDTO> res = new ArrayList<MedicineInfoDTO>();
 		if (name.equals("") && form.equals("") && type.equals("") && manu.equals("")) {
@@ -94,6 +102,112 @@ public class MedicineService implements IMedicineService {
 	public Medicine save(Medicine medicine) {
 		Medicine newMedicine = medicineRepository.save(medicine);
 		return newMedicine;
+	}
+
+	@Override
+	public Set<MedicineForPharmacyAdminDTO> getAll(Pharmacy pharmacy) {
+		List<Medicine> medicines = medicineRepository.findAll();
+		Set<MedicineForPharmacyAdminDTO> ret = new HashSet<MedicineForPharmacyAdminDTO>();
+		for (Medicine m : medicines)
+			ret.add(new MedicineForPharmacyAdminDTO(m.getId(), m.getCode(), m.getName(), m.getType().toString(), m.getManufacturer(), pharmacy.offers(m)));
+		return ret;
+	}
+
+	@Override
+	public Medicine findById(long id) {
+		Optional<Medicine> medicine = medicineRepository.findById(id);
+		if(medicine.isEmpty())
+			return null;
+		return medicine.get();
+	}
+
+	@Override
+	public Set<MedicineInPharmacyDTO> getAllOffered(Pharmacy pharmacy) {
+		List<Medicine> medicines = medicineRepository.findAll();
+		Set<MedicineInPharmacyDTO> ret = new HashSet<MedicineInPharmacyDTO>();
+		for (Medicine m : medicines)
+			if(pharmacy.offers(m)) {
+				int quantity = 0;
+				Optional<MedicineQuantity> mq = pharmacy.getMedicines().stream().filter(med -> med.getMedicine().getId() == m.getId()).findFirst();
+				if(!mq.isEmpty())
+					quantity = mq.get().getQuantity();
+				ret.add(new MedicineInPharmacyDTO(m.getId(), m.getCode(), m.getName(), m.getType().toString(), m.getManufacturer(), quantity));
+			}
+		return ret;
+	}
+
+	@Override
+	public Set<MedicineInPharmacyDTO> search(SearchMedicineDTO dto, Pharmacy pharmacy) {
+		Set<MedicineInPharmacyDTO> ret = getAllOffered(pharmacy);
+		ret = searchByCode(dto.getCode(), ret);
+		ret = searchByName(dto.getName(), ret);
+		ret = searchByManufacturer(dto.getManufacturer(), ret);
+		return ret;
+	}
+	
+	private Set<MedicineInPharmacyDTO> searchByCode(String code, Set<MedicineInPharmacyDTO> medicines) {
+		Set<MedicineInPharmacyDTO> ret = new HashSet<MedicineInPharmacyDTO>();
+		if(code.length() == 0) return medicines;
+		String[] tokens = formatSearchCriterion(code).split(" ");
+		for(MedicineInPharmacyDTO m : medicines ) {
+			boolean hasAllTokens = true;
+			for(String token : tokens)
+				if(!m.getCode().toLowerCase().contains(token)) {
+					hasAllTokens = false;
+					break;
+				}
+			if (hasAllTokens)
+				ret.add(m);
+		}
+		return ret;
+	}
+	
+	private Set<MedicineInPharmacyDTO> searchByName(String name, Set<MedicineInPharmacyDTO> medicines) {
+		Set<MedicineInPharmacyDTO> ret = new HashSet<MedicineInPharmacyDTO>();
+		if(name.length() == 0) return medicines;
+		String[] tokens = formatSearchCriterion(name).split(" ");
+		for(MedicineInPharmacyDTO m : medicines ) {
+			boolean hasAllTokens = true;
+			for(String token : tokens)
+				if(!m.getName().toLowerCase().contains(token)) {
+					hasAllTokens = false;
+					break;
+				}
+			if (hasAllTokens)
+				ret.add(m);
+		}
+		return ret;
+	}
+	
+	private Set<MedicineInPharmacyDTO> searchByManufacturer(String manufacturer, Set<MedicineInPharmacyDTO> medicines) {
+		Set<MedicineInPharmacyDTO> ret = new HashSet<MedicineInPharmacyDTO>();
+		if(manufacturer.length() == 0) return medicines;
+		String[] tokens = formatSearchCriterion(manufacturer).split(" ");
+		for(MedicineInPharmacyDTO m : medicines ) {
+			boolean hasAllTokens = true;
+			for(String token : tokens)
+				if(!m.getManufacturer().toLowerCase().contains(token)) {
+					hasAllTokens = false;
+					break;
+				}
+			if (hasAllTokens)
+				ret.add(m);
+		}
+		return ret;
+	}
+	
+	private String formatSearchCriterion(String criterion) {
+		return criterion.trim().replaceAll(" +", " ").toLowerCase();
+	}
+
+	@Override
+	public Set<MedicineForPharmacyAdminDTO> getAllNotOffered(Pharmacy pharmacy) {
+		List<Medicine> medicines = medicineRepository.findAll();
+		Set<MedicineForPharmacyAdminDTO> ret = new HashSet<MedicineForPharmacyAdminDTO>();
+		for (Medicine m : medicines)
+			if(!pharmacy.offers(m))
+				ret.add(new MedicineForPharmacyAdminDTO(m.getId(), m.getCode(), m.getName(), m.getType().toString(), m.getManufacturer(), false));
+		return ret;
 	}
 
 }

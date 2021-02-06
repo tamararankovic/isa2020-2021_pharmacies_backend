@@ -1,7 +1,5 @@
 package isa.tim28.pharmacies.model;
 
-import java.time.LocalDate;
-
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -10,6 +8,8 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
+
+import isa.tim28.pharmacies.exceptions.PriceInvalidException;
 
 @Entity
 public class MedicinePrice {
@@ -23,20 +23,28 @@ public class MedicinePrice {
 	
 	@Column(name = "price", nullable = false)
 	private double price;
-	
-	@Column(name = "startDate", nullable = false)
-	private LocalDate startDate;
 
 	public MedicinePrice() {
 		super();
 	}
 	
-	public MedicinePrice(long id, Medicine medicine, double price, LocalDate startDate) {
-		super();
+	public MedicinePrice(long id, Medicine medicine, double price) throws PriceInvalidException {
+		if (!isPriceValid(price)) 
+			throw new PriceInvalidException("Price must be a number between 1 and 100000");
 		this.id = id;
 		this.medicine = medicine;
 		this.price = price;
-		this.startDate = startDate;
+	}
+	
+	public MedicinePrice(Medicine medicine, double price) throws PriceInvalidException {
+		if (!isPriceValid(price)) 
+			throw new PriceInvalidException("Price must be a number between 1 and 100000");
+		this.medicine = medicine;
+		this.price = price;
+	}
+	
+	private boolean isPriceValid (double price) {
+		return price > 0 && price <= 100000;
 	}
 
 	public long getId() {
@@ -62,14 +70,4 @@ public class MedicinePrice {
 	public void setPrice(double price) {
 		this.price = price;
 	}
-
-	public LocalDate getStartDate() {
-		return startDate;
-	}
-
-	public void setStartDate(LocalDate startDate) {
-		this.startDate = startDate;
-	}
-	
-	
 }

@@ -1,8 +1,13 @@
 package isa.tim28.pharmacies.controller;
 
 import java.util.ArrayList;
+
 import java.util.List;
 
+import java.util.Set;
+
+
+import javax.mail.MessagingException;
 import javax.servlet.http.HttpSession;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,12 +24,16 @@ import org.springframework.web.server.ResponseStatusException;
 
 import isa.tim28.pharmacies.dtos.MedicineInfoDTO;
 
+import isa.tim28.pharmacies.dtos.DealPromotionDTO;
 
 import isa.tim28.pharmacies.dtos.PharmacyBasicInfoDTO;
-
 import isa.tim28.pharmacies.dtos.PharmacyInfoForPatientDTO;
+import isa.tim28.pharmacies.dtos.PriceListDTO;
+import isa.tim28.pharmacies.exceptions.ForbiddenOperationException;
+import isa.tim28.pharmacies.exceptions.MedicineDoesNotExistException;
 import isa.tim28.pharmacies.exceptions.PharmacyDataInvalidException;
 import isa.tim28.pharmacies.exceptions.PharmacyNotFoundException;
+import isa.tim28.pharmacies.exceptions.PriceInvalidException;
 import isa.tim28.pharmacies.exceptions.UserDoesNotExistException;
 import isa.tim28.pharmacies.model.Pharmacy;
 import isa.tim28.pharmacies.model.PharmacyAdmin;
@@ -32,6 +41,7 @@ import isa.tim28.pharmacies.model.Role;
 import isa.tim28.pharmacies.model.User;
 import isa.tim28.pharmacies.service.interfaces.IPharmacyAdminService;
 import isa.tim28.pharmacies.service.interfaces.IPharmacyService;
+import isa.tim28.pharmacies.service.interfaces.ISubscriptionService;
 
 @RestController
 @RequestMapping("pharmacy")
@@ -39,12 +49,14 @@ public class PharmacyController {
 
 	private IPharmacyService pharmacyService;
 	private IPharmacyAdminService pharmacyAdminService;
+	private ISubscriptionService subscriptionService;
 
 	@Autowired
-	public PharmacyController(IPharmacyService pharmacyService, IPharmacyAdminService pharmacyAdminService) {
+	public PharmacyController(IPharmacyService pharmacyService, IPharmacyAdminService pharmacyAdminService, ISubscriptionService subscriptionService) {
 		super();
 		this.pharmacyService = pharmacyService;
 		this.pharmacyAdminService = pharmacyAdminService;
+		this.subscriptionService = subscriptionService;
 	}
 
 	@GetMapping(value = "info/{id}")
@@ -127,6 +139,7 @@ public class PharmacyController {
 		}
 	}
 
+
 	@PostMapping(value = "/getByMedicine",  produces = MediaType.APPLICATION_JSON_VALUE,consumes = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<List<PharmacyBasicInfoDTO>> getPharmacyByMedicine(@RequestBody MedicineInfoDTO dto, HttpSession session) {
 		User loggedInUser = (User) session.getAttribute("loggedInUser");
@@ -146,6 +159,108 @@ public class PharmacyController {
 		}
 		
 		return new ResponseEntity<>(res,HttpStatus.OK);
+	}
+
+
+	
+	@PostMapping(value = "add-medicines")
+	public void addMedicines(@RequestBody Set<Long> medicineIds, HttpSession session) {
+		User user = (User) session.getAttribute("loggedInUser");
+		if (user == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not logged in!");
+		}
+		if (user.getRole() != Role.PHARMACY_ADMIN) {
+			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You don't have required permissions!");
+		}
+		try {
+			PharmacyAdmin admin = pharmacyAdminService.findByUser(user);
+			pharmacyService.addNewMedicines(admin.getPharmacy(), medicineIds);
+		} catch (UserDoesNotExistException e) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+		} catch (MedicineDoesNotExistException e) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+		}
+	}
+	
+	@PostMapping(value = "delete-medicine/{id}")
+	public void deleteMedicine(@PathVariable long id, HttpSession session) {
+		User user = (User) session.getAttribute("loggedInUser");
+		if (user == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not logged in!");
+		}
+		if (user.getRole() != Role.PHARMACY_ADMIN) {
+			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You don't have required permissions!");
+		}
+		try {
+			PharmacyAdmin admin = pharmacyAdminService.findByUser(user);
+			pharmacyService.deleteMedicine(admin.getPharmacy(), id);
+		} catch (UserDoesNotExistException e) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+		} catch (MedicineDoesNotExistException e) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+		} catch (ForbiddenOperationException e) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+		}
+	}
+	
+	@GetMapping(value = "current-price-list")
+	public ResponseEntity<PriceListDTO> getCurrentPriceList(HttpSession session) {
+		User user = (User) session.getAttribute("loggedInUser");
+		if (user == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not logged in!");
+		}
+		if (user.getRole() != Role.PHARMACY_ADMIN) {
+			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You don't have required permissions!");
+		}
+		try {
+			PharmacyAdmin admin = pharmacyAdminService.findByUser(user);
+			return new ResponseEntity<>(pharmacyService.getCurrentPriceList(admin.getPharmacy()), HttpStatus.OK);
+		} catch (UserDoesNotExistException e) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+		}
+	}
+	
+	@PostMapping(value = "new-price-list")
+	public void updatePriceLists(@RequestBody PriceListDTO dto, HttpSession session) {
+		User user = (User) session.getAttribute("loggedInUser");
+		if (user == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not logged in!");
+		}
+		if (user.getRole() != Role.PHARMACY_ADMIN) {
+			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You don't have required permissions!");
+		}
+		try {
+			PharmacyAdmin admin = pharmacyAdminService.findByUser(user);
+			pharmacyService.updatePriceLists(dto, admin.getPharmacy());
+		} catch (UserDoesNotExistException e) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+		} catch (MedicineDoesNotExistException e) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+		} catch (ForbiddenOperationException e) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+		} catch (PriceInvalidException e) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+		}
+	}
+	
+	@PostMapping(value = "send-deals-promotions")
+	public void sendDealsPromotions(@RequestBody DealPromotionDTO dto, HttpSession session) {
+		User user = (User) session.getAttribute("loggedInUser");
+		if (user == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not logged in!");
+		}
+		if (user.getRole() != Role.PHARMACY_ADMIN) {
+			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You don't have required permissions!");
+		}
+		try {
+			PharmacyAdmin admin = pharmacyAdminService.findByUser(user);
+			subscriptionService.sendDealOrPromotionToAllSubscribed(dto, admin.getPharmacy());
+		} catch (UserDoesNotExistException e) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+		} catch (MessagingException e) {
+		} catch (ForbiddenOperationException e) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+		}
 	}
 
 }

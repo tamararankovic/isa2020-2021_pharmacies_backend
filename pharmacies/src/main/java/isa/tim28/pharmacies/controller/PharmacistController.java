@@ -1,6 +1,7 @@
 package isa.tim28.pharmacies.controller;
 
 import java.util.Set;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import javax.mail.MessagingException;
@@ -20,6 +21,7 @@ import org.springframework.web.server.ResponseStatusException;
 import isa.tim28.pharmacies.dtos.DermatologistAppointmentDTO;
 import isa.tim28.pharmacies.dtos.DermatologistReportDTO;
 import isa.tim28.pharmacies.dtos.IsAllergicDTO;
+import isa.tim28.pharmacies.dtos.IsAppointmentAvailableDTO;
 import isa.tim28.pharmacies.dtos.MedicineDTOM;
 import isa.tim28.pharmacies.dtos.MedicineQuantityCheckDTO;
 import isa.tim28.pharmacies.dtos.PasswordChangeDTO;
@@ -28,6 +30,7 @@ import isa.tim28.pharmacies.dtos.NewPharmacistDTO;
 import isa.tim28.pharmacies.dtos.PharmacistDTO;
 import isa.tim28.pharmacies.dtos.PatientSearchDTO;
 import isa.tim28.pharmacies.dtos.PharmacistProfileDTO;
+import isa.tim28.pharmacies.dtos.PharmacistSaveAppointmentDTO;
 import isa.tim28.pharmacies.dtos.ReservationValidDTO;
 import isa.tim28.pharmacies.exceptions.BadNameException;
 import isa.tim28.pharmacies.exceptions.BadNewEmailException;
@@ -37,6 +40,7 @@ import isa.tim28.pharmacies.exceptions.InvalidDeleteUserAttemptException;
 import isa.tim28.pharmacies.exceptions.PasswordIncorrectException;
 import isa.tim28.pharmacies.exceptions.UserDoesNotExistException;
 import isa.tim28.pharmacies.model.Pharmacist;
+import isa.tim28.pharmacies.model.PharmacistAppointment;
 import isa.tim28.pharmacies.model.Reservation;
 import isa.tim28.pharmacies.model.Role;
 import isa.tim28.pharmacies.model.User;
@@ -420,7 +424,58 @@ public class PharmacistController {
 				throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email not sent.");
 			}
 		}
-		else throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No reservation.");
+		else throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No reservation.");	
+	}
+	
+	/*
+	 url: POST localhost:8081/pharm/saveAppointment
+	 HTTP request for saving new appointment
+	 returns ResponseEntity object
+	*/
+	@PostMapping(value = "/saveAppointment", produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<String> saveAppointment(@RequestBody PharmacistSaveAppointmentDTO dto, HttpSession session){
 		
+		User loggedInUser = (User) session.getAttribute("loggedInUser");
+		if(loggedInUser == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No logged in user!");
+		}
+		if(loggedInUser.getRole() != Role.PHARMACIST) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only pharmacist can schedule appointments.");
+		}
+		
+		PharmacistAppointment appointment = pharmacistAppointmentService.savePharmacistAppointment(dto.getLastAppointmentId(), dto.getStartDateTime());
+		if(appointment != null) {
+			String patientName = appointment.getPatient().getUser().getName();
+			String patientEmail = appointment.getPatient().getUser().getEmail();
+			LocalDateTime startDateTime = appointment.getStartDateTime();
+			try {
+				emailService.sendAppointmnetConfirmationAsync(patientName, patientEmail, startDateTime);
+				return new ResponseEntity<>("", HttpStatus.OK);
+			} catch (MessagingException e) {
+				throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email not sent.");
+			}
+		}
+		else throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No appointment.");
+	}
+	
+	/*
+	 url: POST localhost:8081/pharm/appointment
+	 HTTP request for saving new appointment
+	 returns ResponseEntity object
+	*/
+	@PostMapping(value = "/appointment", produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<IsAppointmentAvailableDTO> isAppointmentAvailable(@RequestBody PharmacistSaveAppointmentDTO dto, HttpSession session){
+		
+		
+		User loggedInUser = (User) session.getAttribute("loggedInUser");
+		if(loggedInUser == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No logged in user!");
+		}
+		if(loggedInUser.getRole() != Role.PHARMACIST) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only pharmacist can schedule appointments.");
+		}
+		
+		IsAppointmentAvailableDTO available = new IsAppointmentAvailableDTO(pharmacistAppointmentService.checkIfFreeAppointmentExists(dto.getLastAppointmentId(), dto.getStartDateTime()));
+		return new ResponseEntity<>(available, HttpStatus.OK);
 	}
 }

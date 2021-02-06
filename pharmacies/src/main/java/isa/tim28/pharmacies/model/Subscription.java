@@ -1,6 +1,7 @@
 package isa.tim28.pharmacies.model;
 
 import javax.persistence.CascadeType;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
@@ -20,16 +21,29 @@ public class Subscription {
 	
 	@ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
 	private Patient patient;
-
+	
+	@Column(name = "cancelled", nullable = false)
+	private boolean cancelled;
+	
 	public Subscription() {
 		super();
 	}
 	
-	public Subscription(long id, Pharmacy pharmacy, Patient patient) {
+	public Subscription(long id, Pharmacy pharmacy, Patient patient, boolean cancelled) {
 		super();
 		this.id = id;
 		this.pharmacy = pharmacy;
 		this.patient = patient;
+		this.cancelled = cancelled;
+	}
+	
+
+	public boolean getCancelled() {
+		return cancelled;
+	}
+
+	public void setCancelled(boolean cancelled) {
+		this.cancelled = cancelled;
 	}
 
 	public long getId() {

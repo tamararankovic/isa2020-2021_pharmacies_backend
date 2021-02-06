@@ -1,5 +1,7 @@
 package isa.tim28.pharmacies.model;
 
+import java.time.LocalDateTime;
+
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -19,6 +21,8 @@ public class Offer {
 	@ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
 	private Supplier supplier;
 	
+	private LocalDateTime deadline;
+	
 	@Column(name = "accepted", nullable = false)
 	private boolean accepted;
 	
@@ -29,10 +33,11 @@ public class Offer {
 		super();
 	}
 	
-	public Offer(long id, Supplier supplier, boolean accepted, double totalPrice) {
+	public Offer(long id, Supplier supplier, LocalDateTime deadline ,boolean accepted, double totalPrice) {
 		super();
 		this.id = id;
 		this.supplier = supplier;
+		this.deadline = deadline;
 		this.accepted = accepted;
 		this.totalPrice = totalPrice;
 	}
@@ -67,6 +72,13 @@ public class Offer {
 
 	public void setTotalPrice(double totalPrice) {
 		this.totalPrice = totalPrice;
+	}
+	public LocalDateTime getDeadline() {
+		return deadline;
+	}
+
+	public void setDeadline(LocalDateTime deadline) {
+		this.deadline = deadline;
 	}
 
 }

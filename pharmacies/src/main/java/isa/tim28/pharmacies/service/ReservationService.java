@@ -6,14 +6,22 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
+
 import javax.mail.MessagingException;
+
+import java.util.Set;
+import java.util.stream.Collectors;
+
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import isa.tim28.pharmacies.dtos.ReservationDTO;
 import isa.tim28.pharmacies.exceptions.UserDoesNotExistException;
+
 import isa.tim28.pharmacies.model.CancelledReservation;
+
+import isa.tim28.pharmacies.model.Pharmacy;
 
 import isa.tim28.pharmacies.model.Reservation;
 import isa.tim28.pharmacies.model.ReservationStatus;
@@ -152,7 +160,10 @@ public class ReservationService implements IReservationService {
 		}
 		
 		return res;
-		
+	}
+	public Set<Reservation> getAllByPharamcy(Pharmacy pharmacy) {
+		return reservationRepository.findAll().stream().filter(r -> r.getPharmacy().getId() == pharmacy.getId()).collect(Collectors.toSet());
+
 	}
 	
 	
