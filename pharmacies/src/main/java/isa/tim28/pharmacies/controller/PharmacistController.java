@@ -505,7 +505,7 @@ public class PharmacistController {
 	
 	/*
 	 url: POST localhost:8081/pharm/month
-	 HTTP request for appointments for selected week
+	 HTTP request for appointments for selected month
 	 returns ResponseEntity object
 	*/
 	@PostMapping(value = "/month", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -525,7 +525,7 @@ public class PharmacistController {
 	
 	/*
 	 url: POST localhost:8081/pharm/year
-	 HTTP request for appointments for selected week
+	 HTTP request for appointments for selected year
 	 returns ResponseEntity object
 	*/
 	@PostMapping(value = "/year", produces = MediaType.APPLICATION_JSON_VALUE)

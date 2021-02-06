@@ -3,6 +3,7 @@ package isa.tim28.pharmacies.service.interfaces;
 import java.util.List;
 import java.util.Set;
 
+import isa.tim28.pharmacies.dtos.DermPharmacyDTO;
 import isa.tim28.pharmacies.dtos.DermatologistDTO;
 import isa.tim28.pharmacies.dtos.DermatologistProfileDTO;
 import isa.tim28.pharmacies.dtos.DermatologistToEmployDTO;
@@ -51,4 +52,6 @@ public interface IDermatologistService {
 	List<PatientSearchDTO> getAllPatientsByNameAndSurname(String name, String surname);
 	
 	Dermatologist save(Dermatologist dermatologist);
+	
+	List<DermPharmacyDTO> getAllPharmaciesByDermatologist(long userId);
 }
