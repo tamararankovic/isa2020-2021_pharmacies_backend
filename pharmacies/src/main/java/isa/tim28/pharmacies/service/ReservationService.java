@@ -5,7 +5,7 @@ import java.time.Period;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-
+import java.util.Optional;
 
 import javax.mail.MessagingException;
 
@@ -17,10 +17,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import isa.tim28.pharmacies.dtos.ReservationDTO;
+import isa.tim28.pharmacies.exceptions.ForbiddenOperationException;
+import isa.tim28.pharmacies.exceptions.MedicineDoesNotExistException;
 import isa.tim28.pharmacies.exceptions.UserDoesNotExistException;
 
 import isa.tim28.pharmacies.model.CancelledReservation;
-
+import isa.tim28.pharmacies.model.Medicine;
+import isa.tim28.pharmacies.model.MedicineQuantity;
 import isa.tim28.pharmacies.model.Pharmacy;
 
 import isa.tim28.pharmacies.model.Reservation;
@@ -166,8 +169,31 @@ public class ReservationService implements IReservationService {
 
 	}
 	
+	@Override
+	public boolean pharmacyHasActiveReservationsForMedicine(Pharmacy pharmacy, Medicine med) {
+		Set<Reservation> reservations = getAllByPharamcy(pharmacy).stream().filter(r -> r.getMedicine().getId() == med.getId()).collect(Collectors.toSet());
+		for(Reservation r : reservations)
+			if(r.isActive())
+				return true;
+		return false;
+	}
 	
-	
+
+	@Override
+	public void deleteMedicine(Pharmacy pharmacy, long medicineId) throws MedicineDoesNotExistException, ForbiddenOperationException {
+		Medicine medicine = medicineService.findById(medicineId);
+		if(medicine == null)
+			throw new MedicineDoesNotExistException("Medicine does not exist in the system!");
+		Optional<MedicineQuantity> medOpt = pharmacy.getMedicines().stream().filter(m -> m.getMedicine().getId() == medicine.getId()).findFirst();
+		if(medOpt.isEmpty()) {
+			throw new MedicineDoesNotExistException("You can't delete a medicine that the pharmacy doesn't offer!");
+		}
+		MedicineQuantity med = medOpt.get();
+		if(pharmacyHasActiveReservationsForMedicine(pharmacy, med.getMedicine()))
+			throw new ForbiddenOperationException("You can't delete a medicine that has active reservations!");
+		pharmacy.getMedicines().remove(med);
+		pharmacyService.savePharmacy(pharmacy);
+	}
 	
 
 

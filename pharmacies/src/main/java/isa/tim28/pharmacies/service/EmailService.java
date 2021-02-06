@@ -102,7 +102,7 @@ public class EmailService {
 	public void sendReservationMadeEmailAsync(String name, String address, long reservationId) throws MessagingException {
 		System.out.println("Async metoda se izvrsava u drugom Threadu u odnosu na prihvaceni zahtev. Thread id: " + Thread.currentThread().getId());
 		System.out.println("Slanje emaila...");
-		String content = "Pozdrav " + name + ",<br>"
+		String content= "Pozdrav " + name + ",<br>"
 	            + "Rezervisali ste lek." + "<br>"
 	            + "Broj rezervacije: " + reservationId + "<br>";
 		

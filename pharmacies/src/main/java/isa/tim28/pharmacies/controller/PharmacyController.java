@@ -35,12 +35,12 @@ import isa.tim28.pharmacies.exceptions.PharmacyDataInvalidException;
 import isa.tim28.pharmacies.exceptions.PharmacyNotFoundException;
 import isa.tim28.pharmacies.exceptions.PriceInvalidException;
 import isa.tim28.pharmacies.exceptions.UserDoesNotExistException;
-import isa.tim28.pharmacies.model.Pharmacy;
 import isa.tim28.pharmacies.model.PharmacyAdmin;
 import isa.tim28.pharmacies.model.Role;
 import isa.tim28.pharmacies.model.User;
 import isa.tim28.pharmacies.service.interfaces.IPharmacyAdminService;
 import isa.tim28.pharmacies.service.interfaces.IPharmacyService;
+import isa.tim28.pharmacies.service.interfaces.IReservationService;
 import isa.tim28.pharmacies.service.interfaces.ISubscriptionService;
 
 @RestController
@@ -50,13 +50,15 @@ public class PharmacyController {
 	private IPharmacyService pharmacyService;
 	private IPharmacyAdminService pharmacyAdminService;
 	private ISubscriptionService subscriptionService;
+	private IReservationService reservationService;
 
 	@Autowired
-	public PharmacyController(IPharmacyService pharmacyService, IPharmacyAdminService pharmacyAdminService, ISubscriptionService subscriptionService) {
+	public PharmacyController( IReservationService reservationService, IPharmacyService pharmacyService, IPharmacyAdminService pharmacyAdminService, ISubscriptionService subscriptionService) {
 		super();
 		this.pharmacyService = pharmacyService;
 		this.pharmacyAdminService = pharmacyAdminService;
 		this.subscriptionService = subscriptionService;
+		this.reservationService = reservationService;
 	}
 
 	@GetMapping(value = "info/{id}")
@@ -193,7 +195,7 @@ public class PharmacyController {
 		}
 		try {
 			PharmacyAdmin admin = pharmacyAdminService.findByUser(user);
-			pharmacyService.deleteMedicine(admin.getPharmacy(), id);
+			reservationService.deleteMedicine(admin.getPharmacy(), id);
 		} catch (UserDoesNotExistException e) {
 			throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
 		} catch (MedicineDoesNotExistException e) {

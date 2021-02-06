@@ -46,11 +46,11 @@ public interface IPharmacyService {
 	void addNewMedicines(Pharmacy pharmacy, Set<Long> medicineIds) throws MedicineDoesNotExistException;
 	
 	void addMedicines(Pharmacy pharmacy, Set<MedicineQuantity> medicines) throws ForbiddenOperationException;
-	
-	void deleteMedicine(Pharmacy pharmacy, long medicineId) throws MedicineDoesNotExistException, ForbiddenOperationException;
-	
+		
 	PriceListDTO getCurrentPriceList(Pharmacy pharmacy);
 	
 	void updatePriceLists(PriceListDTO dto, Pharmacy pharmacy) throws MedicineDoesNotExistException, ForbiddenOperationException, PriceInvalidException;
+
+	Pharmacy savePharmacy(Pharmacy pharmacy);
 
 }
