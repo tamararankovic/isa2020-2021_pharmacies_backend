@@ -7,6 +7,7 @@ import javax.servlet.http.HttpSession;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -18,6 +19,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import isa.tim28.pharmacies.dtos.NewOrderDTO;
 import isa.tim28.pharmacies.dtos.OrderForPharmacyAdminDTO;
+import isa.tim28.pharmacies.dtos.OrderForSupplierDTO;
 import isa.tim28.pharmacies.dtos.OrderWinnerDTO;
 import isa.tim28.pharmacies.dtos.UpdateOrderDTO;
 import isa.tim28.pharmacies.exceptions.ForbiddenOperationException;
@@ -78,6 +80,20 @@ public class OrderController {
 		} catch(UserDoesNotExistException e1) {
 			throw new ResponseStatusException(HttpStatus.NOT_FOUND, e1.getMessage());
 		}
+	}
+	
+	@GetMapping(value = "/getOrdersSupplier", produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<Set<OrderForSupplierDTO>> getAllOrdersForSupplier(HttpSession session) {
+		User user = (User)session.getAttribute("loggedInUser");
+		if (user == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not logged in!");
+		}
+		if (user.getRole() != Role.SUPPLIER) {
+			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You don't have required permissions!");
+		}
+
+		return new ResponseEntity<>(orderService.getAllOrders(), HttpStatus.OK);
+		
 	}
 	
 	@PostMapping(value = "choose-winner")

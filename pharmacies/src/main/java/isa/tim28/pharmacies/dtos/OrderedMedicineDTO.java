@@ -15,7 +15,7 @@ public class OrderedMedicineDTO {
 		this.medicine = medicine;
 		this.quantity = quantity;
 	}
-
+	
 	public MedicineForPharmacyAdminDTO getMedicine() {
 		return medicine;
 	}

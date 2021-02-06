@@ -14,6 +14,7 @@ import isa.tim28.pharmacies.repository.SupplierRepository;
 import isa.tim28.pharmacies.repository.UserRepository;
 import isa.tim28.pharmacies.service.interfaces.ISupplierService;
 
+
 @Service
 public class SupplierService implements ISupplierService {
 	
@@ -25,6 +26,14 @@ public class SupplierService implements ISupplierService {
 		super();
 		this.supplierRepository = supplierRepository;
 		this.userRepository = userRepository;
+	}
+	
+	@Override
+	public Supplier getSupplierById(long id) throws UserDoesNotExistException {
+		if (supplierRepository.findOneByUser_Id(id) == null)
+			throw new UserDoesNotExistException("Supplier does not exist!");
+		else
+			return supplierRepository.findOneByUser_Id(id);
 	}
 	
 	@Override

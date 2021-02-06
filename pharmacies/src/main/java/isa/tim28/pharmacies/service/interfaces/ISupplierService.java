@@ -12,8 +12,14 @@ import isa.tim28.pharmacies.model.User;
 
 public interface ISupplierService {
 	Supplier save(Supplier supplier);
+	
 	User getUserPart(long id) throws UserDoesNotExistException;
+	
 	User updateSupplier(SupplierProfileDTO newUser, long id) throws BadNameException, BadSurnameException, BadNewEmailException, UserDoesNotExistException;
+	
 	boolean checkOldPassword(long id, String oldPassword) throws UserDoesNotExistException, PasswordIncorrectException;
+	
 	void changePassword(long id, String newPassword) throws UserDoesNotExistException;
+	
+	Supplier getSupplierById(long id) throws UserDoesNotExistException;
 }

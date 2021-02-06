@@ -109,7 +109,7 @@ alter sequence supplier_id_seq restart with 2;
 insert into orders(id, deadline, admin_creator_id) values (1, '2021-02-04 20:21:00.000000', 1);
 alter sequence orders_id_seq restart with 2;
 
-insert into offer(id, accepted, supplier_id, total_price) values (1, FALSE, 1, 5000);
+insert into offer(id, deadline,accepted, supplier_id, total_price) values (1, '2021-02-04 20:21:00.000000' ,FALSE, 1, 5000);
 alter sequence offer_id_seq restart with 2;
 
 insert into orders_offers(order_id, offers_id) values (1, 1);
