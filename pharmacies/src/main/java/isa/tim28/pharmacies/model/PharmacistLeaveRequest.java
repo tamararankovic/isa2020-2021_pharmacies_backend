@@ -32,16 +32,13 @@ public class PharmacistLeaveRequest {
 	
 	@Column(name = "confirmed", nullable = false)
 	private boolean confirmed;
-	
-	@Column(name = "reasonDenied", nullable = false)
-	private String reasonDenied;
 
 	public PharmacistLeaveRequest() {
 		super();
 	}
 	
 	public PharmacistLeaveRequest(long id, Pharmacist pharmacist, LocalDate startDate, LocalDate endDate,
-			LeaveType type, boolean confirmed, String reasonDenied) {
+			LeaveType type, boolean confirmed) {
 		super();
 		this.id = id;
 		this.pharmacist = pharmacist;
@@ -49,7 +46,6 @@ public class PharmacistLeaveRequest {
 		this.endDate = endDate;
 		this.type = type;
 		this.confirmed = confirmed;
-		this.reasonDenied = reasonDenied;
 	}
 
 	public long getId() {
@@ -98,13 +94,5 @@ public class PharmacistLeaveRequest {
 
 	public void setConfirmed(boolean confirmed) {
 		this.confirmed = confirmed;
-	}
-
-	public String getReasonDenied() {
-		return reasonDenied;
-	}
-
-	public void setReasonDenied(String reasonDenied) {
-		this.reasonDenied = reasonDenied;
 	}
 }

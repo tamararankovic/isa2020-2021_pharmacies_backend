@@ -1,9 +1,9 @@
 package isa.tim28.pharmacies.controller;
 
-import java.util.Set;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.mail.MessagingException;
 import javax.servlet.http.HttpSession;
@@ -22,26 +22,28 @@ import org.springframework.web.server.ResponseStatusException;
 
 import isa.tim28.pharmacies.dtos.DermPharmacyDTO;
 import isa.tim28.pharmacies.dtos.DermatologistAppointmentDTO;
+import isa.tim28.pharmacies.dtos.DermatologistDTO;
 import isa.tim28.pharmacies.dtos.DermatologistProfileDTO;
 import isa.tim28.pharmacies.dtos.DermatologistReportDTO;
 import isa.tim28.pharmacies.dtos.DermatologistSaveAppointmentDTO;
+import isa.tim28.pharmacies.dtos.DermatologistToEmployDTO;
+import isa.tim28.pharmacies.dtos.ExistingDermatologistAppointmentDTO;
 import isa.tim28.pharmacies.dtos.IsAllergicDTO;
 import isa.tim28.pharmacies.dtos.IsAppointmentAvailableDTO;
+import isa.tim28.pharmacies.dtos.LeaveDTO;
+import isa.tim28.pharmacies.dtos.LeaveViewDTO;
 import isa.tim28.pharmacies.dtos.MedicineDTOM;
 import isa.tim28.pharmacies.dtos.MedicineDetailsDTO;
 import isa.tim28.pharmacies.dtos.MedicineQuantityCheckDTO;
+import isa.tim28.pharmacies.dtos.NewDermatologistInPharmacyDTO;
 import isa.tim28.pharmacies.dtos.PasswordChangeDTO;
 import isa.tim28.pharmacies.dtos.PatientReportAllergyDTO;
-import isa.tim28.pharmacies.dtos.DermatologistDTO;
-import isa.tim28.pharmacies.dtos.DermatologistToEmployDTO;
-import isa.tim28.pharmacies.dtos.ExistingDermatologistAppointmentDTO;
-import isa.tim28.pharmacies.dtos.NewDermatologistInPharmacyDTO;
-import isa.tim28.pharmacies.exceptions.AddingDermatologistToPharmacyException;
 import isa.tim28.pharmacies.dtos.PatientSearchDTO;
 import isa.tim28.pharmacies.dtos.PharmAppByMonthDTO;
 import isa.tim28.pharmacies.dtos.PharmAppByWeekDTO;
 import isa.tim28.pharmacies.dtos.PharmAppByYearDTO;
 import isa.tim28.pharmacies.dtos.PharmAppDTO;
+import isa.tim28.pharmacies.exceptions.AddingDermatologistToPharmacyException;
 import isa.tim28.pharmacies.exceptions.BadNameException;
 import isa.tim28.pharmacies.exceptions.BadNewEmailException;
 import isa.tim28.pharmacies.exceptions.BadSurnameException;
@@ -614,5 +616,43 @@ public class DermatologistController {
 		
 		List<PharmAppDTO> appointments = dermatologistAppointmentService.getAppointmentsByYear(dto, pharmacyId, loggedInUser.getId());
 		return new ResponseEntity<>(appointments, HttpStatus.OK);
+	}
+	
+	/*
+	 url: POST localhost:8081/derm/newLeaveRequest
+	 HTTP request for saving new dermatologist leave request
+	 returns ResponseEntity object
+	*/
+	@PostMapping(value = "/newLeaveRequest", produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<String> newLeaveRequest(@RequestBody LeaveDTO dto, HttpSession session){
+		
+		User loggedInUser = (User) session.getAttribute("loggedInUser");
+		if(loggedInUser == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No logged in user!");
+		}
+		if(loggedInUser.getRole() != Role.DERMATOLOGIST) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only dermatologist can save leave requests.");
+		}
+		dermatologistAppointmentService.saveLeaveRequest(dto, loggedInUser.getId());
+		return new ResponseEntity<>("", HttpStatus.OK);
+	}
+	
+	/*
+	 url: GET localhost:8081/derm/allLeaveRequests
+	 HTTP request for all leave request list
+	 returns ResponseEntity object
+	*/
+	@GetMapping(value = "/allLeaveRequests", produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<List<LeaveViewDTO>> allLeaveRequests(HttpSession session){
+		
+		User loggedInUser = (User) session.getAttribute("loggedInUser");
+		if(loggedInUser == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No logged in user!");
+		}
+		if(loggedInUser.getRole() != Role.DERMATOLOGIST) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only dermatologist can see his leave request list.");
+		}
+		List<LeaveViewDTO> dtos = dermatologistAppointmentService.allLeaveRequests(loggedInUser.getId());
+		return new ResponseEntity<>(dtos, HttpStatus.OK);
 	}
 }

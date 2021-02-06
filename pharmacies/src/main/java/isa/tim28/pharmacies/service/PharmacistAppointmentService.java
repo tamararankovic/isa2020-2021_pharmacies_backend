@@ -15,6 +15,8 @@ import org.springframework.stereotype.Service;
 
 import isa.tim28.pharmacies.dtos.DermatologistAppointmentDTO;
 import isa.tim28.pharmacies.dtos.DermatologistReportDTO;
+import isa.tim28.pharmacies.dtos.LeaveDTO;
+import isa.tim28.pharmacies.dtos.LeaveViewDTO;
 import isa.tim28.pharmacies.dtos.MedicineDTOM;
 import isa.tim28.pharmacies.dtos.MedicineQuantityCheckDTO;
 import isa.tim28.pharmacies.dtos.PharmAppByMonthDTO;
@@ -26,6 +28,7 @@ import isa.tim28.pharmacies.dtos.TherapyDTO;
 import isa.tim28.pharmacies.exceptions.UserDoesNotExistException;
 import isa.tim28.pharmacies.model.DailyEngagement;
 import isa.tim28.pharmacies.model.DermatologistAppointment;
+import isa.tim28.pharmacies.model.LeaveType;
 import isa.tim28.pharmacies.model.Medicine;
 import isa.tim28.pharmacies.model.MedicineMissingNotification;
 import isa.tim28.pharmacies.model.MedicineQuantity;
@@ -398,6 +401,44 @@ public class PharmacistAppointmentService implements IPharmacistAppointmentServi
 			patientRepository.save(p);
 		} catch(Exception e) {
 			return;
+		}
+	}
+
+	@Override
+	public void saveLeaveRequest(LeaveDTO dto, long userId) {
+		try {
+			Pharmacist pharmacist = pharmacistRepository.findOneByUser_Id(userId);
+			PharmacistLeaveRequest request = new PharmacistLeaveRequest();
+			request.setStartDate(dto.getStartDate());
+			request.setEndDate(dto.getEndDate());
+			request.setPharmacist(pharmacist);
+			if(dto.getType().equals("SICK_LEAVE")) request.setType(LeaveType.SICK_LEAVE);
+			else request.setType(LeaveType.ANNUAL_LEAVE);
+			request.setConfirmed(false);
+			pharmacistLeaveRequestRepository.save(request);
+		} catch(Exception e) {
+			return;
+		}
+		
+	}
+
+	@Override
+	public List<LeaveViewDTO> allLeaveRequests(long userId) {
+		try {
+			Pharmacist pharmacist = pharmacistRepository.findOneByUser_Id(userId);
+			List<LeaveViewDTO> dtos = new ArrayList<LeaveViewDTO>();
+			Set<PharmacistLeaveRequest> requests = pharmacistLeaveRequestRepository.findAllByPharmacist_Id(pharmacist.getId());
+			for(PharmacistLeaveRequest request : requests) {;
+				LeaveViewDTO dto = new LeaveViewDTO();
+				dto.setConfirmed(request.isConfirmed());
+				dto.setStartDate(request.getStartDate().format(DateTimeFormatter.ofPattern("dd.MM.yyyy.")));
+				dto.setEndDate(request.getEndDate().format(DateTimeFormatter.ofPattern("dd.MM.yyyy.")));
+				dto.setType(request.getType().toString());
+				dtos.add(dto);
+			}
+			return dtos;
+		} catch(Exception e) {
+			return new ArrayList<LeaveViewDTO>();
 		}
 	}
 }

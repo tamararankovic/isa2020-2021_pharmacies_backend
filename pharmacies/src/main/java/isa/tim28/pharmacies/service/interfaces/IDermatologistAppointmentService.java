@@ -7,6 +7,8 @@ import java.util.Set;
 import isa.tim28.pharmacies.dtos.DermatologistAppointmentDTO;
 import isa.tim28.pharmacies.dtos.DermatologistReportDTO;
 import isa.tim28.pharmacies.dtos.ExistingDermatologistAppointmentDTO;
+import isa.tim28.pharmacies.dtos.LeaveDTO;
+import isa.tim28.pharmacies.dtos.LeaveViewDTO;
 import isa.tim28.pharmacies.dtos.MedicineDTOM;
 import isa.tim28.pharmacies.dtos.MedicineDetailsDTO;
 import isa.tim28.pharmacies.dtos.MedicineQuantityCheckDTO;
@@ -61,4 +63,7 @@ public interface IDermatologistAppointmentService {
 	
 	void patientWasNotPresent(long appointmentId);
 	
+	void saveLeaveRequest(LeaveDTO dto, long userId);
+	
+	List<LeaveViewDTO> allLeaveRequests(long userId);
 }
