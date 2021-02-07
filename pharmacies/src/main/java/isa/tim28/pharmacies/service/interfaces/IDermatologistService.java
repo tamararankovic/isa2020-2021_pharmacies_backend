@@ -1,5 +1,6 @@
 package isa.tim28.pharmacies.service.interfaces;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 
@@ -13,6 +14,7 @@ import isa.tim28.pharmacies.dtos.PatientSearchDTO;
 import isa.tim28.pharmacies.exceptions.BadNameException;
 import isa.tim28.pharmacies.exceptions.BadNewEmailException;
 import isa.tim28.pharmacies.exceptions.BadSurnameException;
+import isa.tim28.pharmacies.exceptions.ForbiddenOperationException;
 import isa.tim28.pharmacies.exceptions.InvalidDeleteUserAttemptException;
 import isa.tim28.pharmacies.exceptions.PasswordIncorrectException;
 import isa.tim28.pharmacies.exceptions.UserDoesNotExistException;
@@ -54,4 +56,6 @@ public interface IDermatologistService {
 	Dermatologist save(Dermatologist dermatologist);
 	
 	List<DermPharmacyDTO> getAllPharmaciesByDermatologist(long userId);
+	
+	void createPredefinedAppointment(long dermatologistId, LocalDateTime startDateTime, int durationInMinutes, long price, Pharmacy pharmacy) throws UserDoesNotExistException, ForbiddenOperationException;
 }

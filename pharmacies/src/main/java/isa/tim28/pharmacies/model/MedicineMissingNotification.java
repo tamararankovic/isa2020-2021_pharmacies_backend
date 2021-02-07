@@ -1,6 +1,9 @@
 package isa.tim28.pharmacies.model;
 
+import java.time.LocalDateTime;
+
 import javax.persistence.CascadeType;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
@@ -20,16 +23,20 @@ public class MedicineMissingNotification {
 	
 	@ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
 	private Pharmacy pharmacy;
+	
+	@Column(name = "timestamp", nullable = false)
+	private LocalDateTime timestamp;
 
 	public MedicineMissingNotification() {
 		super();
 	}
 	
-	public MedicineMissingNotification(long id, Medicine medicine, Pharmacy pharmacy) {
+	public MedicineMissingNotification(long id, Medicine medicine, Pharmacy pharmacy, LocalDateTime timestamp) {
 		super();
 		this.id = id;
 		this.medicine = medicine;
 		this.pharmacy = pharmacy;
+		this.timestamp = timestamp;
 	}
 
 	public long getId() {
@@ -56,4 +63,11 @@ public class MedicineMissingNotification {
 		this.pharmacy = pharmacy;
 	}
 
+	public LocalDateTime getTimestamp() {
+		return timestamp;
+	}
+
+	public void setTimestamp(LocalDateTime timestamp) {
+		this.timestamp = timestamp;
+	}
 }
