@@ -9,10 +9,14 @@ import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import isa.tim28.pharmacies.dtos.CompatibleMedicinesDTO;
 import isa.tim28.pharmacies.dtos.DermatologistExaminationForPatientDTO;
 import isa.tim28.pharmacies.dtos.ItemPriceDTO;
+import isa.tim28.pharmacies.dtos.MedicineSearchDTO;
+import isa.tim28.pharmacies.dtos.MedicineSpecificationDTO;
 import isa.tim28.pharmacies.dtos.PharmacyAddAdminDTO;
 import isa.tim28.pharmacies.dtos.PharmacyBasicInfoDTO;
+import isa.tim28.pharmacies.dtos.PharmacyForMedSearchDTO;
 import isa.tim28.pharmacies.dtos.PharmacyInfoForPatientDTO;
 import isa.tim28.pharmacies.dtos.PriceListDTO;
 import isa.tim28.pharmacies.exceptions.ForbiddenOperationException;
@@ -56,6 +60,110 @@ public class PharmacyService implements IPharmacyService {
 		this.dermatologistService = dermatologistService;
 		this.appointmentService = appointmentService;
 		this.medicineService = medicineService;
+	}
+	
+	@Override
+	public List<MedicineSearchDTO> searchMedicineByName(String name){
+		List<MedicineSearchDTO> result = new ArrayList<MedicineSearchDTO>();
+		if(name.equals("")) {
+			for (Medicine m : medicineService.getAllMedicine()) {
+				double averageRating= 0.0;
+				int sumOfRatings = 0;
+				Set<Rating> ratings = m.getRatings();
+				if(!ratings.isEmpty()) {
+					for(Rating r : ratings) {
+						sumOfRatings += r.getRating();
+					}
+					averageRating = sumOfRatings/ratings.size();
+				}
+				
+				Set<CompatibleMedicinesDTO> compatibleMedicines = new HashSet<CompatibleMedicinesDTO>();
+
+				for(String code : m.getCompatibleMedicineCodes()) {
+					Medicine me = medicineService.getMedicineByCode(code);
+					CompatibleMedicinesDTO med = new CompatibleMedicinesDTO(me.getName(),code);
+					compatibleMedicines.add(med);
+				}
+				MedicineSpecificationDTO specification = new MedicineSpecificationDTO(m.getSideEffects(), m.getAdvisedDailyDose(), m.getIngredients(), compatibleMedicines);
+				
+				Set<PharmacyForMedSearchDTO> pharmacies = new HashSet<PharmacyForMedSearchDTO>();
+				for(Pharmacy pharmacy : getAll()) {
+					for(MedicineQuantity medi : pharmacy.getMedicines()) {
+						if(medi.getId() == m.getId()) {
+							double price = 0.0;
+							for(PriceList pl : pharmacy.getPriceLists()) {
+								for(MedicinePrice mp : pl.getMedicinePrices()) {
+									if(mp.getMedicine().getId()==m.getId()) {
+										price = mp.getPrice();
+									}
+								}
+							}
+							PharmacyForMedSearchDTO ph = new PharmacyForMedSearchDTO(pharmacy.getName(), price);
+							pharmacies.add(ph);
+						}
+					}
+				}
+				
+				MedicineSearchDTO dto = new MedicineSearchDTO(m.getId(),m.getName(),m.getType().toString(), averageRating, specification, pharmacies);
+				result.add(dto);
+			}
+			return result;
+		}
+		
+		else {
+			for (Medicine m : findAllMedicineByName(name)) {
+				double averageRating= 0.0;
+				int sumOfRatings = 0;
+				Set<Rating> ratings = m.getRatings();
+				if(!ratings.isEmpty()) {
+					for(Rating r : ratings) {
+						sumOfRatings += r.getRating();
+					}
+					averageRating = sumOfRatings/ratings.size();
+				}
+				
+				Set<CompatibleMedicinesDTO> compatibleMedicines = new HashSet<CompatibleMedicinesDTO>();
+
+				for(String code : m.getCompatibleMedicineCodes()) {
+					Medicine me = medicineService.getMedicineByCode(code);
+					CompatibleMedicinesDTO med = new CompatibleMedicinesDTO(me.getName(),code);
+					compatibleMedicines.add(med);
+				}
+				MedicineSpecificationDTO specification = new MedicineSpecificationDTO(m.getSideEffects(), m.getAdvisedDailyDose(), m.getIngredients(), compatibleMedicines);
+				
+				Set<PharmacyForMedSearchDTO> pharmacies = new HashSet<PharmacyForMedSearchDTO>();
+				for(Pharmacy pharmacy : getAll()) {
+					for(MedicineQuantity medi : pharmacy.getMedicines()) {
+						if(medi.getId() == m.getId()) {
+							double price = 0.0;
+							for(PriceList pl : pharmacy.getPriceLists()) {
+								for(MedicinePrice mp : pl.getMedicinePrices()) {
+									if(mp.getMedicine().getId()==m.getId()) {
+										price = mp.getPrice();
+									}
+								}
+							}
+							PharmacyForMedSearchDTO ph = new PharmacyForMedSearchDTO(pharmacy.getName(), price);
+							pharmacies.add(ph);
+						}
+					}
+				}
+				
+				MedicineSearchDTO dto = new MedicineSearchDTO(m.getId(),m.getName(),m.getType().toString(), averageRating, specification, pharmacies);
+				result.add(dto);
+				
+			}
+			return result;
+		}
+	}
+	
+	public List<Medicine> findAllMedicineByName(String name){
+		List<Medicine> ret = new ArrayList<Medicine>();
+		for (Medicine m : medicineService.getAllMedicine()) {
+			if (m.getName().toLowerCase().contains(name.toLowerCase()))
+				ret.add(m);
+		}
+		return ret;
 	}
 
 	@Override
@@ -334,5 +442,11 @@ public class PharmacyService implements IPharmacyService {
 		
 		pharmacy.getPriceLists().add(pl);
 		pharmacyRepository.save(pharmacy);
+	}
+
+	@Override
+	public List<Pharmacy> getAll() {
+		List<Pharmacy> pharm = pharmacyRepository.findAll();
+		return pharm;
 	}
 }
