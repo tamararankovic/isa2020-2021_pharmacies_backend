@@ -1,5 +1,7 @@
 package isa.tim28.pharmacies.controller;
 
+import java.util.Set;
+
 import javax.servlet.http.HttpSession;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+import isa.tim28.pharmacies.dtos.NotificationDTO;
 import isa.tim28.pharmacies.dtos.PharmacyAdminDTO;
 import isa.tim28.pharmacies.dtos.UserPasswordChangeDTO;
 import isa.tim28.pharmacies.exceptions.BadNameException;
@@ -22,6 +25,7 @@ import isa.tim28.pharmacies.exceptions.UserDoesNotExistException;
 import isa.tim28.pharmacies.model.PharmacyAdmin;
 import isa.tim28.pharmacies.model.Role;
 import isa.tim28.pharmacies.model.User;
+import isa.tim28.pharmacies.service.interfaces.INotificationService;
 import isa.tim28.pharmacies.service.interfaces.IPharmacyAdminService;
 
 @RestController
@@ -29,11 +33,13 @@ import isa.tim28.pharmacies.service.interfaces.IPharmacyAdminService;
 public class PharmacyAdminController {
 
 private IPharmacyAdminService pharmacyAdminService;
+private INotificationService notificationService;
 	
 	@Autowired
-	public PharmacyAdminController(IPharmacyAdminService pharmacyAdminService) {
+	public PharmacyAdminController(IPharmacyAdminService pharmacyAdminService, INotificationService notificationService) {
 		super();
 		this.pharmacyAdminService = pharmacyAdminService;
+		this.notificationService = notificationService;
 	}
 	
 	@GetMapping
@@ -92,6 +98,23 @@ private IPharmacyAdminService pharmacyAdminService;
 			throw new ResponseStatusException(HttpStatus.NOT_FOUND, e1.getMessage());
 		} catch (PasswordIncorrectException e) {
 			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+		}
+	}
+	
+	@GetMapping(value = "notifications")
+	public ResponseEntity<Set<NotificationDTO>> getNotifications(HttpSession session) {
+		User user = (User)session.getAttribute("loggedInUser");
+		if (user == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not logged in!");
+		}
+		if (user.getRole() != Role.PHARMACY_ADMIN) {
+			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You don't have required permissions!");
+		}
+		try {
+			PharmacyAdmin admin = pharmacyAdminService.findByUser(user);
+			return new ResponseEntity<>(notificationService.getAll(admin.getPharmacy()), HttpStatus.OK);
+		} catch(UserDoesNotExistException e1) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, e1.getMessage());
 		}
 	}
 }

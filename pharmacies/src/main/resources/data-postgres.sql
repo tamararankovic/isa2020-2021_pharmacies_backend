@@ -133,3 +133,9 @@ alter sequence dermatologist_leave_request_id_seq restart with 2;
 
 insert into system_admin(id, user_id) values (1, 5);
 alter sequence system_admin_id_seq restart with 2;
+
+insert into medicine_missing_notification(id, medicine_id, pharmacy_id, timestamp) values (1, 1, 1, '2021-02-02 20:21:00.000000');
+insert into medicine_missing_notification(id, medicine_id, pharmacy_id, timestamp) values (2, 1, 1, '2021-02-01 20:21:00.000000');
+insert into medicine_missing_notification(id, medicine_id, pharmacy_id, timestamp) values (3, 1, 1, '2020-02-02 20:21:00.000000');
+insert into medicine_missing_notification(id, medicine_id, pharmacy_id, timestamp) values (4, 1, 1, '2021-01-15 20:21:00.000000');
+alter sequence medicine_missing_notification_id_seq restart with 5;
