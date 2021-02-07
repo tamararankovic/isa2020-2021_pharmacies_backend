@@ -225,4 +225,11 @@ public class Pharmacy {
 		else
 			return priceLists.stream().filter(p -> p.getStartDate().equals(date)).findFirst().get();
 	}
+	
+	public double getAvgRating() {
+		double sum = 0;
+		for(Rating r : ratings)
+			sum += r.getRating();
+		return ratings.size() > 0 ? sum / ratings.size() : 0;
+	}
 }
