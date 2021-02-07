@@ -1,11 +1,8 @@
 package isa.tim28.pharmacies.controller;
 
 import java.util.ArrayList;
-
 import java.util.List;
-
 import java.util.Set;
-
 
 import javax.mail.MessagingException;
 import javax.servlet.http.HttpSession;
@@ -22,13 +19,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
-import isa.tim28.pharmacies.dtos.MedicineInfoDTO;
-
 import isa.tim28.pharmacies.dtos.DealPromotionDTO;
-
+import isa.tim28.pharmacies.dtos.MedicineInfoDTO;
 import isa.tim28.pharmacies.dtos.PharmacyBasicInfoDTO;
 import isa.tim28.pharmacies.dtos.PharmacyInfoForPatientDTO;
 import isa.tim28.pharmacies.dtos.PriceListDTO;
+import isa.tim28.pharmacies.dtos.StatisticalDataDTO;
 import isa.tim28.pharmacies.exceptions.ForbiddenOperationException;
 import isa.tim28.pharmacies.exceptions.MedicineDoesNotExistException;
 import isa.tim28.pharmacies.exceptions.PharmacyDataInvalidException;
@@ -41,6 +37,7 @@ import isa.tim28.pharmacies.model.User;
 import isa.tim28.pharmacies.service.interfaces.IPharmacyAdminService;
 import isa.tim28.pharmacies.service.interfaces.IPharmacyService;
 import isa.tim28.pharmacies.service.interfaces.IReservationService;
+import isa.tim28.pharmacies.service.interfaces.IStatisticsService;
 import isa.tim28.pharmacies.service.interfaces.ISubscriptionService;
 
 @RestController
@@ -51,14 +48,16 @@ public class PharmacyController {
 	private IPharmacyAdminService pharmacyAdminService;
 	private ISubscriptionService subscriptionService;
 	private IReservationService reservationService;
+	private IStatisticsService statisticsService;
 
 	@Autowired
-	public PharmacyController( IReservationService reservationService, IPharmacyService pharmacyService, IPharmacyAdminService pharmacyAdminService, ISubscriptionService subscriptionService) {
+	public PharmacyController( IReservationService reservationService, IPharmacyService pharmacyService, IPharmacyAdminService pharmacyAdminService, ISubscriptionService subscriptionService, IStatisticsService statisticsService) {
 		super();
 		this.pharmacyService = pharmacyService;
 		this.pharmacyAdminService = pharmacyAdminService;
 		this.subscriptionService = subscriptionService;
 		this.reservationService = reservationService;
+		this.statisticsService = statisticsService;
 	}
 
 	@GetMapping(value = "info/{id}")
@@ -265,4 +264,207 @@ public class PharmacyController {
 		}
 	}
 
+	@GetMapping(value = "pharm-app-month")
+	public ResponseEntity<List<StatisticalDataDTO>> getPharmAppCountByMonth(HttpSession session) {
+		User user = (User) session.getAttribute("loggedInUser");
+		if (user == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not logged in!");
+		}
+		if (user.getRole() != Role.PHARMACY_ADMIN) {
+			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You don't have required permissions!");
+		}
+		try {
+			PharmacyAdmin admin = pharmacyAdminService.findByUser(user);
+			return new ResponseEntity<>(statisticsService.getPharmacistAppointmentCountByMonth(admin.getPharmacy()), HttpStatus.OK);
+		} catch (UserDoesNotExistException e) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+		}
+	}
+	
+	@GetMapping(value = "pharm-app-quarter")
+	public ResponseEntity<List<StatisticalDataDTO>> getPharmAppCountByQuarter(HttpSession session) {
+		User user = (User) session.getAttribute("loggedInUser");
+		if (user == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not logged in!");
+		}
+		if (user.getRole() != Role.PHARMACY_ADMIN) {
+			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You don't have required permissions!");
+		}
+		try {
+			PharmacyAdmin admin = pharmacyAdminService.findByUser(user);
+			return new ResponseEntity<>(statisticsService.getPharmacistAppointmentCountByQuarter(admin.getPharmacy()), HttpStatus.OK);
+		} catch (UserDoesNotExistException e) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+		}
+	}
+	
+	@GetMapping(value = "pharm-app-year")
+	public ResponseEntity<List<StatisticalDataDTO>> getPharmAppCountByYear(HttpSession session) {
+		User user = (User) session.getAttribute("loggedInUser");
+		if (user == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not logged in!");
+		}
+		if (user.getRole() != Role.PHARMACY_ADMIN) {
+			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You don't have required permissions!");
+		}
+		try {
+			PharmacyAdmin admin = pharmacyAdminService.findByUser(user);
+			return new ResponseEntity<>(statisticsService.getPharmacistAppointmentCountByYear(admin.getPharmacy()), HttpStatus.OK);
+		} catch (UserDoesNotExistException e) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+		}
+	}
+	
+	@GetMapping(value = "derm-app-month")
+	public ResponseEntity<List<StatisticalDataDTO>> getDermAppCountByMonth(HttpSession session) {
+		User user = (User) session.getAttribute("loggedInUser");
+		if (user == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not logged in!");
+		}
+		if (user.getRole() != Role.PHARMACY_ADMIN) {
+			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You don't have required permissions!");
+		}
+		try {
+			PharmacyAdmin admin = pharmacyAdminService.findByUser(user);
+			return new ResponseEntity<>(statisticsService.getDermatologistAppointmentCountByMonth(admin.getPharmacy()), HttpStatus.OK);
+		} catch (UserDoesNotExistException e) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+		}
+	}
+	
+	@GetMapping(value = "derm-app-quarter")
+	public ResponseEntity<List<StatisticalDataDTO>> getDermAppCountByQuarter(HttpSession session) {
+		User user = (User) session.getAttribute("loggedInUser");
+		if (user == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not logged in!");
+		}
+		if (user.getRole() != Role.PHARMACY_ADMIN) {
+			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You don't have required permissions!");
+		}
+		try {
+			PharmacyAdmin admin = pharmacyAdminService.findByUser(user);
+			return new ResponseEntity<>(statisticsService.getDermatologistAppointmentCountByQuarter(admin.getPharmacy()), HttpStatus.OK);
+		} catch (UserDoesNotExistException e) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+		}
+	}
+	
+	@GetMapping(value = "derm-app-year")
+	public ResponseEntity<List<StatisticalDataDTO>> getDermAppCountByYear(HttpSession session) {
+		User user = (User) session.getAttribute("loggedInUser");
+		if (user == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not logged in!");
+		}
+		if (user.getRole() != Role.PHARMACY_ADMIN) {
+			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You don't have required permissions!");
+		}
+		try {
+			PharmacyAdmin admin = pharmacyAdminService.findByUser(user);
+			return new ResponseEntity<>(statisticsService.getDermatologistAppointmentCountByYear(admin.getPharmacy()), HttpStatus.OK);
+		} catch (UserDoesNotExistException e) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+		}
+	}
+	
+	@GetMapping(value = "med-consumption-month")
+	public ResponseEntity<List<StatisticalDataDTO>> getMedConsumptionyMonth(HttpSession session) {
+		User user = (User) session.getAttribute("loggedInUser");
+		if (user == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not logged in!");
+		}
+		if (user.getRole() != Role.PHARMACY_ADMIN) {
+			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You don't have required permissions!");
+		}
+		try {
+			PharmacyAdmin admin = pharmacyAdminService.findByUser(user);
+			return new ResponseEntity<>(statisticsService.getMedicineConsumptionByMonth(admin.getPharmacy()), HttpStatus.OK);
+		} catch (UserDoesNotExistException e) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+		}
+	}
+	
+	@GetMapping(value = "med-consumption-quarter")
+	public ResponseEntity<List<StatisticalDataDTO>> getMedConsumptionByQuarter(HttpSession session) {
+		User user = (User) session.getAttribute("loggedInUser");
+		if (user == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not logged in!");
+		}
+		if (user.getRole() != Role.PHARMACY_ADMIN) {
+			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You don't have required permissions!");
+		}
+		try {
+			PharmacyAdmin admin = pharmacyAdminService.findByUser(user);
+			return new ResponseEntity<>(statisticsService.getMedicineConsumptionByQuarter(admin.getPharmacy()), HttpStatus.OK);
+		} catch (UserDoesNotExistException e) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+		}
+	}
+	
+	@GetMapping(value = "med-consumption-year")
+	public ResponseEntity<List<StatisticalDataDTO>> getMedConsumptionByYear(HttpSession session) {
+		User user = (User) session.getAttribute("loggedInUser");
+		if (user == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not logged in!");
+		}
+		if (user.getRole() != Role.PHARMACY_ADMIN) {
+			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You don't have required permissions!");
+		}
+		try {
+			PharmacyAdmin admin = pharmacyAdminService.findByUser(user);
+			return new ResponseEntity<>(statisticsService.getMedicineConsumptionByYear(admin.getPharmacy()), HttpStatus.OK);
+		} catch (UserDoesNotExistException e) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+		}
+	}
+	
+	@GetMapping(value = "income-pharm-app")
+	public ResponseEntity<List<StatisticalDataDTO>> getIncomeFromPharmAppointments(HttpSession session) {
+		User user = (User) session.getAttribute("loggedInUser");
+		if (user == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not logged in!");
+		}
+		if (user.getRole() != Role.PHARMACY_ADMIN) {
+			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You don't have required permissions!");
+		}
+		try {
+			PharmacyAdmin admin = pharmacyAdminService.findByUser(user);
+			return new ResponseEntity<>(statisticsService.getDailyIncomeFromPharmacistAppointments(admin.getPharmacy()), HttpStatus.OK);
+		} catch (UserDoesNotExistException e) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+		}
+	}
+	
+	@GetMapping(value = "income-derm-app")
+	public ResponseEntity<List<StatisticalDataDTO>> getIncomeFromDermAppointments(HttpSession session) {
+		User user = (User) session.getAttribute("loggedInUser");
+		if (user == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not logged in!");
+		}
+		if (user.getRole() != Role.PHARMACY_ADMIN) {
+			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You don't have required permissions!");
+		}
+		try {
+			PharmacyAdmin admin = pharmacyAdminService.findByUser(user);
+			return new ResponseEntity<>(statisticsService.getDailyIncomeFromDermatologistAppointments(admin.getPharmacy()), HttpStatus.OK);
+		} catch (UserDoesNotExistException e) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+		}
+	}
+	
+	@GetMapping(value = "income-med-cons")
+	public ResponseEntity<List<StatisticalDataDTO>> getIncomeFromMedicines(HttpSession session) {
+		User user = (User) session.getAttribute("loggedInUser");
+		if (user == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not logged in!");
+		}
+		if (user.getRole() != Role.PHARMACY_ADMIN) {
+			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You don't have required permissions!");
+		}
+		try {
+			PharmacyAdmin admin = pharmacyAdminService.findByUser(user);
+			return new ResponseEntity<>(statisticsService.getDailyIncomeFromSoldMedicines(admin.getPharmacy()), HttpStatus.OK);
+		} catch (UserDoesNotExistException e) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+		}
+	}
 }
