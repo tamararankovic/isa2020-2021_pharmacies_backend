@@ -34,4 +34,5 @@ public interface IMedicineService {
 	Medicine getByName(String name);
 	
 	public List<MedicineInfoDTO> getAllMedicineInfo(String name, String form, String type, String manu);
+
 }

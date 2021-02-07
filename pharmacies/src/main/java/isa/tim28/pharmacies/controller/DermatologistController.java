@@ -1,9 +1,9 @@
 package isa.tim28.pharmacies.controller;
 
-import java.util.Set;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.mail.MessagingException;
 import javax.servlet.http.HttpSession;
@@ -22,29 +22,31 @@ import org.springframework.web.server.ResponseStatusException;
 
 import isa.tim28.pharmacies.dtos.DermPharmacyDTO;
 import isa.tim28.pharmacies.dtos.DermatologistAppointmentDTO;
+import isa.tim28.pharmacies.dtos.DermatologistDTO;
 import isa.tim28.pharmacies.dtos.DermatologistProfileDTO;
 import isa.tim28.pharmacies.dtos.DermatologistReportDTO;
 import isa.tim28.pharmacies.dtos.DermatologistSaveAppointmentDTO;
+import isa.tim28.pharmacies.dtos.DermatologistToEmployDTO;
+import isa.tim28.pharmacies.dtos.ExistingDermatologistAppointmentDTO;
 import isa.tim28.pharmacies.dtos.IsAllergicDTO;
 import isa.tim28.pharmacies.dtos.IsAppointmentAvailableDTO;
 import isa.tim28.pharmacies.dtos.MedicineDTOM;
 import isa.tim28.pharmacies.dtos.MedicineDetailsDTO;
 import isa.tim28.pharmacies.dtos.MedicineQuantityCheckDTO;
+import isa.tim28.pharmacies.dtos.NewDermatologistInPharmacyDTO;
 import isa.tim28.pharmacies.dtos.PasswordChangeDTO;
 import isa.tim28.pharmacies.dtos.PatientReportAllergyDTO;
-import isa.tim28.pharmacies.dtos.DermatologistDTO;
-import isa.tim28.pharmacies.dtos.DermatologistToEmployDTO;
-import isa.tim28.pharmacies.dtos.ExistingDermatologistAppointmentDTO;
-import isa.tim28.pharmacies.dtos.NewDermatologistInPharmacyDTO;
-import isa.tim28.pharmacies.exceptions.AddingDermatologistToPharmacyException;
 import isa.tim28.pharmacies.dtos.PatientSearchDTO;
 import isa.tim28.pharmacies.dtos.PharmAppByMonthDTO;
 import isa.tim28.pharmacies.dtos.PharmAppByWeekDTO;
 import isa.tim28.pharmacies.dtos.PharmAppByYearDTO;
 import isa.tim28.pharmacies.dtos.PharmAppDTO;
+import isa.tim28.pharmacies.dtos.PredefinedExaminationDTO;
+import isa.tim28.pharmacies.exceptions.AddingDermatologistToPharmacyException;
 import isa.tim28.pharmacies.exceptions.BadNameException;
 import isa.tim28.pharmacies.exceptions.BadNewEmailException;
 import isa.tim28.pharmacies.exceptions.BadSurnameException;
+import isa.tim28.pharmacies.exceptions.ForbiddenOperationException;
 import isa.tim28.pharmacies.exceptions.InvalidDeleteUserAttemptException;
 import isa.tim28.pharmacies.exceptions.PasswordIncorrectException;
 import isa.tim28.pharmacies.exceptions.UserDoesNotExistException;
@@ -614,5 +616,25 @@ public class DermatologistController {
 		
 		List<PharmAppDTO> appointments = dermatologistAppointmentService.getAppointmentsByYear(dto, pharmacyId, loggedInUser.getId());
 		return new ResponseEntity<>(appointments, HttpStatus.OK);
+	}
+	
+	@PostMapping(value = "new-predefined")
+	public void newPredefined(@RequestBody PredefinedExaminationDTO dto, HttpSession session) {
+		User loggedInUser = (User) session.getAttribute("loggedInUser");
+		if(loggedInUser == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not logged in!");
+		}
+		if(loggedInUser.getRole() == Role.PHARMACY_ADMIN) {
+			try {
+				PharmacyAdmin admin = pharmacyAdminService.findByUser(loggedInUser);
+				dermatologistService.createPredefinedAppointment(dto.getDermatologistId(), dto.getStartDateTime(), (int)dto.getDurationInMinutes(), (long)dto.getPrice(), admin.getPharmacy());
+				return;
+			} catch(UserDoesNotExistException e1) {
+				throw new ResponseStatusException(HttpStatus.NOT_FOUND, e1.getMessage());
+			} catch (ForbiddenOperationException e) {
+				throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+			}
+		}
+		throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You don't have required permissions!");
 	}
 }

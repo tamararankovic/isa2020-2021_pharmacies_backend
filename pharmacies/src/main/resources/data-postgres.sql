@@ -4,8 +4,8 @@ insert into users(id, name, surname, email, password, role, active, loged) value
 insert into users(id, name, surname, email, password, role, active, loged) values (4, 'Tamara', 'Rankovic', 'rankovictamaraa@gmail.com', '1234', 3, TRUE, FALSE);
 insert into users(id, name, surname, email, password, role, active, loged) values (5, 'Tamara', 'Rankovic', 'email5@gmail.com', '1234', 4, TRUE, TRUE);
 insert into users(id, name, surname, email, password, role, active, loged) values (6, 'Tamara', 'Rankovic', 'email6@gmail.com', '1234', 5, TRUE, TRUE);
-insert into users(id, name, surname, email, password, role, active, loged) values (7, 'Milijana', 'Djordjevic', 'rankovictamaraa@gmail.com', '1234', 0, TRUE, TRUE);
-insert into users(id, name, surname, email, password, role, active, loged) values (8, 'Milijana', 'Djordjevic', 'milijana.djordjevic1998@gmail.com', '1234', 0, TRUE, TRUE);
+insert into users(id, name, surname, email, password, role, active, loged) values (7, 'Milijana', 'Djordjevic', 'rankovictamaraa+3@gmail.com', '1234', 0, TRUE, TRUE);
+insert into users(id, name, surname, email, password, role, active, loged) values (8, 'Milijana', 'Djordjevic', 'milijana.djordjevic1998+1@gmail.com', '1234', 0, TRUE, TRUE);
 
 insert into patient(id, address, category, city, country, penalties, phone, points, user_id) values (1, 'Podgoricka 2', 0, 'Novi Sad', 'Srbija', 0, '0655555555', 0, 1);
 insert into patient(id, address, category, city, country, penalties, phone, points, user_id) values (2, 'Podgoricka 2', 0, 'Novi Sad', 'Srbija', 0, '0655555555', 0, 7);
@@ -133,3 +133,9 @@ alter sequence dermatologist_leave_request_id_seq restart with 2;
 
 insert into system_admin(id, user_id) values (1, 5);
 alter sequence system_admin_id_seq restart with 2;
+
+insert into medicine_missing_notification(id, medicine_id, pharmacy_id, timestamp) values (1, 1, 1, '2021-02-02 20:21:00.000000');
+insert into medicine_missing_notification(id, medicine_id, pharmacy_id, timestamp) values (2, 1, 1, '2021-02-01 20:21:00.000000');
+insert into medicine_missing_notification(id, medicine_id, pharmacy_id, timestamp) values (3, 1, 1, '2020-02-02 20:21:00.000000');
+insert into medicine_missing_notification(id, medicine_id, pharmacy_id, timestamp) values (4, 1, 1, '2021-01-15 20:21:00.000000');
+alter sequence medicine_missing_notification_id_seq restart with 5;
