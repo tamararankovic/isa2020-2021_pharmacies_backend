@@ -1,4 +1,4 @@
-insert into users(id, name, surname, email, password, role, active, loged) values (1, 'Tamara', 'Rankovic', 'milijana.djordjevic1998@gmail.com', '1234', 0, TRUE, TRUE);
+insert into users(id, name, surname, email, password, role, active, loged) values (1, 'Tamara', 'Rankovic', 'milijana.djordjevic1998+1@gmail.com', '1234', 0, TRUE, TRUE);
 insert into users(id, name, surname, email, password, role, active, loged) values (2, 'Tamara', 'Rankovic', 'rankovictamaraa+1@gmail.com', '1234', 1, TRUE, TRUE);
 insert into users(id, name, surname, email, password, role, active, loged) values (3, 'Tamara', 'Rankovic', 'rankovictamaraa+2@gmail.com', '1234', 2, TRUE, TRUE);
 insert into users(id, name, surname, email, password, role, active, loged) values (4, 'Tamara', 'Rankovic', 'rankovictamaraa@gmail.com', '1234', 3, TRUE, FALSE);
