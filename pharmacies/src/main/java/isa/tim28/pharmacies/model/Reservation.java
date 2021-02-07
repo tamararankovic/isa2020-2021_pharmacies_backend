@@ -1,6 +1,5 @@
 package isa.tim28.pharmacies.model;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import javax.persistence.CascadeType;
@@ -33,9 +32,6 @@ public class Reservation {
 	
 	@Column(name = "received", nullable = false)
 	private boolean received;
-	
-	@Column(name = "dateReceived", nullable = false)
-	private LocalDate dateReceived;
 
 	public Reservation() {
 		super();
@@ -50,18 +46,6 @@ public class Reservation {
 		this.medicine = medicine;
 		this.dueDate = dueDate;
 		this.received = received;
-	}
-
-	public Reservation(long id, Patient patient, Pharmacy pharmacy, Medicine medicine, LocalDateTime dueDate,
-			boolean received, LocalDate dateReceived) {
-		super();
-		this.id = id;
-		this.patient = patient;
-		this.pharmacy = pharmacy;
-		this.medicine = medicine;
-		this.dueDate = dueDate;
-		this.received = received;
-		this.dateReceived = dateReceived;
 	}
 
 	public long getId() {
@@ -110,16 +94,6 @@ public class Reservation {
 
 	public void setReceived(boolean received) {
 		this.received = received;
-		if(received)
-			this.dateReceived = LocalDate.now();
-	}
-	
-	public LocalDate getDateReceived() {
-		return dateReceived;
-	}
-
-	public void setDateReceived(LocalDate dateReceived) {
-		this.dateReceived = dateReceived;
 	}
 
 	public boolean isActive() {
