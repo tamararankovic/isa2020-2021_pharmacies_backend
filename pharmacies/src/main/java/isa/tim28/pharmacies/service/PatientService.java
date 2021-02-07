@@ -1,5 +1,12 @@
 package isa.tim28.pharmacies.service;
 
+import com.google.zxing.client.j2se.BufferedImageLuminanceSource;
+import com.google.zxing.common.HybridBinarizer;
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -7,6 +14,13 @@ import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import com.google.zxing.BinaryBitmap;
+import com.google.zxing.LuminanceSource;
+import com.google.zxing.MultiFormatReader;
+import com.google.zxing.NotFoundException;
+import com.google.zxing.Result;
+
 
 import isa.tim28.pharmacies.dtos.PatientProfileDTO;
 import isa.tim28.pharmacies.exceptions.BadNameException;
@@ -34,6 +48,22 @@ public class PatientService implements IPatientService {
 		this.patientRepository = patientRepository;
 		this.userRepository = userRepository;
 		this.medicineService = medicineService;
+	}
+	
+	
+	public static String decodeQrCode(Path filePath) throws IOException {
+		File img = new File(filePath.toString());
+		BufferedImage bufferedImage = ImageIO.read(img);
+        LuminanceSource source = new BufferedImageLuminanceSource(bufferedImage);
+        BinaryBitmap bitmap = new BinaryBitmap(new HybridBinarizer(source));
+        
+        try {
+            Result result = new MultiFormatReader().decode(bitmap);
+            return result.getText();
+        } catch (NotFoundException e) {
+            System.out.println("There is no QR code in the image");
+            return null;
+        }
 	}
 
 	@Override

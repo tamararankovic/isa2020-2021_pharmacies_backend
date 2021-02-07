@@ -1,6 +1,5 @@
 package isa.tim28.pharmacies.service.interfaces;
 
-
 import java.util.ArrayList;
 import isa.tim28.pharmacies.dtos.PatientProfileDTO;
 import isa.tim28.pharmacies.exceptions.BadNameException;
@@ -29,6 +28,7 @@ public interface IPatientService {
 	ArrayList<String> getAllMedicine(Patient patient);
 	
 	Patient save(Patient patient);
+
 }
 	
 	

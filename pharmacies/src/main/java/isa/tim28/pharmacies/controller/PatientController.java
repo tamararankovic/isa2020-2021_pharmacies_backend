@@ -1,5 +1,11 @@
 package isa.tim28.pharmacies.controller;
 
+import java.awt.image.BufferedImage;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -10,11 +16,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 import isa.tim28.pharmacies.dtos.PasswordChangeDTO;
 import isa.tim28.pharmacies.dtos.PatientProfileDTO;
@@ -80,6 +89,34 @@ public class PatientController {
 				patient.getPoints(), patient.getCategory().toString(),allergy), HttpStatus.OK);
 	}
 
+	@PostMapping(value="sendQr",  consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+	public ResponseEntity<String> uploadQrCode(@RequestParam("imageFile") MultipartFile  qrCode, HttpSession session){
+		
+		User loggedInUser = (User) session.getAttribute("loggedInUser");
+		if (loggedInUser == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No logged in user!");
+		}
+		if (loggedInUser.getRole() != Role.PATIENT) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only patient can upload qr code.");
+		}
+		Path filepath = Paths.get("C:\\ISA-INTERNET SOFTVERSKE ARHITEKTURE\\projekat\\isa2020-2021_pharmacies_frontend\\qrs", qrCode.getOriginalFilename());
+
+		try (OutputStream os = Files.newOutputStream(filepath)) {
+		        os.write(qrCode.getBytes());
+		    } catch (IOException e2) {
+				e2.printStackTrace();
+			}
+		BufferedImage bufferedImage;
+		try {
+			String result = patientService.decodeQrCode(filepath);
+			System.out.println(result);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		return new ResponseEntity<>(HttpStatus.OK);
+		
+	}
 	@PostMapping(value = "edit", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<PatientProfileDTO> editPatient(@RequestBody PatientProfileDTO newPatient,
 			HttpSession session) throws BadNameException, BadSurnameException {
