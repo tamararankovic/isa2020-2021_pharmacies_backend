@@ -36,15 +36,21 @@ public interface IPharmacyService {
 	
 	void update(PharmacyAdmin admin, PharmacyBasicInfoDTO dto) throws PharmacyNotFoundException, PharmacyDataInvalidException;
 
+	List<PharmacyBasicInfoDTO> getPharmacyByMedicineId(long medicineId) throws PharmacyNotFoundException;
+	
+	Pharmacy getByName(String name);
+	
+
 	void addNewmedicine(Pharmacy pharmacy, Medicine medicine);
 	
 	void addNewMedicines(Pharmacy pharmacy, Set<Long> medicineIds) throws MedicineDoesNotExistException;
 	
 	void addMedicines(Pharmacy pharmacy, Set<MedicineQuantity> medicines) throws ForbiddenOperationException;
-	
-	void deleteMedicine(Pharmacy pharmacy, long medicineId) throws MedicineDoesNotExistException, ForbiddenOperationException;
-	
+		
 	PriceListDTO getCurrentPriceList(Pharmacy pharmacy);
 	
 	void updatePriceLists(PriceListDTO dto, Pharmacy pharmacy) throws MedicineDoesNotExistException, ForbiddenOperationException, PriceInvalidException;
+
+	Pharmacy savePharmacy(Pharmacy pharmacy);
+
 }

@@ -99,6 +99,15 @@ public class EmailService {
 	}
 	
 	@Async
+	public void sendReservationMadeEmailAsync(String name, String address, long reservationId) throws MessagingException {
+		System.out.println("Async metoda se izvrsava u drugom Threadu u odnosu na prihvaceni zahtev. Thread id: " + Thread.currentThread().getId());
+		System.out.println("Slanje emaila...");
+		String content= "Pozdrav " + name + ",<br>"
+	            + "Rezervisali ste lek." + "<br>"
+	            + "Broj rezervacije: " + reservationId + "<br>";
+		
+			
+	            }
 	public void sendEmailToSupplier(String email, String name, String text, long offerId) throws MessagingException {
 		String content = "Poštovani/Poštovana " + name + ",<br>"
 	            + "Vaša ponuda je " + text + "<br>"
@@ -132,13 +141,14 @@ public class EmailService {
 	    MimeMessageHelper helper = new MimeMessageHelper(message);
 	    helper.setFrom(env.getProperty("spring.mail.username"));
 	    helper.setTo(address);
-	    helper.setSubject("Zakazan pregled");
+	    helper.setSubject("Recept");
 	    helper.setText(content, true);
 	    
 		javaMailSender.send(message);
 
-		System.out.println("Email za zakazivanje poslat!");
+		System.out.println("Email poslat!");
 	}
+
 	
 	@Async
 	public void sendEmailDealPromotion(String email, String pharmacyName, String type, String text, LocalDate startDateTIme, LocalDate endDateTime) throws MessagingException {

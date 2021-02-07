@@ -8,4 +8,5 @@ public interface PatientRepository extends JpaRepository<Patient, Long>{
 
 
 	Patient findOneByUser_Id(long id);
+	
 }

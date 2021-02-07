@@ -105,7 +105,10 @@ insert into patient_allergies(patient_id, allergies_id) values(2, 1);
 insert into reservation(id, due_date, received, medicine_id, patient_id, pharmacy_id) values(1, '2021-02-25 08:00:00.000000', '0', 1, 1, 1);
 insert into reservation(id, due_date, received, medicine_id, patient_id, pharmacy_id) values(2, '2021-02-04 08:00:00.000000', '0', 2, 1, 1);
 insert into reservation(id, due_date, received, medicine_id, patient_id, pharmacy_id) values(3, '2021-02-25 08:00:00.000000', '1', 3, 1, 1);
+
+alter sequence pharmacist_appointment_id_seq restart with 4;
 alter sequence reservation_id_seq restart with 4;
+
 
 insert into supplier(id, user_id) values (1, 4);
 alter sequence supplier_id_seq restart with 2;

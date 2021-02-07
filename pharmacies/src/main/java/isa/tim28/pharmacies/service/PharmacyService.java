@@ -6,8 +6,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -32,14 +30,12 @@ import isa.tim28.pharmacies.model.Pharmacy;
 import isa.tim28.pharmacies.model.PharmacyAdmin;
 import isa.tim28.pharmacies.model.PriceList;
 import isa.tim28.pharmacies.model.Rating;
-import isa.tim28.pharmacies.model.Reservation;
 import isa.tim28.pharmacies.repository.PharmacyRepository;
 import isa.tim28.pharmacies.service.interfaces.IDermatologistAppointmentService;
 import isa.tim28.pharmacies.service.interfaces.IDermatologistService;
 import isa.tim28.pharmacies.service.interfaces.IMedicineService;
 import isa.tim28.pharmacies.service.interfaces.IPharmacistService;
 import isa.tim28.pharmacies.service.interfaces.IPharmacyService;
-import isa.tim28.pharmacies.service.interfaces.IReservationService;
 
 @Service
 public class PharmacyService implements IPharmacyService {
@@ -48,22 +44,25 @@ public class PharmacyService implements IPharmacyService {
 	private IPharmacistService pharmacistService;
 	private IDermatologistService dermatologistService;
 	private IDermatologistAppointmentService appointmentService;
-	private IReservationService reservationService;
 	private IMedicineService medicineService;
 
 	@Autowired
 	public PharmacyService(PharmacyRepository pharmacyRepository, IPharmacistService pharmacistService,
 			IDermatologistService dermatologistService, IDermatologistAppointmentService appointmentService,
-			IReservationService reservationService, IMedicineService medicineService) {
+		    IMedicineService medicineService) {
 		super();
 		this.pharmacyRepository = pharmacyRepository;
 		this.pharmacistService = pharmacistService;
 		this.dermatologistService = dermatologistService;
 		this.appointmentService = appointmentService;
-		this.reservationService = reservationService;
 		this.medicineService = medicineService;
 	}
 
+	@Override
+	public Pharmacy savePharmacy(Pharmacy pharmacy) {
+		Pharmacy newPharmacy = pharmacyRepository.save(pharmacy);
+		return newPharmacy;
+	}
 	@Override
 	public ArrayList<PharmacyInfoForPatientDTO> getAllPharmacies(String name, String address)throws PharmacyNotFoundException {
 		
@@ -207,6 +206,28 @@ public class PharmacyService implements IPharmacyService {
 		Pharmacy pharmacy = pharmacyRepository.findById(pharmacyId).get();
 		return pharmacy;
 	}
+	
+	@Override
+	public List<PharmacyBasicInfoDTO> getPharmacyByMedicineId(long medicineId) throws PharmacyNotFoundException {
+		List<PharmacyBasicInfoDTO> res = new ArrayList<PharmacyBasicInfoDTO>();
+		List<Pharmacy> pharmacies = pharmacyRepository.findAll();
+		for(Pharmacy p : pharmacies) {
+			Set<Medicine> allMedicine = findAllInStockByPharmacyId(p.getId());
+			for(Medicine m : allMedicine) {
+				if(medicineId ==m.getId()) {
+					PharmacyBasicInfoDTO pharm = new PharmacyBasicInfoDTO(p.getName(),p.getDescription(),p.getAddress());
+					res.add(pharm);
+					continue;
+				}
+			}
+		}
+		return res;
+	}
+
+	@Override
+	public Pharmacy getByName(String name) {
+		return pharmacyRepository.findByName(name);
+	}
 
 	@Override
 	public void addNewmedicine(Pharmacy pharmacy, Medicine medicine) {
@@ -232,30 +253,6 @@ public class PharmacyService implements IPharmacyService {
 			else 
 				throw new MedicineDoesNotExistException("Medicine does not exist in the system!");
 		}
-	}
-
-	@Override
-	public void deleteMedicine(Pharmacy pharmacy, long medicineId) throws MedicineDoesNotExistException, ForbiddenOperationException {
-		Medicine medicine = medicineService.findById(medicineId);
-		if(medicine == null)
-			throw new MedicineDoesNotExistException("Medicine does not exist in the system!");
-		Optional<MedicineQuantity> medOpt = pharmacy.getMedicines().stream().filter(m -> m.getMedicine().getId() == medicine.getId()).findFirst();
-		if(medOpt.isEmpty()) {
-			throw new MedicineDoesNotExistException("You can't delete a medicine that the pharmacy doesn't offer!");
-		}
-		MedicineQuantity med = medOpt.get();
-		if(pharmacyHasActiveReservationsForMedicine(pharmacy, med.getMedicine()))
-			throw new ForbiddenOperationException("You can't delete a medicine that has active reservations!");
-		pharmacy.getMedicines().remove(med);
-		pharmacyRepository.save(pharmacy);
-	}
-	
-	private boolean pharmacyHasActiveReservationsForMedicine(Pharmacy pharmacy, Medicine med) {
-		Set<Reservation> reservations = reservationService.getAllByPharamcy(pharmacy).stream().filter(r -> r.getMedicine().getId() == med.getId()).collect(Collectors.toSet());
-		for(Reservation r : reservations)
-			if(r.isActive())
-				return true;
-		return false;
 	}
 
 	@Override
