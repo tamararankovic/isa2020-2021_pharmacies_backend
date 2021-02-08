@@ -89,7 +89,7 @@ public class PharmacyService implements IPharmacyService {
 				Set<PharmacyForMedSearchDTO> pharmacies = new HashSet<PharmacyForMedSearchDTO>();
 				for(Pharmacy pharmacy : getAll()) {
 					for(MedicineQuantity medi : pharmacy.getMedicines()) {
-						if(medi.getId() == m.getId()) {
+						if(medi.getMedicine().getId() == m.getId()) {
 							double price = 0.0;
 							for(PriceList pl : pharmacy.getPriceLists()) {
 								for(MedicinePrice mp : pl.getMedicinePrices()) {
@@ -134,7 +134,7 @@ public class PharmacyService implements IPharmacyService {
 				Set<PharmacyForMedSearchDTO> pharmacies = new HashSet<PharmacyForMedSearchDTO>();
 				for(Pharmacy pharmacy : getAll()) {
 					for(MedicineQuantity medi : pharmacy.getMedicines()) {
-						if(medi.getId() == m.getId()) {
+						if(medi.getMedicine().getId() == m.getId()) {
 							double price = 0.0;
 							for(PriceList pl : pharmacy.getPriceLists()) {
 								for(MedicinePrice mp : pl.getMedicinePrices()) {

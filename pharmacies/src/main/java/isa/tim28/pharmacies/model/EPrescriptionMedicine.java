@@ -25,6 +25,12 @@ public class EPrescriptionMedicine {
 	public EPrescriptionMedicine() {
 		super();
 	}
+	public EPrescriptionMedicine(String name, String code, int quantity) {
+		super();
+		this.name = name;
+		this.code = code;
+		this.quantity = quantity;
+	}
 	
 	public EPrescriptionMedicine(long id, String name, String code, int quantity) {
 		super();
