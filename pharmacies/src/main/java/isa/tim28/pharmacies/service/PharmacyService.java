@@ -272,7 +272,7 @@ public class PharmacyService implements IPharmacyService {
 		if(pharmacy.isEmpty())
 			throw new PharmacyNotFoundException("Pharmacy admin's pharmacy not found");
 		Pharmacy ret = pharmacy.get();
-		return new PharmacyBasicInfoDTO(ret.getName(), ret.getDescription(), ret.getAddress());
+		return new PharmacyBasicInfoDTO(ret.getName(), ret.getDescription(), ret.getAddress(), ret.getAvgRating());
 	}
 
 	@Override
@@ -323,7 +323,7 @@ public class PharmacyService implements IPharmacyService {
 			Set<Medicine> allMedicine = findAllInStockByPharmacyId(p.getId());
 			for(Medicine m : allMedicine) {
 				if(medicineId ==m.getId()) {
-					PharmacyBasicInfoDTO pharm = new PharmacyBasicInfoDTO(p.getName(),p.getDescription(),p.getAddress());
+					PharmacyBasicInfoDTO pharm = new PharmacyBasicInfoDTO(p.getName(),p.getDescription(),p.getAddress(), p.getAvgRating());
 					res.add(pharm);
 					continue;
 				}

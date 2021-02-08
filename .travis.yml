@@ -1,0 +1,17 @@
+sudo: required
+language: java
+jdk: oraclejdk11
+
+services:
+  - postgresql
+
+script:
+  - cd pharmacies
+  - mvn clean install
+
+dist: trusty
+
+deploy:
+  provider: heroku
+  api_key: $HEROKU_API_KEY
+  app: pharmacies

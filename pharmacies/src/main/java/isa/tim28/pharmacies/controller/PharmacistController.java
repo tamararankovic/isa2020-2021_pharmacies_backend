@@ -22,8 +22,11 @@ import isa.tim28.pharmacies.dtos.DermatologistAppointmentDTO;
 import isa.tim28.pharmacies.dtos.DermatologistReportDTO;
 import isa.tim28.pharmacies.dtos.IsAllergicDTO;
 import isa.tim28.pharmacies.dtos.IsAppointmentAvailableDTO;
+import isa.tim28.pharmacies.dtos.LeaveDTO;
+import isa.tim28.pharmacies.dtos.LeaveViewDTO;
 import isa.tim28.pharmacies.dtos.MedicineDTOM;
 import isa.tim28.pharmacies.dtos.MedicineQuantityCheckDTO;
+import isa.tim28.pharmacies.dtos.MyPatientDTO;
 import isa.tim28.pharmacies.dtos.PasswordChangeDTO;
 import isa.tim28.pharmacies.dtos.PatientReportAllergyDTO;
 import isa.tim28.pharmacies.dtos.NewPharmacistDTO;
@@ -560,5 +563,81 @@ public class PharmacistController {
 		}
 		pharmacistAppointmentService.patientWasNotPresent(appointmentId);
 		return new ResponseEntity<>("", HttpStatus.OK);
+	}
+	
+	/*
+	 url: POST localhost:8081/pharm/newLeaveRequest
+	 HTTP request for saving new pharmacist leave request
+	 returns ResponseEntity object
+	*/
+	@PostMapping(value = "/newLeaveRequest", produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<String> newLeaveRequest(@RequestBody LeaveDTO dto, HttpSession session){
+		
+		User loggedInUser = (User) session.getAttribute("loggedInUser");
+		if(loggedInUser == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No logged in user!");
+		}
+		if(loggedInUser.getRole() != Role.PHARMACIST) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only pharmacist can save leave requests.");
+		}
+		pharmacistAppointmentService.saveLeaveRequest(dto, loggedInUser.getId());
+		return new ResponseEntity<>("", HttpStatus.OK);
+	}
+	
+	/*
+	 url: GET localhost:8081/pharm/allLeaveRequests
+	 HTTP request for all leave request list
+	 returns ResponseEntity object
+	*/
+	@GetMapping(value = "/allLeaveRequests", produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<List<LeaveViewDTO>> allLeaveRequests(HttpSession session){
+		
+		User loggedInUser = (User) session.getAttribute("loggedInUser");
+		if(loggedInUser == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No logged in user!");
+		}
+		if(loggedInUser.getRole() != Role.PHARMACIST) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only pharmacist can see his leave request list.");
+		}
+		List<LeaveViewDTO> dtos = pharmacistAppointmentService.allLeaveRequests(loggedInUser.getId());
+		return new ResponseEntity<>(dtos, HttpStatus.OK);
+	}
+	
+	/*
+	 url: GET localhost:8081/pharm/myPatients
+	 HTTP request for my patients list
+	 returns ResponseEntity object
+	*/
+	@GetMapping(value = "/myPatients", produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<List<MyPatientDTO>> myPatients(HttpSession session){
+		
+		User loggedInUser = (User) session.getAttribute("loggedInUser");
+		if(loggedInUser == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No logged in user!");
+		}
+		if(loggedInUser.getRole() != Role.PHARMACIST) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only pharmacist can see his patients list.");
+		}
+		List<MyPatientDTO> dtos = pharmacistAppointmentService.myPatients(loggedInUser.getId());
+		return new ResponseEntity<>(dtos, HttpStatus.OK);
+	}
+	
+	/*
+	 url: GET localhost:8081/pharm/startAppointment/{patientId}
+	 HTTP request for appointment starting from patient search list
+	 returns ResponseEntity object
+	*/
+	@GetMapping(value = "/startAppointment/{patientId}", produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<PharmAppDTO> startAppointmentForPatient(@PathVariable long patientId, HttpSession session){
+		
+		User loggedInUser = (User) session.getAttribute("loggedInUser");
+		if(loggedInUser == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No logged in user!");
+		}
+		if(loggedInUser.getRole() != Role.PHARMACIST) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only pharmacist can startAppointment.");
+		}
+		PharmAppDTO dto = pharmacistAppointmentService.hasAppointmentWithPatient(loggedInUser.getId(), patientId);
+		return new ResponseEntity<>(dto, HttpStatus.OK);
 	}
 }

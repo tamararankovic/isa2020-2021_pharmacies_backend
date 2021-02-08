@@ -159,7 +159,7 @@ public class Pharmacy {
 	}
 	
 	public double getCurrentPrice(Medicine medicine) {
-		for(PriceList pl : getPriceListsSortedByStartDateDescending()) {
+		for(PriceList pl : getPriceListsSortedByStartDateDescending(priceLists)) {
 			if(pl.isInPriceList(medicine)) {
 				return pl.getPrice(medicine);
 			}
@@ -168,7 +168,7 @@ public class Pharmacy {
 	}
 	
 	public double getPharmacistAppointmentCurrentPrice() {
-		for(PriceList pl : getPriceListsSortedByStartDateDescending()) {
+		for(PriceList pl : getPriceListsSortedByStartDateDescending(priceLists)) {
 			if(pl.isPharmAppPriceDefined()) {
 				return pl.getPharmacistAppointmentPrice();
 			}
@@ -177,7 +177,7 @@ public class Pharmacy {
 	}
 	
 	public double getDermatologistAppointmentCurrentPrice() {
-		for(PriceList pl : getPriceListsSortedByStartDateDescending()) {
+		for(PriceList pl : getPriceListsSortedByStartDateDescending(priceLists)) {
 			if(pl.isDermAppPriceDefined()) {
 				return pl.getDefaultDermatologistAppointmentPrice();
 			}
@@ -186,7 +186,7 @@ public class Pharmacy {
 	}
 	
 	public boolean isPriceDefined(Medicine medicine) {
-		for(PriceList pl : getPriceListsSortedByStartDateDescending()) {
+		for(PriceList pl : getPriceListsSortedByStartDateDescending(priceLists)) {
 			if(pl.isInPriceList(medicine))
 				return true;
 		}
@@ -194,7 +194,7 @@ public class Pharmacy {
 	}
 	
 	public boolean isPharmacistAppointmentPriceDefined() {
-		for(PriceList pl : getPriceListsSortedByStartDateDescending()) {
+		for(PriceList pl : getPriceListsSortedByStartDateDescending(priceLists)) {
 			if(pl.isPharmAppPriceDefined())
 				return true;
 		}
@@ -202,14 +202,14 @@ public class Pharmacy {
 	}
 	
 	public boolean isDermatologistAppointmentPriceDefined() {
-		for(PriceList pl : getPriceListsSortedByStartDateDescending()) {
+		for(PriceList pl : getPriceListsSortedByStartDateDescending(priceLists)) {
 			if(pl.isDermAppPriceDefined())
 				return true;
 		}
 		return false;
 	}
 	
-	public List<PriceList> getPriceListsSortedByStartDateDescending() {
+	public List<PriceList> getPriceListsSortedByStartDateDescending(Set<PriceList> priceLists) {
 		List<PriceList> orderedPriceLists = priceLists.stream().collect(Collectors.toList());
 		Collections.sort(orderedPriceLists);
 		return orderedPriceLists;
@@ -224,5 +224,42 @@ public class Pharmacy {
 			return null;
 		else
 			return priceLists.stream().filter(p -> p.getStartDate().equals(date)).findFirst().get();
+	}
+	
+	public double getAvgRating() {
+		double sum = 0;
+		for(Rating r : ratings)
+			sum += r.getRating();
+		return ratings.size() > 0 ? sum / ratings.size() : 0;
+	}
+	
+	public double getPharmacistAppointmentPriceOnDate(LocalDate date) {
+		Set<PriceList> validPriceLists = priceLists.stream().filter(pl -> pl.getStartDate().isBefore(date)).collect(Collectors.toSet());
+		for(PriceList pl : getPriceListsSortedByStartDateDescending(validPriceLists)) {
+			if(pl.isPharmAppPriceDefined()) {
+				return pl.getPharmacistAppointmentPrice();
+			}
+		}
+		return 0;
+	}
+	
+	public double getDermatologistAppointmentPriceOnDate(LocalDate date) {
+		Set<PriceList> validPriceLists = priceLists.stream().filter(pl -> pl.getStartDate().isBefore(date)).collect(Collectors.toSet());
+		for(PriceList pl : getPriceListsSortedByStartDateDescending(validPriceLists)) {
+			if(pl.isDermAppPriceDefined()) {
+				return pl.getDefaultDermatologistAppointmentPrice();
+			}
+		}
+		return 0;
+	}
+	
+	public double getMedicinePriceOnDate(LocalDate date, Medicine medicine) {
+		Set<PriceList> validPriceLists = priceLists.stream().filter(pl -> pl.getStartDate().isBefore(date)).collect(Collectors.toSet());
+		for(PriceList pl : getPriceListsSortedByStartDateDescending(validPriceLists)) {
+			if(pl.isInPriceList(medicine)) {
+				return pl.getPrice(medicine);
+			}
+		}
+		return 0;
 	}
 }
