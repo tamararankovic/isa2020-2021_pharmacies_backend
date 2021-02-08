@@ -7,14 +7,14 @@ public class MyPatientDTO {
 	private long patientId;
 	private String name;
 	private String surname;
-	private LocalDate appointmentDate;
+	private String appointmentDate;
 	private String time;
 	
 	public MyPatientDTO() {
 		super();
 	}
 
-	public MyPatientDTO(long patientId, String name, String surname, LocalDate appointmentDate, String time) {
+	public MyPatientDTO(long patientId, String name, String surname, String appointmentDate, String time) {
 		super();
 		this.patientId = patientId;
 		this.name = name;
@@ -55,11 +55,11 @@ public class MyPatientDTO {
 		this.surname = surname;
 	}
 
-	public LocalDate getAppointmentDate() {
+	public String getAppointmentDate() {
 		return appointmentDate;
 	}
 
-	public void setAppointmentDate(LocalDate appointmentDate) {
+	public void setAppointmentDate(String appointmentDate) {
 		this.appointmentDate = appointmentDate;
 	}
 	

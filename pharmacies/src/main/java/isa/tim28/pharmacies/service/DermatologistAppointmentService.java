@@ -501,12 +501,12 @@ public class DermatologistAppointmentService implements IDermatologistAppointmen
 			List<MyPatientDTO> dtos = new ArrayList<MyPatientDTO>();
 			Set<DermatologistAppointment> appointments = appointmentRepository.findAllByDermatologist_Id(dermatologist.getId());
 			for(DermatologistAppointment app : appointments) {
-				if(app.isPatientWasPresent() && app.isScheduled() && app.isDone()) {
+				if(app.isPatientWasPresent() && app.getPatient() != null && app.isDone()) {
 					MyPatientDTO dto = new MyPatientDTO();
 					dto.setPatientId(app.getPatient().getId());
 					dto.setName(app.getPatient().getUser().getName());
 					dto.setSurname(app.getPatient().getUser().getSurname());
-					dto.setAppointmentDate(app.getStartDateTime().toLocalDate());
+					dto.setAppointmentDate(app.getStartDateTime().toLocalDate().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
 					dto.setTime(app.getStartDateTime().format(DateTimeFormatter.ofPattern("HH:mm")));
 					dtos.add(dto);
 				}

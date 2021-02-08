@@ -455,7 +455,7 @@ public class PharmacistAppointmentService implements IPharmacistAppointmentServi
 					dto.setPatientId(app.getPatient().getId());
 					dto.setName(app.getPatient().getUser().getName());
 					dto.setSurname(app.getPatient().getUser().getSurname());
-					dto.setAppointmentDate(app.getStartDateTime().toLocalDate());
+					dto.setAppointmentDate(app.getStartDateTime().toLocalDate().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
 					dto.setTime(app.getStartDateTime().format(DateTimeFormatter.ofPattern("HH:mm")));
 					dtos.add(dto);
 				}
