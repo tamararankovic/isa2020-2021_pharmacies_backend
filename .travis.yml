@@ -10,7 +10,7 @@ before_install:
 
 script:
   - cd pharmacies
-  - ./mvnw clean install -DskipTests=false -B
+  - mvn clean install
 
 dist: trusty
 
