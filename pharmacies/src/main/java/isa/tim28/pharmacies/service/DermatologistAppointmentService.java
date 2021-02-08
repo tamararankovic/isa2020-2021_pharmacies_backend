@@ -22,6 +22,7 @@ import isa.tim28.pharmacies.dtos.LeaveViewDTO;
 import isa.tim28.pharmacies.dtos.MedicineDTOM;
 import isa.tim28.pharmacies.dtos.MedicineDetailsDTO;
 import isa.tim28.pharmacies.dtos.MedicineQuantityCheckDTO;
+import isa.tim28.pharmacies.dtos.MyPatientDTO;
 import isa.tim28.pharmacies.dtos.PharmAppByMonthDTO;
 import isa.tim28.pharmacies.dtos.PharmAppByWeekDTO;
 import isa.tim28.pharmacies.dtos.PharmAppByYearDTO;
@@ -491,5 +492,56 @@ public class DermatologistAppointmentService implements IDermatologistAppointmen
 		} catch(Exception e) {
 			return new ArrayList<LeaveViewDTO>();
 		}
+	}
+
+	@Override
+	public List<MyPatientDTO> myPatients(long userId) {
+		try {
+			Dermatologist dermatologist = dermatologistRepository.findOneByUser_Id(userId);
+			List<MyPatientDTO> dtos = new ArrayList<MyPatientDTO>();
+			Set<DermatologistAppointment> appointments = appointmentRepository.findAllByDermatologist_Id(dermatologist.getId());
+			for(DermatologistAppointment app : appointments) {
+				if(app.isPatientWasPresent() && app.isScheduled() && app.isDone()) {
+					MyPatientDTO dto = new MyPatientDTO();
+					dto.setPatientId(app.getPatient().getId());
+					dto.setName(app.getPatient().getUser().getName());
+					dto.setSurname(app.getPatient().getUser().getSurname());
+					dto.setAppointmentDate(app.getStartDateTime().toLocalDate());
+					dto.setTime(app.getStartDateTime().format(DateTimeFormatter.ofPattern("HH:mm")));
+					dtos.add(dto);
+				}
+			}
+			return dtos;
+		} catch(Exception e) {
+			return new ArrayList<MyPatientDTO>();
+		}
+	}
+
+	@Override
+	public PharmAppDTO hasAppointmentWithPatient(long userId, long patientId) {
+		try {
+			Dermatologist dermatologist = dermatologistRepository.findOneByUser_Id(userId);
+			Set<DermatologistAppointment> appointments = appointmentRepository.findAllByDermatologist_Id(dermatologist.getId());
+			PharmAppDTO dto = new PharmAppDTO(0, "", 0, "");
+			for(DermatologistAppointment app : appointments) {
+				if(app.isScheduled()) {
+					if(app.getPatient().getId() == patientId && isAppointmentNow(app.getStartDateTime(), app.getDurationInMinutes()) && !app.isDone()) {
+						dto.setAppointmentId(app.getId());
+						dto.setDurationInMinutes(app.getDurationInMinutes());
+						dto.setPatientName(app.getPatient().getUser().getFullName());
+						dto.setStartTime(app.getStartDateTime().format(DateTimeFormatter.ofPattern("HH:mm, dd.MM.yyyy.")));
+					}
+				}
+			}
+			return dto;
+		} catch(Exception e) {
+			return new PharmAppDTO(0, "", 0, "");
+		}
+	}
+	
+	private boolean isAppointmentNow(LocalDateTime startTime, int duration) {
+		//moze 10 minuta ranije i moze da kasni do duration-1 minuta
+		if(!startTime.isBefore(LocalDateTime.now().minusMinutes(duration-1)) && !startTime.isAfter(LocalDateTime.now().plusMinutes(10))) return true;
+		return false;
 	}
 }

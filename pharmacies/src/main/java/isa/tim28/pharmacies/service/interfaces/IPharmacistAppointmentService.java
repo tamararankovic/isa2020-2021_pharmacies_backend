@@ -9,6 +9,7 @@ import isa.tim28.pharmacies.dtos.LeaveDTO;
 import isa.tim28.pharmacies.dtos.LeaveViewDTO;
 import isa.tim28.pharmacies.dtos.MedicineDTOM;
 import isa.tim28.pharmacies.dtos.MedicineQuantityCheckDTO;
+import isa.tim28.pharmacies.dtos.MyPatientDTO;
 import isa.tim28.pharmacies.dtos.PharmAppByMonthDTO;
 import isa.tim28.pharmacies.dtos.PharmAppByWeekDTO;
 import isa.tim28.pharmacies.dtos.PharmAppByYearDTO;
@@ -58,4 +59,8 @@ public interface IPharmacistAppointmentService {
 	void saveLeaveRequest(LeaveDTO dto, long userId);
 	
 	List<LeaveViewDTO> allLeaveRequests(long userId);
+	
+	List<MyPatientDTO> myPatients(long userId);
+	
+	PharmAppDTO hasAppointmentWithPatient(long userId, long patientId);
 }

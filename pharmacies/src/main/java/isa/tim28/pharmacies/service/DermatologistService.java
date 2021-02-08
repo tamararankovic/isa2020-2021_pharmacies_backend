@@ -280,7 +280,7 @@ public class DermatologistService implements IDermatologistService {
 	private List<PatientSearchDTO> patientsToDtos(List<Patient> patients) {
 		List<PatientSearchDTO> dtos = new ArrayList<PatientSearchDTO>();
 		for (Patient p : patients) {
-			dtos.add(new PatientSearchDTO(p.getUser().getName(), p.getUser().getSurname()));
+			dtos.add(new PatientSearchDTO(p.getId(), p.getUser().getName(), p.getUser().getSurname()));
 		}
 		return dtos;
 	}

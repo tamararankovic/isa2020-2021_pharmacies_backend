@@ -35,6 +35,7 @@ import isa.tim28.pharmacies.dtos.LeaveViewDTO;
 import isa.tim28.pharmacies.dtos.MedicineDTOM;
 import isa.tim28.pharmacies.dtos.MedicineDetailsDTO;
 import isa.tim28.pharmacies.dtos.MedicineQuantityCheckDTO;
+import isa.tim28.pharmacies.dtos.MyPatientDTO;
 import isa.tim28.pharmacies.dtos.NewDermatologistInPharmacyDTO;
 import isa.tim28.pharmacies.dtos.PasswordChangeDTO;
 import isa.tim28.pharmacies.dtos.PatientReportAllergyDTO;
@@ -654,5 +655,43 @@ public class DermatologistController {
 		}
 		List<LeaveViewDTO> dtos = dermatologistAppointmentService.allLeaveRequests(loggedInUser.getId());
 		return new ResponseEntity<>(dtos, HttpStatus.OK);
+	}
+	
+	/*
+	 url: GET localhost:8081/derm/myPatients
+	 HTTP request for my patients list
+	 returns ResponseEntity object
+	*/
+	@GetMapping(value = "/myPatients", produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<List<MyPatientDTO>> myPatients(HttpSession session){
+		
+		User loggedInUser = (User) session.getAttribute("loggedInUser");
+		if(loggedInUser == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No logged in user!");
+		}
+		if(loggedInUser.getRole() != Role.DERMATOLOGIST) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only dermatologist can see his patients list.");
+		}
+		List<MyPatientDTO> dtos = dermatologistAppointmentService.myPatients(loggedInUser.getId());
+		return new ResponseEntity<>(dtos, HttpStatus.OK);
+	}
+	
+	/*
+	 url: GET localhost:8081/derm/startAppointment/{patientId}
+	 HTTP request for my patients list
+	 returns ResponseEntity object
+	*/
+	@GetMapping(value = "/startAppointment/{patientId}", produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<PharmAppDTO> startAppointmentForPatient(@PathVariable long patientId, HttpSession session){
+		
+		User loggedInUser = (User) session.getAttribute("loggedInUser");
+		if(loggedInUser == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No logged in user!");
+		}
+		if(loggedInUser.getRole() != Role.DERMATOLOGIST) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only dermatologist can startAppointment.");
+		}
+		PharmAppDTO dto = dermatologistAppointmentService.hasAppointmentWithPatient(loggedInUser.getId(), patientId);
+		return new ResponseEntity<>(dto, HttpStatus.OK);
 	}
 }
