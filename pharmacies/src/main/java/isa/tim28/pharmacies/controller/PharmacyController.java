@@ -1,5 +1,7 @@
 package isa.tim28.pharmacies.controller;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 
 import java.util.List;
@@ -23,7 +25,8 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 import isa.tim28.pharmacies.dtos.MedicineInfoDTO;
-
+import isa.tim28.pharmacies.dtos.PharmaciesCounselingDTO;
+import isa.tim28.pharmacies.dtos.PharmacistAppointmentDTO;
 import isa.tim28.pharmacies.dtos.DealPromotionDTO;
 
 import isa.tim28.pharmacies.dtos.PharmacyBasicInfoDTO;
@@ -263,6 +266,25 @@ public class PharmacyController {
 		} catch (ForbiddenOperationException e) {
 			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
 		}
+	}
+	
+	
+	@PostMapping(value = "pharmacies-for-counseling",  produces = MediaType.APPLICATION_JSON_VALUE,consumes = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<List<PharmaciesCounselingDTO>> getPharmaciesWithAvailablePharmacist(@RequestBody PharmacistAppointmentDTO dto, HttpSession session) {
+		User loggedInUser = (User) session.getAttribute("loggedInUser");
+		if (loggedInUser == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No logged in user!");
+		}
+		if (loggedInUser.getRole() != Role.PATIENT) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only patient can view his profile data.");
+		}
+		
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm"); 
+		LocalDateTime date = LocalDateTime.parse(dto.getDate(), formatter);
+		List<PharmaciesCounselingDTO> res = pharmacyService.getPharmaciesWithAvailablePharmacists(date);
+		
+		
+		return new ResponseEntity<>(res,HttpStatus.OK);
 	}
 
 }

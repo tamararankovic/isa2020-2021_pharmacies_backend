@@ -1,6 +1,7 @@
 package isa.tim28.pharmacies.service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -14,6 +15,7 @@ import isa.tim28.pharmacies.dtos.DermatologistExaminationForPatientDTO;
 import isa.tim28.pharmacies.dtos.ItemPriceDTO;
 import isa.tim28.pharmacies.dtos.MedicineSearchDTO;
 import isa.tim28.pharmacies.dtos.MedicineSpecificationDTO;
+import isa.tim28.pharmacies.dtos.PharmaciesCounselingDTO;
 import isa.tim28.pharmacies.dtos.PharmacyAddAdminDTO;
 import isa.tim28.pharmacies.dtos.PharmacyBasicInfoDTO;
 import isa.tim28.pharmacies.dtos.PharmacyForMedSearchDTO;
@@ -38,6 +40,7 @@ import isa.tim28.pharmacies.repository.PharmacyRepository;
 import isa.tim28.pharmacies.service.interfaces.IDermatologistAppointmentService;
 import isa.tim28.pharmacies.service.interfaces.IDermatologistService;
 import isa.tim28.pharmacies.service.interfaces.IMedicineService;
+import isa.tim28.pharmacies.service.interfaces.IPharmacistAppointmentService;
 import isa.tim28.pharmacies.service.interfaces.IPharmacistService;
 import isa.tim28.pharmacies.service.interfaces.IPharmacyService;
 
@@ -49,51 +52,54 @@ public class PharmacyService implements IPharmacyService {
 	private IDermatologistService dermatologistService;
 	private IDermatologistAppointmentService appointmentService;
 	private IMedicineService medicineService;
+	private IPharmacistAppointmentService pharmacistAppointmentService;
 
 	@Autowired
 	public PharmacyService(PharmacyRepository pharmacyRepository, IPharmacistService pharmacistService,
 			IDermatologistService dermatologistService, IDermatologistAppointmentService appointmentService,
-		    IMedicineService medicineService) {
+			IMedicineService medicineService, IPharmacistAppointmentService pharmacistAppointmentService) {
 		super();
 		this.pharmacyRepository = pharmacyRepository;
 		this.pharmacistService = pharmacistService;
 		this.dermatologistService = dermatologistService;
 		this.appointmentService = appointmentService;
 		this.medicineService = medicineService;
+		this.pharmacistAppointmentService = pharmacistAppointmentService;
 	}
-	
+
 	@Override
-	public List<MedicineSearchDTO> searchMedicineByName(String name){
+	public List<MedicineSearchDTO> searchMedicineByName(String name) {
 		List<MedicineSearchDTO> result = new ArrayList<MedicineSearchDTO>();
-		if(name.equals("")) {
+		if (name.equals("")) {
 			for (Medicine m : medicineService.getAllMedicine()) {
-				double averageRating= 0.0;
+				double averageRating = 0.0;
 				int sumOfRatings = 0;
 				Set<Rating> ratings = m.getRatings();
-				if(!ratings.isEmpty()) {
-					for(Rating r : ratings) {
+				if (!ratings.isEmpty()) {
+					for (Rating r : ratings) {
 						sumOfRatings += r.getRating();
 					}
-					averageRating = sumOfRatings/ratings.size();
+					averageRating = sumOfRatings / ratings.size();
 				}
-				
+
 				Set<CompatibleMedicinesDTO> compatibleMedicines = new HashSet<CompatibleMedicinesDTO>();
 
-				for(String code : m.getCompatibleMedicineCodes()) {
+				for (String code : m.getCompatibleMedicineCodes()) {
 					Medicine me = medicineService.getMedicineByCode(code);
-					CompatibleMedicinesDTO med = new CompatibleMedicinesDTO(me.getName(),code);
+					CompatibleMedicinesDTO med = new CompatibleMedicinesDTO(me.getName(), code);
 					compatibleMedicines.add(med);
 				}
-				MedicineSpecificationDTO specification = new MedicineSpecificationDTO(m.getSideEffects(), m.getAdvisedDailyDose(), m.getIngredients(), compatibleMedicines);
-				
+				MedicineSpecificationDTO specification = new MedicineSpecificationDTO(m.getSideEffects(),
+						m.getAdvisedDailyDose(), m.getIngredients(), compatibleMedicines);
+
 				Set<PharmacyForMedSearchDTO> pharmacies = new HashSet<PharmacyForMedSearchDTO>();
-				for(Pharmacy pharmacy : getAll()) {
-					for(MedicineQuantity medi : pharmacy.getMedicines()) {
-						if(medi.getId() == m.getId()) {
+				for (Pharmacy pharmacy : getAll()) {
+					for (MedicineQuantity medi : pharmacy.getMedicines()) {
+						if (medi.getId() == m.getId()) {
 							double price = 0.0;
-							for(PriceList pl : pharmacy.getPriceLists()) {
-								for(MedicinePrice mp : pl.getMedicinePrices()) {
-									if(mp.getMedicine().getId()==m.getId()) {
+							for (PriceList pl : pharmacy.getPriceLists()) {
+								for (MedicinePrice mp : pl.getMedicinePrices()) {
+									if (mp.getMedicine().getId() == m.getId()) {
 										price = mp.getPrice();
 									}
 								}
@@ -103,42 +109,44 @@ public class PharmacyService implements IPharmacyService {
 						}
 					}
 				}
-				
-				MedicineSearchDTO dto = new MedicineSearchDTO(m.getId(),m.getName(),m.getType().toString(), averageRating, specification, pharmacies);
+
+				MedicineSearchDTO dto = new MedicineSearchDTO(m.getId(), m.getName(), m.getType().toString(),
+						averageRating, specification, pharmacies);
 				result.add(dto);
 			}
 			return result;
 		}
-		
+
 		else {
 			for (Medicine m : findAllMedicineByName(name)) {
-				double averageRating= 0.0;
+				double averageRating = 0.0;
 				int sumOfRatings = 0;
 				Set<Rating> ratings = m.getRatings();
-				if(!ratings.isEmpty()) {
-					for(Rating r : ratings) {
+				if (!ratings.isEmpty()) {
+					for (Rating r : ratings) {
 						sumOfRatings += r.getRating();
 					}
-					averageRating = sumOfRatings/ratings.size();
+					averageRating = sumOfRatings / ratings.size();
 				}
-				
+
 				Set<CompatibleMedicinesDTO> compatibleMedicines = new HashSet<CompatibleMedicinesDTO>();
 
-				for(String code : m.getCompatibleMedicineCodes()) {
+				for (String code : m.getCompatibleMedicineCodes()) {
 					Medicine me = medicineService.getMedicineByCode(code);
-					CompatibleMedicinesDTO med = new CompatibleMedicinesDTO(me.getName(),code);
+					CompatibleMedicinesDTO med = new CompatibleMedicinesDTO(me.getName(), code);
 					compatibleMedicines.add(med);
 				}
-				MedicineSpecificationDTO specification = new MedicineSpecificationDTO(m.getSideEffects(), m.getAdvisedDailyDose(), m.getIngredients(), compatibleMedicines);
-				
+				MedicineSpecificationDTO specification = new MedicineSpecificationDTO(m.getSideEffects(),
+						m.getAdvisedDailyDose(), m.getIngredients(), compatibleMedicines);
+
 				Set<PharmacyForMedSearchDTO> pharmacies = new HashSet<PharmacyForMedSearchDTO>();
-				for(Pharmacy pharmacy : getAll()) {
-					for(MedicineQuantity medi : pharmacy.getMedicines()) {
-						if(medi.getId() == m.getId()) {
+				for (Pharmacy pharmacy : getAll()) {
+					for (MedicineQuantity medi : pharmacy.getMedicines()) {
+						if (medi.getId() == m.getId()) {
 							double price = 0.0;
-							for(PriceList pl : pharmacy.getPriceLists()) {
-								for(MedicinePrice mp : pl.getMedicinePrices()) {
-									if(mp.getMedicine().getId()==m.getId()) {
+							for (PriceList pl : pharmacy.getPriceLists()) {
+								for (MedicinePrice mp : pl.getMedicinePrices()) {
+									if (mp.getMedicine().getId() == m.getId()) {
 										price = mp.getPrice();
 									}
 								}
@@ -148,16 +156,17 @@ public class PharmacyService implements IPharmacyService {
 						}
 					}
 				}
-				
-				MedicineSearchDTO dto = new MedicineSearchDTO(m.getId(),m.getName(),m.getType().toString(), averageRating, specification, pharmacies);
+
+				MedicineSearchDTO dto = new MedicineSearchDTO(m.getId(), m.getName(), m.getType().toString(),
+						averageRating, specification, pharmacies);
 				result.add(dto);
-				
+
 			}
 			return result;
 		}
 	}
-	
-	public List<Medicine> findAllMedicineByName(String name){
+
+	public List<Medicine> findAllMedicineByName(String name) {
 		List<Medicine> ret = new ArrayList<Medicine>();
 		for (Medicine m : medicineService.getAllMedicine()) {
 			if (m.getName().toLowerCase().contains(name.toLowerCase()))
@@ -171,9 +180,11 @@ public class PharmacyService implements IPharmacyService {
 		Pharmacy newPharmacy = pharmacyRepository.save(pharmacy);
 		return newPharmacy;
 	}
+
 	@Override
-	public ArrayList<PharmacyInfoForPatientDTO> getAllPharmacies(String name, String address)throws PharmacyNotFoundException {
-		
+	public ArrayList<PharmacyInfoForPatientDTO> getAllPharmacies(String name, String address)
+			throws PharmacyNotFoundException {
+
 		ArrayList<PharmacyInfoForPatientDTO> pharmacies = new ArrayList<PharmacyInfoForPatientDTO>();
 
 		if (name.equals("") && address.equals("")) {
@@ -182,7 +193,7 @@ public class PharmacyService implements IPharmacyService {
 				pharmacies.add(getPharmacyInfo(p.getId()));
 			}
 			return pharmacies;
-		}else {
+		} else {
 			List<Pharmacy> pharm = findAllPharmaciesWithCriteria(name, address);
 			for (Pharmacy p : pharm) {
 				pharmacies.add(getPharmacyInfo(p.getId()));
@@ -246,14 +257,13 @@ public class PharmacyService implements IPharmacyService {
 			throw new PharmacyNotFoundException();
 		Pharmacy pharmacy = pharmacyRepository.findById(pharmacyId).get();
 		Set<Medicine> ret = new HashSet<Medicine>();
-		for (MedicineQuantity mq : pharmacy.getMedicines()){
+		for (MedicineQuantity mq : pharmacy.getMedicines()) {
 			if (mq.getQuantity() > 0) {
 				ret.add(mq.getMedicine());
-				}
 			}
+		}
 		return ret;
 	}
-
 
 	private List<Pharmacy> findAllPharmaciesWithCriteria(String name, String address) {
 		List<Pharmacy> ret = new ArrayList<Pharmacy>();
@@ -265,20 +275,20 @@ public class PharmacyService implements IPharmacyService {
 		return ret;
 	}
 
-
 	@Override
 	public PharmacyBasicInfoDTO getBasicInfo(PharmacyAdmin admin) throws PharmacyNotFoundException {
 		Optional<Pharmacy> pharmacy = pharmacyRepository.findById(admin.getPharmacy().getId());
-		if(pharmacy.isEmpty())
+		if (pharmacy.isEmpty())
 			throw new PharmacyNotFoundException("Pharmacy admin's pharmacy not found");
 		Pharmacy ret = pharmacy.get();
 		return new PharmacyBasicInfoDTO(ret.getName(), ret.getDescription(), ret.getAddress());
 	}
 
 	@Override
-	public void update(PharmacyAdmin admin, PharmacyBasicInfoDTO dto) throws PharmacyNotFoundException, PharmacyDataInvalidException {
+	public void update(PharmacyAdmin admin, PharmacyBasicInfoDTO dto)
+			throws PharmacyNotFoundException, PharmacyDataInvalidException {
 		Optional<Pharmacy> pharmacyOpt = pharmacyRepository.findById(admin.getPharmacy().getId());
-		if(pharmacyOpt.isEmpty())
+		if (pharmacyOpt.isEmpty())
 			throw new PharmacyNotFoundException("Pharmacy admin's pharmacy not found");
 		Pharmacy pharmacy = pharmacyOpt.get();
 		pharmacy.setName(dto.getName());
@@ -286,7 +296,7 @@ public class PharmacyService implements IPharmacyService {
 		pharmacy.setDescription(dto.getDescription());
 		pharmacyRepository.save(pharmacy);
 	}
-	
+
 	@Override
 	public Pharmacy save(Pharmacy pharmacy) {
 		Pharmacy newPharmacy = pharmacyRepository.save(pharmacy);
@@ -297,33 +307,34 @@ public class PharmacyService implements IPharmacyService {
 	public List<PharmacyAddAdminDTO> getAllPharmacies() {
 		return pharmaciesToDtos(pharmacyRepository.findAll());
 	}
-	
-	private List<PharmacyAddAdminDTO> pharmaciesToDtos(List<Pharmacy> pharmacies){
+
+	private List<PharmacyAddAdminDTO> pharmaciesToDtos(List<Pharmacy> pharmacies) {
 		List<PharmacyAddAdminDTO> dtos = new ArrayList<PharmacyAddAdminDTO>();
-		for(Pharmacy p : pharmacies) {
-			dtos.add(new PharmacyAddAdminDTO(p.getId(),p.getName(),p.getDescription(),p.getAddress()));
+		for (Pharmacy p : pharmacies) {
+			dtos.add(new PharmacyAddAdminDTO(p.getId(), p.getName(), p.getDescription(), p.getAddress()));
 		}
 		return dtos;
 	}
 
 	@Override
 	public Pharmacy getPharmacyById(long pharmacyId) throws PharmacyNotFoundException {
-		
+
 		if (pharmacyRepository.findById(pharmacyId).isEmpty())
 			throw new PharmacyNotFoundException();
 		Pharmacy pharmacy = pharmacyRepository.findById(pharmacyId).get();
 		return pharmacy;
 	}
-	
+
 	@Override
 	public List<PharmacyBasicInfoDTO> getPharmacyByMedicineId(long medicineId) throws PharmacyNotFoundException {
 		List<PharmacyBasicInfoDTO> res = new ArrayList<PharmacyBasicInfoDTO>();
 		List<Pharmacy> pharmacies = pharmacyRepository.findAll();
-		for(Pharmacy p : pharmacies) {
+		for (Pharmacy p : pharmacies) {
 			Set<Medicine> allMedicine = findAllInStockByPharmacyId(p.getId());
-			for(Medicine m : allMedicine) {
-				if(medicineId ==m.getId()) {
-					PharmacyBasicInfoDTO pharm = new PharmacyBasicInfoDTO(p.getName(),p.getDescription(),p.getAddress());
+			for (Medicine m : allMedicine) {
+				if (medicineId == m.getId()) {
+					PharmacyBasicInfoDTO pharm = new PharmacyBasicInfoDTO(p.getName(), p.getDescription(),
+							p.getAddress());
 					res.add(pharm);
 					continue;
 				}
@@ -339,7 +350,7 @@ public class PharmacyService implements IPharmacyService {
 
 	@Override
 	public void addNewmedicine(Pharmacy pharmacy, Medicine medicine) {
-		if(!pharmacy.offers(medicine)) {
+		if (!pharmacy.offers(medicine)) {
 			pharmacy.getMedicines().add(new MedicineQuantity(medicine, 0));
 			pharmacyRepository.save(pharmacy);
 		}
@@ -347,18 +358,18 @@ public class PharmacyService implements IPharmacyService {
 
 	@Override
 	public void addMedicines(Pharmacy pharmacy, Set<MedicineQuantity> medicines) throws ForbiddenOperationException {
-		for(MedicineQuantity mq : medicines)
+		for (MedicineQuantity mq : medicines)
 			pharmacy.addMedicine(mq);
 		pharmacyRepository.save(pharmacy);
 	}
 
 	@Override
 	public void addNewMedicines(Pharmacy pharmacy, Set<Long> medicineIds) throws MedicineDoesNotExistException {
-		for(long medId : medicineIds) {
+		for (long medId : medicineIds) {
 			Medicine m = medicineService.findById(medId);
-			if(m != null)
+			if (m != null)
 				addNewmedicine(pharmacy, m);
-			else 
+			else
 				throw new MedicineDoesNotExistException("Medicine does not exist in the system!");
 		}
 	}
@@ -367,25 +378,30 @@ public class PharmacyService implements IPharmacyService {
 	public PriceListDTO getCurrentPriceList(Pharmacy pharmacy) {
 		PriceListDTO priceList = new PriceListDTO();
 		Set<Medicine> allMedicines = pharmacy.getAllOfferedMedicines();
-		for(Medicine m : allMedicines) {
-			if(pharmacy.isPriceDefined(m))
-				priceList.getMedicinePrices().add(new ItemPriceDTO(m.getId(), m.getName(), pharmacy.getCurrentPrice(m), false));
+		for (Medicine m : allMedicines) {
+			if (pharmacy.isPriceDefined(m))
+				priceList.getMedicinePrices()
+						.add(new ItemPriceDTO(m.getId(), m.getName(), pharmacy.getCurrentPrice(m), false));
 			else
 				priceList.getMedicinePrices().add(new ItemPriceDTO(m.getId(), m.getName(), 0, true));
 		}
 		if (pharmacy.isDermatologistAppointmentPriceDefined())
-			priceList.setDermatologistAppointmentPrice(new ItemPriceDTO(0, "", pharmacy.getDermatologistAppointmentCurrentPrice(), false));
+			priceList.setDermatologistAppointmentPrice(
+					new ItemPriceDTO(0, "", pharmacy.getDermatologistAppointmentCurrentPrice(), false));
 		else
 			priceList.setDermatologistAppointmentPrice(new ItemPriceDTO(0, "", 0, true));
 		if (pharmacy.isPharmacistAppointmentPriceDefined())
-			priceList.setPharmacistAppointmentPrice(new ItemPriceDTO(0, "", pharmacy.getPharmacistAppointmentCurrentPrice(), false));
-		else priceList.setPharmacistAppointmentPrice(new ItemPriceDTO(0, "", 0, true));
+			priceList.setPharmacistAppointmentPrice(
+					new ItemPriceDTO(0, "", pharmacy.getPharmacistAppointmentCurrentPrice(), false));
+		else
+			priceList.setPharmacistAppointmentPrice(new ItemPriceDTO(0, "", 0, true));
 		return priceList;
 	}
 
 	@Override
-	public void updatePriceLists(PriceListDTO dto, Pharmacy pharmacy) throws MedicineDoesNotExistException, ForbiddenOperationException, PriceInvalidException {
-		if(dto.getStartDate().isBefore(LocalDate.now()))
+	public void updatePriceLists(PriceListDTO dto, Pharmacy pharmacy)
+			throws MedicineDoesNotExistException, ForbiddenOperationException, PriceInvalidException {
+		if (dto.getStartDate().isBefore(LocalDate.now()))
 			throw new ForbiddenOperationException("You can't set price list with start date in the past");
 		if (pharmacy.hasPriceListDefinedOnDate(dto.getStartDate())) {
 			updatePriceList(dto, pharmacy);
@@ -393,53 +409,61 @@ public class PharmacyService implements IPharmacyService {
 			createPriceList(dto, pharmacy);
 		}
 	}
-	
-	private void updatePriceList(PriceListDTO dto, Pharmacy pharmacy) throws MedicineDoesNotExistException, PriceInvalidException {
+
+	private void updatePriceList(PriceListDTO dto, Pharmacy pharmacy)
+			throws MedicineDoesNotExistException, PriceInvalidException {
 		if (!dto.getDermatologistAppointmentPrice().isUndefined()) {
 			pharmacy.getPriceListDefinedOnDate(dto.getStartDate()).setDermAppPriceDefined(true);
-			pharmacy.getPriceListDefinedOnDate(dto.getStartDate()).setDefaultDermatologistAppointmentPrice(dto.getDermatologistAppointmentPrice().getPrice());
+			pharmacy.getPriceListDefinedOnDate(dto.getStartDate())
+					.setDefaultDermatologistAppointmentPrice(dto.getDermatologistAppointmentPrice().getPrice());
 		}
-		
-		if(!dto.getPharmacistAppointmentPrice().isUndefined()) {
+
+		if (!dto.getPharmacistAppointmentPrice().isUndefined()) {
 			pharmacy.getPriceListDefinedOnDate(dto.getStartDate()).setPharmAppPriceDefined(true);
-			pharmacy.getPriceListDefinedOnDate(dto.getStartDate()).setPharmacistAppointmentPrice(dto.getPharmacistAppointmentPrice().getPrice());
+			pharmacy.getPriceListDefinedOnDate(dto.getStartDate())
+					.setPharmacistAppointmentPrice(dto.getPharmacistAppointmentPrice().getPrice());
 		}
-		
-		for(ItemPriceDTO mp : dto.getMedicinePrices()) {
+
+		for (ItemPriceDTO mp : dto.getMedicinePrices()) {
 			Medicine m = medicineService.findById(mp.getItemId());
 			if (m != null) {
 				pharmacy.getPriceListDefinedOnDate(dto.getStartDate()).setPrice(m, mp.getPrice());
-			} else throw new MedicineDoesNotExistException("You are trying to add price to a medicine that doesn't exist!");
+			} else
+				throw new MedicineDoesNotExistException(
+						"You are trying to add price to a medicine that doesn't exist!");
 		}
-		
+
 		pharmacyRepository.save(pharmacy);
 	}
-	
-	private void createPriceList(PriceListDTO dto, Pharmacy pharmacy) throws MedicineDoesNotExistException, PriceInvalidException {
+
+	private void createPriceList(PriceListDTO dto, Pharmacy pharmacy)
+			throws MedicineDoesNotExistException, PriceInvalidException {
 		PriceList pl = new PriceList();
 		pl.setStartDate(dto.getStartDate());
-		
+
 		if (dto.getDermatologistAppointmentPrice().isUndefined()) {
 			pl.setDermAppPriceDefined(false);
 		} else {
 			pl.setDermAppPriceDefined(true);
 			pl.setDefaultDermatologistAppointmentPrice(dto.getDermatologistAppointmentPrice().getPrice());
 		}
-		
-		if(dto.getPharmacistAppointmentPrice().isUndefined()) {
+
+		if (dto.getPharmacistAppointmentPrice().isUndefined()) {
 			pl.setPharmAppPriceDefined(false);
 		} else {
 			pl.setPharmAppPriceDefined(true);
 			pl.setPharmacistAppointmentPrice(dto.getPharmacistAppointmentPrice().getPrice());
 		}
-		
-		for(ItemPriceDTO mp : dto.getMedicinePrices()) {
+
+		for (ItemPriceDTO mp : dto.getMedicinePrices()) {
 			Medicine m = medicineService.findById(mp.getItemId());
 			if (m != null) {
 				pl.getMedicinePrices().add(new MedicinePrice(m, mp.getPrice()));
-			} else throw new MedicineDoesNotExistException("You are trying to add price to a medicine that doesn't exist!");
+			} else
+				throw new MedicineDoesNotExistException(
+						"You are trying to add price to a medicine that doesn't exist!");
 		}
-		
+
 		pharmacy.getPriceLists().add(pl);
 		pharmacyRepository.save(pharmacy);
 	}
@@ -448,5 +472,31 @@ public class PharmacyService implements IPharmacyService {
 	public List<Pharmacy> getAll() {
 		List<Pharmacy> pharm = pharmacyRepository.findAll();
 		return pharm;
+	}
+
+	@Override
+	public List<PharmaciesCounselingDTO> getPharmaciesWithAvailablePharmacists(LocalDateTime date) {
+		List<Pharmacy> all = getAll();
+		List<PharmaciesCounselingDTO> result = new ArrayList<PharmaciesCounselingDTO>();
+		boolean hasAvailablePharmacists = false;
+		
+		for (Pharmacy p : all) {
+			hasAvailablePharmacists = false;
+			Set<Pharmacist> pharmacists = pharmacistService.findAllByPharmacyId(p.getId());
+			for (Pharmacist pharm : pharmacists) {
+				if (pharmacistAppointmentService.isPharmacistAvailable(pharm, date)) {
+					hasAvailablePharmacists = true;
+				}
+			}
+			double sumOfRatings = 0;
+			for (Rating r : p.getRatings())
+				sumOfRatings += r.getRating();
+			if (hasAvailablePharmacists) {
+				result.add(new PharmaciesCounselingDTO(p.getId(), p.getName(), p.getAddress(),
+						p.getRatings().size() > 0 ? sumOfRatings / p.getRatings().size() : 0,
+						p.getPharmacistAppointmentCurrentPrice()));
+			}
+		}
+		return result;
 	}
 }

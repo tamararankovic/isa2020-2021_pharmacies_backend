@@ -55,5 +55,7 @@ public interface IPharmacistAppointmentService {
 	void patientWasNotPresent(long appointmentId);
 
 	boolean pharmacisttHasAppointmentsInTimInterval(Pharmacist pharmacist, LocalDate startDate, LocalDate endDate);
+	
+	boolean isPharmacistAvailable(Pharmacist pharmacist, LocalDateTime startDateTime);
 
 }

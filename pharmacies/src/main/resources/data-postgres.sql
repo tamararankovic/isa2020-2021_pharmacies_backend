@@ -1,4 +1,4 @@
-insert into users(id, name, surname, email, password, role, active, loged) values (1, 'Tamara', 'Rankovic', 'milijana.djordjevic1998+1@gmail.com', '1234', 0, TRUE, TRUE);
+insert into users(id, name, surname, email, password, role, active, loged) values (1, 'Tamara', 'Rankovic', 'milijana.djordjevic1998+2@gmail.com', '1234', 0, TRUE, TRUE);
 insert into users(id, name, surname, email, password, role, active, loged) values (2, 'Tamara', 'Rankovic', 'rankovictamaraa+1@gmail.com', '1234', 1, TRUE, TRUE);
 insert into users(id, name, surname, email, password, role, active, loged) values (3, 'Tamara', 'Rankovic', 'rankovictamaraa+2@gmail.com', '1234', 2, TRUE, TRUE);
 insert into users(id, name, surname, email, password, role, active, loged) values (4, 'Tamara', 'Rankovic', 'rankovictamaraa@gmail.com', '1234', 3, TRUE, FALSE);
@@ -106,7 +106,7 @@ insert into reservation(id, due_date, received, medicine_id, patient_id, pharmac
 insert into reservation(id, due_date, received, medicine_id, patient_id, pharmacy_id) values(2, '2021-02-04 08:00:00.000000', '0', 2, 1, 1);
 insert into reservation(id, due_date, received, medicine_id, patient_id, pharmacy_id) values(3, '2021-02-25 08:00:00.000000', '1', 3, 1, 1);
 
-alter sequence pharmacist_appointment_id_seq restart with 4;
+
 alter sequence reservation_id_seq restart with 4;
 
 

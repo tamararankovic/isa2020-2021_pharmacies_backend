@@ -1,10 +1,12 @@
 package isa.tim28.pharmacies.service.interfaces;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
 import isa.tim28.pharmacies.dtos.MedicineSearchDTO;
+import isa.tim28.pharmacies.dtos.PharmaciesCounselingDTO;
 import isa.tim28.pharmacies.dtos.PharmacyAddAdminDTO;
 import isa.tim28.pharmacies.dtos.PharmacyBasicInfoDTO;
 import isa.tim28.pharmacies.dtos.PharmacyInfoForPatientDTO;
@@ -56,5 +58,7 @@ public interface IPharmacyService {
 	Pharmacy savePharmacy(Pharmacy pharmacy);
 
 	List<MedicineSearchDTO> searchMedicineByName(String name);
+
+	List<PharmaciesCounselingDTO> getPharmaciesWithAvailablePharmacists(LocalDateTime date);
 
 }
