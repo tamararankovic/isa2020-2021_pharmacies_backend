@@ -8,16 +8,16 @@ services:
 addons:
   sonarcloud:
   organization: isa-tim28
-  token: $SONAR_TOKEN
+  token: ${SONAR_TOKEN}
 
 script:
   - cd pharmacies
   - mvn clean install
-  - mvn sonar:sonar -Dsonar.projectKey=$PROJECT_KEY -Dsonar.organization=isa-tim28 -Dsonar.host.url=https://sonarcloud.io -Dsonar.login=$SONAR_TOKEN
+  - mvn sonar:sonar -Dsonar.projectKey=${PROJECT_KEY} -Dsonar.organization=isa-tim28 -Dsonar.host.url=https://sonarcloud.io -Dsonar.login=${SONAR_TOKEN}
 
 dist: trusty
 
 deploy:
   provider: heroku
-  api_key: $HEROKU_API_KEY
+  api_key: ${HEROKU_API_KEY}
   app: pharmacies-backend
