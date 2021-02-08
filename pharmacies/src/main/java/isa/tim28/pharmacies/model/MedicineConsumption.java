@@ -32,6 +32,11 @@ public class MedicineConsumption {
 	@Column(name = "dateCreated", nullable = false)
 	private LocalDate dateCreated;
 
+	public MedicineConsumption() {
+		super();
+		// TODO Auto-generated constructor stub
+	}
+
 	public MedicineConsumption(Medicine medicine, Pharmacy pharmacy, int quantity) throws ForbiddenOperationException {
 		if(!pharmacy.offers(medicine))
 			throw new ForbiddenOperationException("Pharmacy doesn't offer selected medicine");

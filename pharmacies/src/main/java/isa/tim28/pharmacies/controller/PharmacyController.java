@@ -366,6 +366,57 @@ public class PharmacyController {
 		}
 	}
 	
+	@GetMapping(value = "app-month")
+	public ResponseEntity<List<StatisticalDataDTO>> getAppCountByMonth(HttpSession session) {
+		User user = (User) session.getAttribute("loggedInUser");
+		if (user == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not logged in!");
+		}
+		if (user.getRole() != Role.PHARMACY_ADMIN) {
+			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You don't have required permissions!");
+		}
+		try {
+			PharmacyAdmin admin = pharmacyAdminService.findByUser(user);
+			return new ResponseEntity<>(statisticsService.getAppointmentCountByMonth(admin.getPharmacy()), HttpStatus.OK);
+		} catch (UserDoesNotExistException e) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+		}
+	}
+	
+	@GetMapping(value = "app-quarter")
+	public ResponseEntity<List<StatisticalDataDTO>> getAppCountByQuarter(HttpSession session) {
+		User user = (User) session.getAttribute("loggedInUser");
+		if (user == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not logged in!");
+		}
+		if (user.getRole() != Role.PHARMACY_ADMIN) {
+			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You don't have required permissions!");
+		}
+		try {
+			PharmacyAdmin admin = pharmacyAdminService.findByUser(user);
+			return new ResponseEntity<>(statisticsService.getAppointmentCountByQuarter(admin.getPharmacy()), HttpStatus.OK);
+		} catch (UserDoesNotExistException e) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+		}
+	}
+	
+	@GetMapping(value = "app-year")
+	public ResponseEntity<List<StatisticalDataDTO>> getAppCountByYear(HttpSession session) {
+		User user = (User) session.getAttribute("loggedInUser");
+		if (user == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not logged in!");
+		}
+		if (user.getRole() != Role.PHARMACY_ADMIN) {
+			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You don't have required permissions!");
+		}
+		try {
+			PharmacyAdmin admin = pharmacyAdminService.findByUser(user);
+			return new ResponseEntity<>(statisticsService.getAppointmentCountByYear(admin.getPharmacy()), HttpStatus.OK);
+		} catch (UserDoesNotExistException e) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+		}
+	}
+	
 	@GetMapping(value = "med-consumption-month")
 	public ResponseEntity<List<StatisticalDataDTO>> getMedConsumptionyMonth(HttpSession session) {
 		User user = (User) session.getAttribute("loggedInUser");

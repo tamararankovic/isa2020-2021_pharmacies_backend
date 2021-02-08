@@ -19,6 +19,12 @@ public interface IStatisticsService {
 	
 	List<StatisticalDataDTO> getDermatologistAppointmentCountByYear(Pharmacy pharmacy);
 	
+	List<StatisticalDataDTO> getAppointmentCountByMonth(Pharmacy pharmacy);
+	
+	List<StatisticalDataDTO> getAppointmentCountByQuarter(Pharmacy pharmacy);
+	
+	List<StatisticalDataDTO> getAppointmentCountByYear(Pharmacy pharmacy);
+	
 	List<StatisticalDataDTO> getMedicineConsumptionByMonth(Pharmacy pharmacy);
 	
 	List<StatisticalDataDTO> getMedicineConsumptionByQuarter(Pharmacy pharmacy);
