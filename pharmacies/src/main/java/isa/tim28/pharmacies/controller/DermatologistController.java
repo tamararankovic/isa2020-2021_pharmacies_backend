@@ -44,10 +44,12 @@ import isa.tim28.pharmacies.dtos.PharmAppByMonthDTO;
 import isa.tim28.pharmacies.dtos.PharmAppByWeekDTO;
 import isa.tim28.pharmacies.dtos.PharmAppByYearDTO;
 import isa.tim28.pharmacies.dtos.PharmAppDTO;
+import isa.tim28.pharmacies.dtos.PredefinedExaminationDTO;
 import isa.tim28.pharmacies.exceptions.AddingDermatologistToPharmacyException;
 import isa.tim28.pharmacies.exceptions.BadNameException;
 import isa.tim28.pharmacies.exceptions.BadNewEmailException;
 import isa.tim28.pharmacies.exceptions.BadSurnameException;
+import isa.tim28.pharmacies.exceptions.ForbiddenOperationException;
 import isa.tim28.pharmacies.exceptions.InvalidDeleteUserAttemptException;
 import isa.tim28.pharmacies.exceptions.PasswordIncorrectException;
 import isa.tim28.pharmacies.exceptions.UserDoesNotExistException;
@@ -693,5 +695,26 @@ public class DermatologistController {
 		}
 		PharmAppDTO dto = dermatologistAppointmentService.hasAppointmentWithPatient(loggedInUser.getId(), patientId);
 		return new ResponseEntity<>(dto, HttpStatus.OK);
+	}
+
+
+	@PostMapping(value = "new-predefined")
+	public void newPredefined(@RequestBody PredefinedExaminationDTO dto, HttpSession session) {
+		User loggedInUser = (User) session.getAttribute("loggedInUser");
+		if(loggedInUser == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not logged in!");
+		}
+		if(loggedInUser.getRole() == Role.PHARMACY_ADMIN) {
+			try {
+				PharmacyAdmin admin = pharmacyAdminService.findByUser(loggedInUser);
+				dermatologistService.createPredefinedAppointment(dto.getDermatologistId(), dto.getStartDateTime(), (int)dto.getDurationInMinutes(), (long)dto.getPrice(), admin.getPharmacy());
+				return;
+			} catch(UserDoesNotExistException e1) {
+				throw new ResponseStatusException(HttpStatus.NOT_FOUND, e1.getMessage());
+			} catch (ForbiddenOperationException e) {
+				throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+			}
+		}
+		throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You don't have required permissions!");
 	}
 }

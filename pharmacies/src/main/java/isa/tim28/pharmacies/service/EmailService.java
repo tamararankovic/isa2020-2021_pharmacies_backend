@@ -99,6 +99,15 @@ public class EmailService {
 	}
 	
 	@Async
+	public void sendReservationMadeEmailAsync(String name, String address, long reservationId) throws MessagingException {
+		System.out.println("Async metoda se izvrsava u drugom Threadu u odnosu na prihvaceni zahtev. Thread id: " + Thread.currentThread().getId());
+		System.out.println("Slanje emaila...");
+		String content= "Pozdrav " + name + ",<br>"
+	            + "Rezervisali ste lek." + "<br>"
+	            + "Broj rezervacije: " + reservationId + "<br>";
+		
+			
+	            }
 	public void sendEmailToSupplier(String email, String name, String text, long offerId) throws MessagingException {
 		String content = "Poštovani/Poštovana " + name + ",<br>"
 	            + "Vaša ponuda je " + text + "<br>"
@@ -132,13 +141,14 @@ public class EmailService {
 	    MimeMessageHelper helper = new MimeMessageHelper(message);
 	    helper.setFrom(env.getProperty("spring.mail.username"));
 	    helper.setTo(address);
-	    helper.setSubject("Zakazan pregled");
+	    helper.setSubject("Recept");
 	    helper.setText(content, true);
 	    
 		javaMailSender.send(message);
 
-		System.out.println("Email za zakazivanje poslat!");
+		System.out.println("Email poslat!");
 	}
+
 	
 	@Async
 	public void sendEmailDealPromotion(String email, String pharmacyName, String type, String text, LocalDate startDateTIme, LocalDate endDateTime) throws MessagingException {
@@ -154,6 +164,45 @@ public class EmailService {
 		
 		helper.setTo(email);
 	    helper.setSubject(type + " iz apoteke " + pharmacyName);
+	    helper.setText(content, true);
+	    
+		javaMailSender.send(message);
+	}
+	
+	@Async
+	public void notifyEmployeeLeaveRequestIsDeclined(String email, String fullName, String type, LocalDate startDate, LocalDate endDate, String reasonDeclined) throws MessagingException {
+		String content = "Poštovani/Poštovana " + fullName + ",<br>" +
+				"Vaš zahtev za " + type +
+				" od " + startDate.format(DateTimeFormatter.ofPattern("dd.MM.yyyy.")) + 
+				" do " + endDate.format(DateTimeFormatter.ofPattern("dd.MM.yyyy.")) 
+				+ " je odbijen." + "<br>" +
+				"Razlog zbog kog je zahtev obijen: " + reasonDeclined;
+				
+		MimeMessage message = javaMailSender.createMimeMessage();
+	    MimeMessageHelper helper = new MimeMessageHelper(message);
+	    helper.setFrom(env.getProperty("spring.mail.username"));
+		
+		helper.setTo(email);
+	    helper.setSubject("Odgovor na zahtev za " + type);
+	    helper.setText(content, true);
+	    
+		javaMailSender.send(message);
+	}
+	
+	@Async
+	public void notifyEmployeeLeaveRequestIsAccepted(String email, String fullName, String type, LocalDate startDate, LocalDate endDate) throws MessagingException {
+		String content = "Poštovani/Poštovana " + fullName + ",<br>" +
+				"Vaš zahtev za " + type +
+				" od " + startDate.format(DateTimeFormatter.ofPattern("dd.MM.yyyy.")) + 
+				" do " + endDate.format(DateTimeFormatter.ofPattern("dd.MM.yyyy.")) 
+				+ " je prihvaćen.";
+				
+		MimeMessage message = javaMailSender.createMimeMessage();
+	    MimeMessageHelper helper = new MimeMessageHelper(message);
+	    helper.setFrom(env.getProperty("spring.mail.username"));
+		
+		helper.setTo(email);
+	    helper.setSubject("Odgovor na zahtev za " + type);
 	    helper.setText(content, true);
 	    
 		javaMailSender.send(message);

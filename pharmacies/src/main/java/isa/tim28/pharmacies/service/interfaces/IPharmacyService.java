@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+import isa.tim28.pharmacies.dtos.MedicineSearchDTO;
 import isa.tim28.pharmacies.dtos.PharmacyAddAdminDTO;
 import isa.tim28.pharmacies.dtos.PharmacyBasicInfoDTO;
 import isa.tim28.pharmacies.dtos.PharmacyInfoForPatientDTO;
@@ -36,15 +37,24 @@ public interface IPharmacyService {
 	
 	void update(PharmacyAdmin admin, PharmacyBasicInfoDTO dto) throws PharmacyNotFoundException, PharmacyDataInvalidException;
 
+	List<PharmacyBasicInfoDTO> getPharmacyByMedicineId(long medicineId) throws PharmacyNotFoundException;
+	
+	Pharmacy getByName(String name);
+	
+	List<Pharmacy> getAll();
+	
 	void addNewmedicine(Pharmacy pharmacy, Medicine medicine);
 	
 	void addNewMedicines(Pharmacy pharmacy, Set<Long> medicineIds) throws MedicineDoesNotExistException;
 	
 	void addMedicines(Pharmacy pharmacy, Set<MedicineQuantity> medicines) throws ForbiddenOperationException;
-	
-	void deleteMedicine(Pharmacy pharmacy, long medicineId) throws MedicineDoesNotExistException, ForbiddenOperationException;
-	
+		
 	PriceListDTO getCurrentPriceList(Pharmacy pharmacy);
 	
 	void updatePriceLists(PriceListDTO dto, Pharmacy pharmacy) throws MedicineDoesNotExistException, ForbiddenOperationException, PriceInvalidException;
+
+	Pharmacy savePharmacy(Pharmacy pharmacy);
+
+	List<MedicineSearchDTO> searchMedicineByName(String name);
+
 }

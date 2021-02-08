@@ -1,14 +1,15 @@
 package isa.tim28.pharmacies.service;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -31,6 +32,7 @@ import isa.tim28.pharmacies.model.DailyEngagement;
 import isa.tim28.pharmacies.model.DermatologistAppointment;
 import isa.tim28.pharmacies.model.LeaveType;
 import isa.tim28.pharmacies.model.Medicine;
+import isa.tim28.pharmacies.model.MedicineConsumption;
 import isa.tim28.pharmacies.model.MedicineMissingNotification;
 import isa.tim28.pharmacies.model.MedicineQuantity;
 import isa.tim28.pharmacies.model.Patient;
@@ -42,6 +44,7 @@ import isa.tim28.pharmacies.model.Pharmacy;
 import isa.tim28.pharmacies.model.Reservation;
 import isa.tim28.pharmacies.model.Therapy;
 import isa.tim28.pharmacies.repository.DermatologistAppointmentRepository;
+import isa.tim28.pharmacies.repository.MedicineConsumptionRepository;
 import isa.tim28.pharmacies.repository.MedicineMissingNotificationRepository;
 import isa.tim28.pharmacies.repository.MedicineQuantityRepository;
 import isa.tim28.pharmacies.repository.MedicineRepository;
@@ -66,6 +69,7 @@ public class PharmacistAppointmentService implements IPharmacistAppointmentServi
 	private MedicineMissingNotificationRepository medicineMissingNotificationRepository;
 	private PharmacistLeaveRequestRepository pharmacistLeaveRequestRepository;
 	private PharmacistRepository pharmacistRepository;
+	private MedicineConsumptionRepository medicineConsumptionRepository;
 	
 	
 	@Autowired
@@ -73,7 +77,7 @@ public class PharmacistAppointmentService implements IPharmacistAppointmentServi
 			PharmacistReportRepository pharmacistReportRepository, PatientRepository patientRepository, MedicineQuantityRepository medicineQuantityRepository,
 			ReservationRepository reservationRepository, MedicineMissingNotificationRepository medicineMissingNotificationRepository,
 			PharmacistLeaveRequestRepository pharmacistLeaveRequestRepository, DermatologistAppointmentRepository dermatologistAppointmentRepository, 
-			PharmacistRepository pharmacistRepository) {
+			PharmacistRepository pharmacistRepository, MedicineConsumptionRepository medicineConsumptionRepository) {
 		super();
 		this.appointmentRepository = appointmentRepository;
 		this.medicineRepository = medicineRepository;
@@ -85,6 +89,7 @@ public class PharmacistAppointmentService implements IPharmacistAppointmentServi
 		this.pharmacistLeaveRequestRepository = pharmacistLeaveRequestRepository;
 		this.dermatologistAppointmentRepository = dermatologistAppointmentRepository;
 		this.pharmacistRepository = pharmacistRepository;
+		this.medicineConsumptionRepository = medicineConsumptionRepository;
 	}
 	
 	@Override
@@ -229,6 +234,7 @@ public class PharmacistAppointmentService implements IPharmacistAppointmentServi
 			else {
 				reservation.setReceived(true);
 				reservationRepository.save(reservation);
+				medicineConsumptionRepository.save(new MedicineConsumption(reservation.getMedicine(), reservation.getPharmacy(), 1));
 				return reservation;
 			}
 		} catch(Exception e) {
@@ -331,8 +337,19 @@ public class PharmacistAppointmentService implements IPharmacistAppointmentServi
 	}
 	
 	private boolean isDateInInterval(LocalDate date, LocalDate startDate, LocalDate endDate) {
-		if(!date.isBefore(startDate) && !date.isAfter(endDate)) return false;
-		return true;
+		if(!date.isBefore(startDate) && !date.isAfter(endDate)) return true;
+		return false;
+	}
+	
+	@Override
+	public boolean pharmacisttHasAppointmentsInTimInterval(Pharmacist pharmacist, LocalDate startDate,
+			LocalDate endDate) {
+		Set<PharmacistAppointment> appointments = appointmentRepository.findAll().stream().filter(a -> a.getPharmacist().getId() == pharmacist.getId()).collect(Collectors.toSet());
+		for(PharmacistAppointment a : appointments) {
+			if (isDateInInterval(a.getStartDateTime().toLocalDate(), startDate, endDate))
+				return true;
+		}
+		return false;
 	}
 
 	@Override
@@ -415,7 +432,6 @@ public class PharmacistAppointmentService implements IPharmacistAppointmentServi
 			request.setPharmacist(pharmacist);
 			if(dto.getType().equals("SICK_LEAVE")) request.setType(LeaveType.SICK_LEAVE);
 			else request.setType(LeaveType.ANNUAL_LEAVE);
-			request.setConfirmed(false);
 			pharmacistLeaveRequestRepository.save(request);
 		} catch(Exception e) {
 			return;
@@ -431,7 +447,7 @@ public class PharmacistAppointmentService implements IPharmacistAppointmentServi
 			Set<PharmacistLeaveRequest> requests = pharmacistLeaveRequestRepository.findAllByPharmacist_Id(pharmacist.getId());
 			for(PharmacistLeaveRequest request : requests) {;
 				LeaveViewDTO dto = new LeaveViewDTO();
-				dto.setConfirmed(request.isConfirmed());
+				dto.setConfirmed(request.getState().toString());
 				dto.setStartDate(request.getStartDate().format(DateTimeFormatter.ofPattern("dd.MM.yyyy.")));
 				dto.setEndDate(request.getEndDate().format(DateTimeFormatter.ofPattern("dd.MM.yyyy.")));
 				dto.setType(request.getType().toString());

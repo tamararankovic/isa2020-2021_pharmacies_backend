@@ -28,12 +28,16 @@ import isa.tim28.pharmacies.dtos.PharmAppByWeekDTO;
 import isa.tim28.pharmacies.dtos.PharmAppByYearDTO;
 import isa.tim28.pharmacies.dtos.PharmAppDTO;
 import isa.tim28.pharmacies.dtos.TherapyDTO;
+import isa.tim28.pharmacies.exceptions.ForbiddenOperationException;
 import isa.tim28.pharmacies.exceptions.UserDoesNotExistException;
+import isa.tim28.pharmacies.model.DailyEngagement;
+import isa.tim28.pharmacies.model.Dermatologist;
 import isa.tim28.pharmacies.model.DermatologistAppointment;
 import isa.tim28.pharmacies.model.DermatologistLeaveRequest;
 import isa.tim28.pharmacies.model.DermatologistReport;
 import isa.tim28.pharmacies.model.EngagementInPharmacy;
 import isa.tim28.pharmacies.model.LeaveType;
+import isa.tim28.pharmacies.model.LeaveRequestState;
 import isa.tim28.pharmacies.model.Medicine;
 import isa.tim28.pharmacies.model.MedicineMissingNotification;
 import isa.tim28.pharmacies.model.MedicineQuantity;
@@ -41,8 +45,6 @@ import isa.tim28.pharmacies.model.Patient;
 import isa.tim28.pharmacies.model.PharmacistAppointment;
 import isa.tim28.pharmacies.model.Pharmacy;
 import isa.tim28.pharmacies.model.Therapy;
-import isa.tim28.pharmacies.model.DailyEngagement;
-import isa.tim28.pharmacies.model.Dermatologist;
 import isa.tim28.pharmacies.repository.DermatologistAppointmentRepository;
 import isa.tim28.pharmacies.repository.DermatologistLeaveRequestRepository;
 import isa.tim28.pharmacies.repository.DermatologistReportRepository;
@@ -181,6 +183,7 @@ public class DermatologistAppointmentService implements IDermatologistAppointmen
 					MedicineMissingNotification notification = new MedicineMissingNotification();
 					notification.setMedicine(mq.getMedicine());
 					notification.setPharmacy(pharmacy);
+					notification.setTimestamp(LocalDateTime.now());
 					medicineMissingNotificationRepository.save(notification);
 				}
 				return dto;
@@ -218,6 +221,7 @@ public class DermatologistAppointmentService implements IDermatologistAppointmen
 		else return new MedicineDetailsDTO();
 	}
 	
+	@Override
 	public boolean dermatologistHasIncomingAppointmentsInPharmacy(Dermatologist dermatologist, Pharmacy pharmacy) {
 		return appointmentRepository.findAll().stream().filter(a -> a.getDermatologist().getId() == dermatologist.getId()
 				&& a.getPharmacy().getId() == pharmacy.getId()
@@ -326,30 +330,34 @@ public class DermatologistAppointmentService implements IDermatologistAppointmen
 		for (DailyEngagement dailyEngagement : engagement.getDailyEngagements()) {
 			if (dailyEngagement.getDayOfWeek().equals(dayOfWeek)) {
 				isWorkingThatDay = true;
-				if (!isTimeInInterval(startDateTime.toLocalTime(), dailyEngagement.getStartTime(), dailyEngagement.getEndTime()))
+				if (!isTimeInInterval(startDateTime.toLocalTime(), 30, dailyEngagement.getStartTime(), dailyEngagement.getEndTime()))
 					return false;
 			}
 		}
 		if(!isWorkingThatDay) return false;
 		for (DermatologistLeaveRequest request : dermatologistLeaveRequestRepository.findAllByDermatologist_Id(dermatologist.getId())) {
-			if (isDateInInterval(startDateTime.toLocalDate(), request.getStartDate(), request.getEndDate()) && request.isConfirmed()) 
+			if (isDateInInterval(startDateTime.toLocalDate(), request.getStartDate(), request.getEndDate()) && request.getState() == LeaveRequestState.ACCEPTED) 
 				return false;
 		}
 		return true;
+	}
+	
+	private boolean isDermatologistInPharmacy(Dermatologist dermatologist, LocalDateTime startDateTime, LocalDateTime endDateTime, Pharmacy pharmacy) {
+		return isDermatologistInPharmacy(dermatologist, startDateTime, pharmacy) && isDermatologistInPharmacy(dermatologist, endDateTime, pharmacy);
 	}
 	
 	private boolean isPatientAvailable(Patient patient, LocalDateTime startDateTime) {
 		Set<PharmacistAppointment> pharmAppointments = pharmacistAppointmentRepository.findAllByPatient_Id(patient.getId());
 		for(PharmacistAppointment appointment : pharmAppointments) {
 			if(appointment.getStartDateTime().toLocalDate().equals(startDateTime.toLocalDate())) {
-				if(isTimeInInterval(startDateTime.toLocalTime(), appointment.getStartDateTime().toLocalTime(), appointment.getStartDateTime().toLocalTime().plusMinutes(30)))
+				if(isTimeInInterval(startDateTime.toLocalTime(), 30, appointment.getStartDateTime().toLocalTime(), appointment.getStartDateTime().toLocalTime().plusMinutes(30)))
 					return false;
 			}
 		}
 		Set<DermatologistAppointment> dermAppointments = appointmentRepository.findAllByPatient_Id(patient.getId());
 		for(DermatologistAppointment appointment : dermAppointments) {
 			if(appointment.getStartDateTime().toLocalDate().equals(startDateTime.toLocalDate())) {
-				if(isTimeInInterval(startDateTime.toLocalTime(), appointment.getStartDateTime().toLocalTime(), appointment.getStartDateTime().toLocalTime().plusMinutes(appointment.getDurationInMinutes())))
+				if(isTimeInInterval(startDateTime.toLocalTime(), 30, appointment.getStartDateTime().toLocalTime(), appointment.getStartDateTime().toLocalTime().plusMinutes(appointment.getDurationInMinutes())))
 					return false;
 			}
 		}
@@ -360,23 +368,35 @@ public class DermatologistAppointmentService implements IDermatologistAppointmen
 		Set<DermatologistAppointment> dermAppointments = appointmentRepository.findAllByDermatologist_Id(dermatologist.getId());
 		for(DermatologistAppointment appointment : dermAppointments) {
 			if(appointment.getStartDateTime().toLocalDate().equals(startDateTime.toLocalDate())) {
-				if(isTimeInInterval(startDateTime.toLocalTime(), appointment.getStartDateTime().toLocalTime(), appointment.getStartDateTime().toLocalTime().plusMinutes(appointment.getDurationInMinutes())))
+				if(isTimeInInterval(startDateTime.toLocalTime(), 30, appointment.getStartDateTime().toLocalTime(), appointment.getStartDateTime().toLocalTime().plusMinutes(appointment.getDurationInMinutes())))
 					return false;
 			}
 		}
 		return true;
 	}
 	
-	private boolean isTimeInInterval(LocalTime time, LocalTime startTime, LocalTime endTime) {
-		if(!time.isBefore(startTime) && !time.plusMinutes(30).isAfter(endTime)) return true;
+	private boolean isTimeInInterval(LocalTime time, int duration, LocalTime startTime, LocalTime endTime) {
+		if(!time.isBefore(startTime) && !time.plusMinutes(duration).isAfter(endTime)) return true;
 		if(time.isAfter(startTime) && time.isBefore(endTime)) return true;
-		if(time.plusMinutes(30).isAfter(startTime) && time.plusMinutes(30).isBefore(endTime)) return true;
+		if(time.plusMinutes(duration).isAfter(startTime) && time.plusMinutes(duration).isBefore(endTime)) return true;
+		if(time.equals(startTime)) return true;
 		return false;
 	}
 	
 	private boolean isDateInInterval(LocalDate date, LocalDate startDate, LocalDate endDate) {
-		if(!date.isBefore(startDate) && !date.isAfter(endDate)) return false;
-		return true;
+		if(!date.isBefore(startDate) && !date.isAfter(endDate)) return true;
+		return false;
+	}
+
+	@Override
+	public boolean dermatologistHasAppointmentsInTimInterval(Dermatologist dermatologist, LocalDate startDate,
+			LocalDate endDate) {
+		Set<DermatologistAppointment> appointments = appointmentRepository.findAll().stream().filter(a -> a.getDermatologist().getId() == dermatologist.getId()).collect(Collectors.toSet());
+		for(DermatologistAppointment a : appointments) {
+			if (isDateInInterval(a.getStartDateTime().toLocalDate(), startDate, endDate))
+				return true;
+		}
+		return false;
 	}
 
 	@Override
@@ -466,8 +486,6 @@ public class DermatologistAppointmentService implements IDermatologistAppointmen
 			request.setDermatologist(dermatologist);
 			if(dto.getType().equals("SICK_LEAVE")) request.setType(LeaveType.SICK_LEAVE);
 			else request.setType(LeaveType.ANNUAL_LEAVE);
-			request.setConfirmed(false);
-			request.setReasonDenied("");
 			dermatologistLeaveRequestRepository.save(request);
 		} catch(Exception e) {
 			return;
@@ -482,7 +500,7 @@ public class DermatologistAppointmentService implements IDermatologistAppointmen
 			Set<DermatologistLeaveRequest> requests = dermatologistLeaveRequestRepository.findAllByDermatologist_Id(dermatologist.getId());
 			for(DermatologistLeaveRequest request : requests) {
 				LeaveViewDTO dto = new LeaveViewDTO();
-				dto.setConfirmed(request.isConfirmed());
+				dto.setConfirmed(request.getState().toString());
 				dto.setStartDate(request.getStartDate().format(DateTimeFormatter.ofPattern("dd.MM.yyyy.")));
 				dto.setEndDate(request.getEndDate().format(DateTimeFormatter.ofPattern("dd.MM.yyyy.")));
 				dto.setType(request.getType().toString());
@@ -543,5 +561,22 @@ public class DermatologistAppointmentService implements IDermatologistAppointmen
 		//moze 10 minuta ranije i moze da kasni do duration-1 minuta
 		if(!startTime.isBefore(LocalDateTime.now().minusMinutes(duration-1)) && !startTime.isAfter(LocalDateTime.now().plusMinutes(10))) return true;
 		return false;
+	}
+	
+	public void createPredefinedAppointment(Dermatologist dermatologist, LocalDateTime startDateTime, int durationInMinutes,
+			long price, Pharmacy pharmacy) throws ForbiddenOperationException {
+		if(!isDermatologistInPharmacy(dermatologist, startDateTime, startDateTime.plusMinutes(durationInMinutes), pharmacy))
+			throw new ForbiddenOperationException("Dermatologist is not present at the pharmacy at the selected date and time. He is either on leave or doesn't have working hours set at the selected time");
+		if(!isDermatologistAvailable(dermatologist, startDateTime) || !isDermatologistAvailable(dermatologist, startDateTime.plusMinutes(durationInMinutes)))
+			throw new ForbiddenOperationException("Dermatologist has an examination in the pharmacy that is overlapping with the one you want to create!");
+		DermatologistAppointment predefined = new DermatologistAppointment();
+		predefined.setDermatologist(dermatologist);
+		predefined.setDone(false);
+		predefined.setDurationInMinutes(durationInMinutes);
+		predefined.setPharmacy(pharmacy);
+		predefined.setPrice(price);
+		predefined.setScheduled(false);
+		predefined.setStartDateTime(startDateTime);
+		appointmentRepository.save(predefined);
 	}
 }

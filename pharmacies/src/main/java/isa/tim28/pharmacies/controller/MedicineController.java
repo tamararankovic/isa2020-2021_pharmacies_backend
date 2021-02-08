@@ -18,13 +18,19 @@ import org.springframework.web.server.ResponseStatusException;
 import isa.tim28.pharmacies.dtos.MedicineForPharmacyAdminDTO;
 import isa.tim28.pharmacies.dtos.MedicineInPharmacyDTO;
 import isa.tim28.pharmacies.dtos.MedicineInfoDTO;
+import isa.tim28.pharmacies.dtos.MedicineSearchDTO;
+import isa.tim28.pharmacies.dtos.SearchMedicineByNameDTO;
+
+
 import isa.tim28.pharmacies.dtos.SearchMedicineDTO;
 import isa.tim28.pharmacies.exceptions.UserDoesNotExistException;
 import isa.tim28.pharmacies.model.PharmacyAdmin;
+
 import isa.tim28.pharmacies.model.Role;
 import isa.tim28.pharmacies.model.User;
 import isa.tim28.pharmacies.service.interfaces.IMedicineService;
 import isa.tim28.pharmacies.service.interfaces.IPharmacyAdminService;
+import isa.tim28.pharmacies.service.interfaces.IPharmacyService;
 
 @RestController
 @RequestMapping(value = "medicine")
@@ -32,13 +38,16 @@ public class MedicineController {
 	
 	private IMedicineService medicineService;
 	private IPharmacyAdminService pharmacyAdminService;
+	private IPharmacyService pharmacyService;
 	
 	@Autowired
-	public MedicineController(IMedicineService medicineService, IPharmacyAdminService pharmacyAdminService) {
+	public MedicineController(IMedicineService medicineService, IPharmacyAdminService pharmacyAdminService, IPharmacyService pharmacyService) {
 		super();
 		this.medicineService = medicineService;
 		this.pharmacyAdminService = pharmacyAdminService;
+		this.pharmacyService = pharmacyService; 
 	}
+	
 	
 	@GetMapping(value = "by-pharmacy")
 	public ResponseEntity<Set<MedicineForPharmacyAdminDTO>> getAll(HttpSession session) {
@@ -112,11 +121,32 @@ public class MedicineController {
 	public ResponseEntity<List<MedicineInfoDTO>> getAllMedicine(@RequestBody MedicineInfoDTO dto, HttpSession session) {
 
 		User user = (User) session.getAttribute("loggedInUser");
-		if (user != null) {
-			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not logged in!");
+		if (user == null) {
+				return new ResponseEntity<>(medicineService.getAllMedicineInfo(dto.getName(), dto.getForm(),
+						dto.getType(), dto.getManufacturer()), HttpStatus.OK);
+
+			
+		} else if (user.getRole() == Role.PATIENT) {
+			
+				return new ResponseEntity<>(medicineService.getAllMedicineInfo(dto.getName(), dto.getForm(),
+						dto.getType(), dto.getManufacturer()), HttpStatus.OK);
+		} else {
+			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You don't have required permissions!");
+
 		}
-
-		return new ResponseEntity<>(medicineService.getAllMedicineInfo(dto.getName(),dto.getForm(),dto.getType(),dto.getManufacturer()), HttpStatus.OK);
-
+	}
+	@PostMapping(value = "/searchMedicine")
+	public ResponseEntity<List<MedicineSearchDTO>> searchMedicine(@RequestBody SearchMedicineByNameDTO dto, HttpSession session) {
+		
+		User user = (User)session.getAttribute("loggedInUser");
+		if (user == null) {
+			return new ResponseEntity<>(pharmacyService.searchMedicineByName(dto.getName()), HttpStatus.OK);
+		}
+		else if (user.getRole() == Role.SUPPLIER) {
+			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You don't have required permissions!");
+		}else {
+		
+			return new ResponseEntity<>(pharmacyService.searchMedicineByName(dto.getName()), HttpStatus.OK);
+		}
 	}
 }

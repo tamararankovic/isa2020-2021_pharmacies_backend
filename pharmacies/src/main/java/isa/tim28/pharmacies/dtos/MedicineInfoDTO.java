@@ -2,6 +2,7 @@ package isa.tim28.pharmacies.dtos;
 
 public class MedicineInfoDTO {
 
+	private long id;
 	private String name;
 	private String info;
 	private int dose;
@@ -14,9 +15,10 @@ public class MedicineInfoDTO {
 		super();
 	}
 	
-	public MedicineInfoDTO(String name, String info, int dose, String form, String manufacturer, String type,
+	public MedicineInfoDTO(long id,String name, String info, int dose, String form, String manufacturer, String type,
 			int points) {
 		super();
+		this.id = id;
 		this.name = name;
 		this.info = info;
 		this.dose = dose;
@@ -25,6 +27,16 @@ public class MedicineInfoDTO {
 		this.type = type;
 		this.points = points;
 	}
+	
+	
+	public long getId() {
+		return id;
+	}
+
+	public void setId(long id) {
+		this.id = id;
+	}
+
 	public String getName() {
 		return name;
 	}

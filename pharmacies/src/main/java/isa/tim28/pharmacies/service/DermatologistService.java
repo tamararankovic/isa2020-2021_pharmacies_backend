@@ -1,6 +1,7 @@
 package isa.tim28.pharmacies.service;
 
 import java.time.DayOfWeek;
+import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -20,6 +21,7 @@ import isa.tim28.pharmacies.dtos.PatientSearchDTO;
 import isa.tim28.pharmacies.exceptions.BadNameException;
 import isa.tim28.pharmacies.exceptions.BadNewEmailException;
 import isa.tim28.pharmacies.exceptions.BadSurnameException;
+import isa.tim28.pharmacies.exceptions.ForbiddenOperationException;
 import isa.tim28.pharmacies.exceptions.InvalidDeleteUserAttemptException;
 import isa.tim28.pharmacies.exceptions.PasswordIncorrectException;
 import isa.tim28.pharmacies.exceptions.UserDoesNotExistException;
@@ -315,6 +317,18 @@ public class DermatologistService implements IDermatologistService {
 		} catch(Exception e) {
 			return new ArrayList<DermPharmacyDTO>();
 		}
+	}
+
+	@Override
+	public void createPredefinedAppointment(long dermatologistId, LocalDateTime startDateTime, int durationInMinutes,
+			long price, Pharmacy pharmacy) throws UserDoesNotExistException, ForbiddenOperationException {
+		if (startDateTime.isBefore(LocalDateTime.now()))
+			throw new ForbiddenOperationException("You can't create an examination that has time set in the past!");
+		if (findAllByPharmacyId(pharmacy.getId()).stream().noneMatch(d -> d.getId() == dermatologistId))
+			throw new ForbiddenOperationException("You can't create an examination for dermatologist that is not employed in your pharmacy!");
+		if (price <= 0 || durationInMinutes <= 0)
+			throw new ForbiddenOperationException("Duration and price must be greater than 0!");
+		appointmentService.createPredefinedAppointment(getDermatologistById(dermatologistId), startDateTime, durationInMinutes, price, pharmacy);
 	}
 
 }
