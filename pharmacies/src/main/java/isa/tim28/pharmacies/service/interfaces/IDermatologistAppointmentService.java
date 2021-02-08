@@ -8,9 +8,12 @@ import java.util.Set;
 import isa.tim28.pharmacies.dtos.DermatologistAppointmentDTO;
 import isa.tim28.pharmacies.dtos.DermatologistReportDTO;
 import isa.tim28.pharmacies.dtos.ExistingDermatologistAppointmentDTO;
+import isa.tim28.pharmacies.dtos.LeaveDTO;
+import isa.tim28.pharmacies.dtos.LeaveViewDTO;
 import isa.tim28.pharmacies.dtos.MedicineDTOM;
 import isa.tim28.pharmacies.dtos.MedicineDetailsDTO;
 import isa.tim28.pharmacies.dtos.MedicineQuantityCheckDTO;
+import isa.tim28.pharmacies.dtos.MyPatientDTO;
 import isa.tim28.pharmacies.dtos.PharmAppByMonthDTO;
 import isa.tim28.pharmacies.dtos.PharmAppByWeekDTO;
 import isa.tim28.pharmacies.dtos.PharmAppByYearDTO;
@@ -64,6 +67,14 @@ public interface IDermatologistAppointmentService {
 	List<PharmAppDTO> getAppointmentsByYear(PharmAppByYearDTO dto, long pharmacyId, long userId);
 	
 	void patientWasNotPresent(long appointmentId);
+	
+	void saveLeaveRequest(LeaveDTO dto, long userId);
+	
+	List<LeaveViewDTO> allLeaveRequests(long userId);
+	
+	List<MyPatientDTO> myPatients(long userId);
+	
+	PharmAppDTO hasAppointmentWithPatient(long userId, long patientId);
 	
 	void createPredefinedAppointment(Dermatologist dermatologist, LocalDateTime startDateTime, int durationInMinutes, long price, Pharmacy pharmacy) throws ForbiddenOperationException;
 	

@@ -17,9 +17,12 @@ import org.springframework.stereotype.Service;
 import isa.tim28.pharmacies.dtos.DermatologistAppointmentDTO;
 import isa.tim28.pharmacies.dtos.DermatologistReportDTO;
 import isa.tim28.pharmacies.dtos.ExistingDermatologistAppointmentDTO;
+import isa.tim28.pharmacies.dtos.LeaveDTO;
+import isa.tim28.pharmacies.dtos.LeaveViewDTO;
 import isa.tim28.pharmacies.dtos.MedicineDTOM;
 import isa.tim28.pharmacies.dtos.MedicineDetailsDTO;
 import isa.tim28.pharmacies.dtos.MedicineQuantityCheckDTO;
+import isa.tim28.pharmacies.dtos.MyPatientDTO;
 import isa.tim28.pharmacies.dtos.PharmAppByMonthDTO;
 import isa.tim28.pharmacies.dtos.PharmAppByWeekDTO;
 import isa.tim28.pharmacies.dtos.PharmAppByYearDTO;
@@ -33,6 +36,7 @@ import isa.tim28.pharmacies.model.DermatologistAppointment;
 import isa.tim28.pharmacies.model.DermatologistLeaveRequest;
 import isa.tim28.pharmacies.model.DermatologistReport;
 import isa.tim28.pharmacies.model.EngagementInPharmacy;
+import isa.tim28.pharmacies.model.LeaveType;
 import isa.tim28.pharmacies.model.LeaveRequestState;
 import isa.tim28.pharmacies.model.Medicine;
 import isa.tim28.pharmacies.model.MedicineMissingNotification;
@@ -473,6 +477,92 @@ public class DermatologistAppointmentService implements IDermatologistAppointmen
 	}
 
 	@Override
+	public void saveLeaveRequest(LeaveDTO dto, long userId) {
+		try {
+			Dermatologist dermatologist = dermatologistRepository.findOneByUser_Id(userId);
+			DermatologistLeaveRequest request = new DermatologistLeaveRequest();
+			request.setStartDate(dto.getStartDate());
+			request.setEndDate(dto.getEndDate());
+			request.setDermatologist(dermatologist);
+			if(dto.getType().equals("SICK_LEAVE")) request.setType(LeaveType.SICK_LEAVE);
+			else request.setType(LeaveType.ANNUAL_LEAVE);
+			dermatologistLeaveRequestRepository.save(request);
+		} catch(Exception e) {
+			return;
+		}
+	}
+
+	@Override
+	public List<LeaveViewDTO> allLeaveRequests(long userId) {
+		try {
+			Dermatologist dermatologist = dermatologistRepository.findOneByUser_Id(userId);
+			List<LeaveViewDTO> dtos = new ArrayList<LeaveViewDTO>();
+			Set<DermatologistLeaveRequest> requests = dermatologistLeaveRequestRepository.findAllByDermatologist_Id(dermatologist.getId());
+			for(DermatologistLeaveRequest request : requests) {
+				LeaveViewDTO dto = new LeaveViewDTO();
+				dto.setConfirmed(request.getState().toString());
+				dto.setStartDate(request.getStartDate().format(DateTimeFormatter.ofPattern("dd.MM.yyyy.")));
+				dto.setEndDate(request.getEndDate().format(DateTimeFormatter.ofPattern("dd.MM.yyyy.")));
+				dto.setType(request.getType().toString());
+				dtos.add(dto);
+			}
+			return dtos;
+		} catch(Exception e) {
+			return new ArrayList<LeaveViewDTO>();
+		}
+	}
+
+	@Override
+	public List<MyPatientDTO> myPatients(long userId) {
+		try {
+			Dermatologist dermatologist = dermatologistRepository.findOneByUser_Id(userId);
+			List<MyPatientDTO> dtos = new ArrayList<MyPatientDTO>();
+			Set<DermatologistAppointment> appointments = appointmentRepository.findAllByDermatologist_Id(dermatologist.getId());
+			for(DermatologistAppointment app : appointments) {
+				if(app.isPatientWasPresent() && app.getPatient() != null && app.isDone()) {
+					MyPatientDTO dto = new MyPatientDTO();
+					dto.setPatientId(app.getPatient().getId());
+					dto.setName(app.getPatient().getUser().getName());
+					dto.setSurname(app.getPatient().getUser().getSurname());
+					dto.setAppointmentDate(app.getStartDateTime().toLocalDate().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
+					dto.setTime(app.getStartDateTime().format(DateTimeFormatter.ofPattern("HH:mm")));
+					dtos.add(dto);
+				}
+			}
+			return dtos;
+		} catch(Exception e) {
+			return new ArrayList<MyPatientDTO>();
+		}
+	}
+
+	@Override
+	public PharmAppDTO hasAppointmentWithPatient(long userId, long patientId) {
+		try {
+			Dermatologist dermatologist = dermatologistRepository.findOneByUser_Id(userId);
+			Set<DermatologistAppointment> appointments = appointmentRepository.findAllByDermatologist_Id(dermatologist.getId());
+			PharmAppDTO dto = new PharmAppDTO(0, "", 0, "");
+			for(DermatologistAppointment app : appointments) {
+				if(app.isScheduled()) {
+					if(app.getPatient().getId() == patientId && isAppointmentNow(app.getStartDateTime(), app.getDurationInMinutes()) && !app.isDone()) {
+						dto.setAppointmentId(app.getId());
+						dto.setDurationInMinutes(app.getDurationInMinutes());
+						dto.setPatientName(app.getPatient().getUser().getFullName());
+						dto.setStartTime(app.getStartDateTime().format(DateTimeFormatter.ofPattern("HH:mm, dd.MM.yyyy.")));
+					}
+				}
+			}
+			return dto;
+		} catch(Exception e) {
+			return new PharmAppDTO(0, "", 0, "");
+		}
+	}
+	
+	private boolean isAppointmentNow(LocalDateTime startTime, int duration) {
+		//moze 10 minuta ranije i moze da kasni do duration-1 minuta
+		if(!startTime.isBefore(LocalDateTime.now().minusMinutes(duration-1)) && !startTime.isAfter(LocalDateTime.now().plusMinutes(10))) return true;
+		return false;
+	}
+	
 	public void createPredefinedAppointment(Dermatologist dermatologist, LocalDateTime startDateTime, int durationInMinutes,
 			long price, Pharmacy pharmacy) throws ForbiddenOperationException {
 		if(!isDermatologistInPharmacy(dermatologist, startDateTime, startDateTime.plusMinutes(durationInMinutes), pharmacy))
