@@ -1,7 +1,5 @@
 package isa.tim28.pharmacies.dtos;
 
-import java.time.LocalDate;
-
 public class MyPatientDTO {
 
 	private long patientId;

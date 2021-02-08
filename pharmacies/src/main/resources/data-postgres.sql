@@ -76,7 +76,9 @@ insert into pharmacist_appointment(id, default_duration_in_minutes, patient_was_
 insert into pharmacist_appointment(id, default_duration_in_minutes, patient_was_present, start_date_time, patient_id, pharmacist_id, done) values (3, 30, '0', '2021-02-08 10:30:00.000000', 1, 1, '0');
 insert into pharmacist_appointment(id, default_duration_in_minutes, patient_was_present, start_date_time, patient_id, pharmacist_id, done) values (4, 30, '0', '2021-02-09 11:30:00.000000', 1, 1, '0');
 insert into pharmacist_appointment(id, default_duration_in_minutes, patient_was_present, start_date_time, patient_id, pharmacist_id, done) values (5, 30, '0', '2021-02-08 15:40:00.000000', 1, 1, '0');
-alter sequence pharmacist_appointment_id_seq restart with 6;
+insert into pharmacist_appointment(id, default_duration_in_minutes, patient_was_present, start_date_time, patient_id, pharmacist_id, done) values (6, 30, '1', '2021-02-05 10:30:00.000000', 1, 1, '1');
+insert into pharmacist_appointment(id, default_duration_in_minutes, patient_was_present, start_date_time, patient_id, pharmacist_id, done) values (7, 30, '1', '2021-02-04 11:00:00.000000', 2, 1, '1');
+alter sequence pharmacist_appointment_id_seq restart with 8;
 
 insert into medicine_ingredients(medicine_id, ingredients) values (1, 'ingredient1');
 insert into medicine_ingredients(medicine_id, ingredients) values (1, 'ingredient2');
