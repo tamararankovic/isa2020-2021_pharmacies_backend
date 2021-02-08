@@ -5,17 +5,19 @@ public class PharmacyBasicInfoDTO {
 	private String name;
 	private String description;
 	private String address;
+	private double avgRating;
 	
 	public PharmacyBasicInfoDTO() {
 		super();
 		// TODO Auto-generated constructor stub
 	}
 	
-	public PharmacyBasicInfoDTO(String name, String description, String address) {
+	public PharmacyBasicInfoDTO(String name, String description, String address, double avgRating) {
 		super();
 		this.name = name;
 		this.description = description;
 		this.address = address;
+		this.avgRating = avgRating;
 	}
 	public String getName() {
 		return name;
@@ -36,4 +38,11 @@ public class PharmacyBasicInfoDTO {
 		this.address = address;
 	}
 
+	public double getAvgRating() {
+		return avgRating;
+	}
+
+	public void setAvgRating(double avgRating) {
+		this.avgRating = avgRating;
+	}
 }
