@@ -5,9 +5,6 @@ jdk: oraclejdk11
 services:
   - postgresql
 
-before_install:
-  - chmod +x mvnw
-
 script:
   - cd pharmacies
   - mvn clean install
