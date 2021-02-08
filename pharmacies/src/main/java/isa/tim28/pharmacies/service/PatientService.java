@@ -1,6 +1,16 @@
 package isa.tim28.pharmacies.service;
 
+import com.google.zxing.client.j2se.BufferedImageLuminanceSource;
+import com.google.zxing.common.HybridBinarizer;
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -8,14 +18,28 @@ import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.google.zxing.BinaryBitmap;
+import com.google.zxing.LuminanceSource;
+import com.google.zxing.MultiFormatReader;
+import com.google.zxing.NotFoundException;
+import com.google.zxing.Result;
+
+import isa.tim28.pharmacies.dtos.ERecepyDTO;
 import isa.tim28.pharmacies.dtos.PatientProfileDTO;
 import isa.tim28.pharmacies.exceptions.BadNameException;
 import isa.tim28.pharmacies.exceptions.BadSurnameException;
 import isa.tim28.pharmacies.exceptions.PasswordIncorrectException;
+import isa.tim28.pharmacies.exceptions.PharmacyNotFoundException;
 import isa.tim28.pharmacies.exceptions.UserDoesNotExistException;
+import isa.tim28.pharmacies.model.EPrescription;
+import isa.tim28.pharmacies.model.EPrescriptionMedicine;
 import isa.tim28.pharmacies.model.Medicine;
+import isa.tim28.pharmacies.model.MedicineQuantity;
 import isa.tim28.pharmacies.model.Patient;
+import isa.tim28.pharmacies.model.Pharmacy;
+import isa.tim28.pharmacies.model.Rating;
 import isa.tim28.pharmacies.model.User;
+import isa.tim28.pharmacies.repository.MedicineQuantityRepository;
 import isa.tim28.pharmacies.repository.PatientRepository;
 import isa.tim28.pharmacies.repository.UserRepository;
 import isa.tim28.pharmacies.service.interfaces.IPatientService;
@@ -26,14 +50,175 @@ public class PatientService implements IPatientService {
 	private PatientRepository patientRepository;
 	private UserRepository userRepository;
 	private MedicineService medicineService;
-
+	private PharmacyService pharmacyService;
+	private EPrescriptionService ePrescriptionService;
+	private EPrescriptionMedicineService ePrescriptionMedicineService;
+	private MedicineQuantityRepository medicineQuantityRepository;
+	
 	@Autowired
 	public PatientService(PatientRepository patientRepository, UserRepository userRepository,
-			MedicineService medicineService) {
+			MedicineService medicineService, PharmacyService pharmacyService, 
+			EPrescriptionService ePrescriptionService, EPrescriptionMedicineService ePrescriptionMedicineService,
+			 MedicineQuantityRepository medicineQuantityRepository) {
 		super();
 		this.patientRepository = patientRepository;
 		this.userRepository = userRepository;
 		this.medicineService = medicineService;
+		this.pharmacyService = pharmacyService;
+		this.ePrescriptionService = ePrescriptionService;
+		this.ePrescriptionMedicineService = ePrescriptionMedicineService;
+		this.medicineQuantityRepository = medicineQuantityRepository;
+		
+	}
+	@Override
+	public void choosePharmacy(Patient patient, ERecepyDTO dto) throws PharmacyNotFoundException {
+		EPrescription prescription = new EPrescription();
+		prescription.setCode(String.join(";", dto.getMedicineCodes()));
+		prescription.setPatientFullName(String.join(" ", patient.getUser().getName(), patient.getUser().getSurname()));
+		LocalDate lt = LocalDate.now();
+		prescription.setDatePrescribed(lt);
+		Set<EPrescriptionMedicine> eMeds = new HashSet<EPrescriptionMedicine>();
+		for(String code : dto.getMedicineCodes()) {
+			Medicine medicine = medicineService.getMedicineByCode(code);
+			updateMedicineQuantity(medicine, dto.getPharmacyId());
+			EPrescriptionMedicine med = new EPrescriptionMedicine(medicine.getName(), medicine.getCode(), 1);
+			ePrescriptionMedicineService.save(med);
+			eMeds.add(med);
+		}
+		prescription.setPrescriptionMedicine(eMeds);
+		ePrescriptionService.save(prescription);		
+		
+	}
+	public void updateMedicineQuantity(Medicine medicine, long pharmacyId) throws PharmacyNotFoundException {
+		Pharmacy pharmacy = pharmacyService.getPharmacyById(pharmacyId);
+		Set<MedicineQuantity> medicines = pharmacy.getMedicines();
+		for (MedicineQuantity mq : medicines) {
+			if (mq.getMedicine().getId() == medicine.getId()) {
+				mq.setQuantity(mq.getQuantity() - 1);
+				medicineQuantityRepository.save(mq);
+				return;
+			}
+		}
+		
+	}
+	
+	@Override
+	public List<ERecepyDTO> sortByPrice(List<ERecepyDTO> dtos){
+		Collections.sort(dtos, new Comparator<ERecepyDTO>() {
+		    @Override
+		    public int compare(ERecepyDTO c1, ERecepyDTO c2) {
+		        return Double.compare(c1.getTotalPrice(), c2.getTotalPrice());
+		    }
+		});
+		return dtos;
+	}
+	
+	@Override
+	public List<ERecepyDTO> sortByRating(List<ERecepyDTO> dtos){
+		Collections.sort(dtos, new Comparator<ERecepyDTO>() {
+		    @Override
+		    public int compare(ERecepyDTO c1, ERecepyDTO c2) {
+		        return Double.compare(c1.getAverageRating(), c2.getAverageRating());
+		    }
+		});
+		return dtos;
+	}
+	
+	@Override
+	public List<ERecepyDTO> sortByPharmacyName(List<ERecepyDTO> dtos){
+		Collections.sort(dtos, new Comparator<ERecepyDTO>() {
+		    @Override
+		    public int compare(ERecepyDTO c1, ERecepyDTO c2) {
+		        return c1.getNameOfPharmacy().compareTo(c2.getNameOfPharmacy());
+		    }
+		});
+		return dtos;
+	}
+	
+	@Override
+	public List<ERecepyDTO> sortByPharmacyAddress(List<ERecepyDTO> dtos){
+		Collections.sort(dtos, new Comparator<ERecepyDTO>() {
+		    @Override
+		    public int compare(ERecepyDTO c1, ERecepyDTO c2) {
+		        return c1.getAddressOfPharmacy().compareTo(c2.getAddressOfPharmacy());
+		    }
+		});
+		return dtos;
+	}
+	
+	@Override
+	public List<ERecepyDTO> getPharmaciesWithMedicines(String decodedQr){
+		List<Medicine> medicines = new ArrayList<Medicine>();
+		List<String> codes = new ArrayList<String>();
+		String[] tokens = decodedQr.split(";");
+		for(String t : tokens) {
+			medicines.add(medicineService.getMedicineByCode(t));
+			codes.add(t);
+		}
+		List<ERecepyDTO> pharmacies = new ArrayList<ERecepyDTO>();
+		
+			for(Pharmacy pharmacy : pharmacyService.getAll()) {
+				if(!hasAllMedicines(pharmacy,medicines)) {
+					continue;
+				}else {
+					double totalPrice = findTotalPrice(pharmacy,medicines);
+					double averageRating = getPharmacyRating(pharmacy);
+					ERecepyDTO er = new ERecepyDTO(codes,pharmacy.getId(), totalPrice, averageRating, pharmacy.getName(),pharmacy.getAddress());
+					pharmacies.add(er);
+				}
+		}
+		return pharmacies;	
+	}
+	private double getPharmacyRating(Pharmacy pharmacy) {
+		double averageRating= 0.0;
+		int sumOfRatings = 0;
+		Set<Rating> ratings = pharmacy.getRatings();
+		if(!ratings.isEmpty()) {
+			for(Rating r : ratings) {
+				sumOfRatings += r.getRating();
+			}
+			averageRating = sumOfRatings/ratings.size();
+		}
+		return averageRating;
+	}
+	
+	private double findTotalPrice(Pharmacy pharmacy, List<Medicine> medicines) {
+		double totalPrice = 0.0;
+		for(Medicine m : medicines) {
+			totalPrice += pharmacy.getCurrentPrice(m);
+		}
+		return totalPrice;
+	}
+	
+	private boolean hasAllMedicines(Pharmacy pharmacy, List<Medicine> medicines) {
+		int counter = 0;
+		for(Medicine m : medicines) {
+			for(MedicineQuantity medi : pharmacy.getMedicines()) {
+			
+				if(medi.getMedicine().getId() == m.getId() && medi.getQuantity()>0){ 
+					++counter;
+				}
+			}
+		}
+		if(counter>=medicines.size()) {
+			return true;
+		}else {
+			return false;
+		}
+	}
+	public static String decodeQrCode(Path filePath) throws IOException {
+		File img = new File(filePath.toString());
+		BufferedImage bufferedImage = ImageIO.read(img);
+        LuminanceSource source = new BufferedImageLuminanceSource(bufferedImage);
+        BinaryBitmap bitmap = new BinaryBitmap(new HybridBinarizer(source));
+        
+        try {
+            Result result = new MultiFormatReader().decode(bitmap);
+            return result.getText();
+        } catch (NotFoundException e) {
+            System.out.println("There is no QR code in the image");
+            return null;
+        }
 	}
 
 	@Override

@@ -93,9 +93,9 @@ public class PharmacyService implements IPharmacyService {
 						m.getAdvisedDailyDose(), m.getIngredients(), compatibleMedicines);
 
 				Set<PharmacyForMedSearchDTO> pharmacies = new HashSet<PharmacyForMedSearchDTO>();
-				for (Pharmacy pharmacy : getAll()) {
-					for (MedicineQuantity medi : pharmacy.getMedicines()) {
-						if (medi.getId() == m.getId()) {
+				for(Pharmacy pharmacy : getAll()) {
+					for(MedicineQuantity medi : pharmacy.getMedicines()) {
+						if(medi.getMedicine().getId() == m.getId()) {
 							double price = 0.0;
 							for (PriceList pl : pharmacy.getPriceLists()) {
 								for (MedicinePrice mp : pl.getMedicinePrices()) {
@@ -140,9 +140,9 @@ public class PharmacyService implements IPharmacyService {
 						m.getAdvisedDailyDose(), m.getIngredients(), compatibleMedicines);
 
 				Set<PharmacyForMedSearchDTO> pharmacies = new HashSet<PharmacyForMedSearchDTO>();
-				for (Pharmacy pharmacy : getAll()) {
-					for (MedicineQuantity medi : pharmacy.getMedicines()) {
-						if (medi.getId() == m.getId()) {
+				for(Pharmacy pharmacy : getAll()) {
+					for(MedicineQuantity medi : pharmacy.getMedicines()) {
+						if(medi.getMedicine().getId() == m.getId()) {
 							double price = 0.0;
 							for (PriceList pl : pharmacy.getPriceLists()) {
 								for (MedicinePrice mp : pl.getMedicinePrices()) {
@@ -281,7 +281,7 @@ public class PharmacyService implements IPharmacyService {
 		if (pharmacy.isEmpty())
 			throw new PharmacyNotFoundException("Pharmacy admin's pharmacy not found");
 		Pharmacy ret = pharmacy.get();
-		return new PharmacyBasicInfoDTO(ret.getName(), ret.getDescription(), ret.getAddress());
+		return new PharmacyBasicInfoDTO(ret.getName(), ret.getDescription(), ret.getAddress(), ret.getAvgRating());
 	}
 
 	@Override
@@ -331,10 +331,9 @@ public class PharmacyService implements IPharmacyService {
 		List<Pharmacy> pharmacies = pharmacyRepository.findAll();
 		for (Pharmacy p : pharmacies) {
 			Set<Medicine> allMedicine = findAllInStockByPharmacyId(p.getId());
-			for (Medicine m : allMedicine) {
-				if (medicineId == m.getId()) {
-					PharmacyBasicInfoDTO pharm = new PharmacyBasicInfoDTO(p.getName(), p.getDescription(),
-							p.getAddress());
+			for(Medicine m : allMedicine) {
+				if(medicineId ==m.getId()) {
+					PharmacyBasicInfoDTO pharm = new PharmacyBasicInfoDTO(p.getName(),p.getDescription(),p.getAddress(), p.getAvgRating());
 					res.add(pharm);
 					continue;
 				}
