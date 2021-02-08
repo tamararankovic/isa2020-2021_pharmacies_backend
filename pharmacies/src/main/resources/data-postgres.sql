@@ -1,4 +1,4 @@
-insert into users(id, name, surname, email, password, role, active, loged) values (1, 'Tamara', 'Rankovic', 'milijana.djordjevic1998@gmail.com', '1234', 0, TRUE, TRUE);
+insert into users(id, name, surname, email, password, role, active, loged) values (1, 'Tamara', 'Rankovic', 'eminaturkovic600@gmail.com', '1234', 0, TRUE, TRUE);
 insert into users(id, name, surname, email, password, role, active, loged) values (2, 'Tamara', 'Rankovic', 'rankovictamaraa+1@gmail.com', '1234', 1, TRUE, TRUE);
 insert into users(id, name, surname, email, password, role, active, loged) values (3, 'Tamara', 'Rankovic', 'rankovictamaraa+2@gmail.com', '1234', 2, TRUE, TRUE);
 insert into users(id, name, surname, email, password, role, active, loged) values (4, 'Tamara', 'Rankovic', 'rankovictamaraa@gmail.com', '1234', 3, TRUE, FALSE);
@@ -50,10 +50,10 @@ insert into dermatologist(id, user_id) values (1, 3);
 insert into dermatologist_engegement_in_pharmacies(dermatologist_id, engegement_in_pharmacies_id) values (1, 2);
 insert into dermatologist_engegement_in_pharmacies(dermatologist_id, engegement_in_pharmacies_id) values (1, 3);
 
-insert into medicine(id, additional_info, advised_daily_dose, code, form, manufacturer, name, points, side_effects, type, with_prescription) values (1, 'info', 1, 'LEK1', 0, 'Manufacturer1', 'Lek1', 2, '', 0, '1');
-insert into medicine(id, additional_info, advised_daily_dose, code, form, manufacturer, name, points, side_effects, type, with_prescription) values (2, 'info', 1, 'LEK2', 1, 'Manufacturer2', 'Lek2', 2, '', 1, '0');
-insert into medicine(id, additional_info, advised_daily_dose, code, form, manufacturer, name, points, side_effects, type, with_prescription) values (3, 'info', 1, 'LEK3', 2, 'Manufacturer3', 'Lek3', 2, '', 2, '1');
-insert into medicine(id, additional_info, advised_daily_dose, code, form, manufacturer, name, points, side_effects, type, with_prescription) values (4, 'info', 1, 'LEK4', 2, 'Manufacturer4', 'Lek4', 2, '', 2, '1');
+insert into medicine(id, additional_info, advised_daily_dose, code, form, manufacturer, name, points, side_effects, type, with_prescription) values (1, 'info', 1, 'LEK1', 0, 'Manufacturer1', 'Lek1', 2, 'mucnina', 0, '1');
+insert into medicine(id, additional_info, advised_daily_dose, code, form, manufacturer, name, points, side_effects, type, with_prescription) values (2, 'info', 1, 'LEK2', 1, 'Manufacturer2', 'Lek2', 2, 'glavobolja', 1, '0');
+insert into medicine(id, additional_info, advised_daily_dose, code, form, manufacturer, name, points, side_effects, type, with_prescription) values (3, 'info', 1, 'LEK3', 2, 'Manufacturer3', 'Lek3', 2, 'glavobolja', 2, '1');
+insert into medicine(id, additional_info, advised_daily_dose, code, form, manufacturer, name, points, side_effects, type, with_prescription) values (4, 'info', 1, 'LEK4', 2, 'Manufacturer4', 'Lek4', 2, 'kostobolja', 2, '1');
 
 alter sequence users_id_seq restart with 9;
 alter sequence pharmacy_id_seq restart with 3;
