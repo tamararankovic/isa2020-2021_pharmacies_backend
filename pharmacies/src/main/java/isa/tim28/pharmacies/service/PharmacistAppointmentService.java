@@ -12,6 +12,7 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.Period;
 import java.time.format.DateTimeFormatter;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +29,7 @@ import isa.tim28.pharmacies.dtos.PharmAppDTO;
 import isa.tim28.pharmacies.dtos.PharmacistAppointmentDTO;
 import isa.tim28.pharmacies.dtos.PharmacistDTO;
 import isa.tim28.pharmacies.dtos.ReservationValidDTO;
+import isa.tim28.pharmacies.dtos.ShowCounselingDTO;
 import isa.tim28.pharmacies.dtos.TherapyDTO;
 import isa.tim28.pharmacies.exceptions.UserDoesNotExistException;
 import isa.tim28.pharmacies.model.DailyEngagement;
@@ -492,5 +494,52 @@ public class PharmacistAppointmentService implements IPharmacistAppointmentServi
 		}
 		return app;
 
+	}
+	
+	@Override
+	public List<ShowCounselingDTO> getAllIncomingCounsellings(long id, boolean past){
+		
+		List<ShowCounselingDTO> resIncoming = new ArrayList<ShowCounselingDTO>();
+		List<ShowCounselingDTO> resPast = new ArrayList<ShowCounselingDTO>();
+		long patientId = patientRepository.findOneByUser_Id(id).getId();
+		boolean cancellable = false;
+		
+		LocalDateTime today = LocalDateTime.now();
+		
+		Set<PharmacistAppointment> all = appointmentRepository.findAllByPatient_Id(patientId);
+		for(PharmacistAppointment pa : all) {
+			
+			LocalDateTime checkDate = pa.getStartDateTime();
+			
+			if(!(pa.isDone() || today.isAfter(checkDate))) {
+				cancellable = false;
+				DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm");
+				String date = pa.getStartDateTime().format(formatter);
+				
+				if(today.isBefore(checkDate.minus(Period.ofDays(1)))) {
+					cancellable =  true;
+				}
+				
+				ShowCounselingDTO dto =  new ShowCounselingDTO(pa.getId(),date, pa.getPharmacist().getUser().getFullName(),cancellable,"PHARMACIST");
+				resIncoming.add(dto);
+			}else {
+				
+				DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm");
+				String date = pa.getStartDateTime().format(formatter);
+				ShowCounselingDTO dto =  new ShowCounselingDTO(pa.getId(),date, pa.getPharmacist().getUser().getFullName(),false,"PHARMACIST");
+				resPast.add(dto);
+			}
+		}
+		
+		if(past) {
+			return resPast;
+		}else {
+			return resIncoming;
+		}
+		
+	}
+	
+	public void cancelApp(long id) {
+		appointmentRepository.deleteById(id);
 	}
 }

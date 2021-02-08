@@ -13,6 +13,7 @@ import isa.tim28.pharmacies.dtos.PharmAppByWeekDTO;
 import isa.tim28.pharmacies.dtos.PharmAppByYearDTO;
 import isa.tim28.pharmacies.dtos.PharmAppDTO;
 import isa.tim28.pharmacies.dtos.ReservationValidDTO;
+import isa.tim28.pharmacies.dtos.ShowCounselingDTO;
 import isa.tim28.pharmacies.exceptions.UserDoesNotExistException;
 import isa.tim28.pharmacies.model.Pharmacist;
 import isa.tim28.pharmacies.model.PharmacistAppointment;
@@ -57,5 +58,7 @@ public interface IPharmacistAppointmentService {
 	boolean pharmacisttHasAppointmentsInTimInterval(Pharmacist pharmacist, LocalDate startDate, LocalDate endDate);
 	
 	boolean isPharmacistAvailable(Pharmacist pharmacist, LocalDateTime startDateTime);
+
+	List<ShowCounselingDTO> getAllIncomingCounsellings(long id, boolean past);
 
 }

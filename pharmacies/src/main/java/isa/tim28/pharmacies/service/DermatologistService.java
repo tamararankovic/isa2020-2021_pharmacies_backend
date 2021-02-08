@@ -330,5 +330,9 @@ public class DermatologistService implements IDermatologistService {
 			throw new ForbiddenOperationException("Duration and price must be greater than 0!");
 		appointmentService.createPredefinedAppointment(getDermatologistById(dermatologistId), startDateTime, durationInMinutes, price, pharmacy);
 	}
+	
+	public void cancelApp(long id) {
+		dermatologistRepository.deleteById(id);
+	}
 
 }
