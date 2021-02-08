@@ -28,6 +28,7 @@ import isa.tim28.pharmacies.model.Pharmacy;
 
 import isa.tim28.pharmacies.model.Reservation;
 import isa.tim28.pharmacies.model.ReservationStatus;
+import isa.tim28.pharmacies.model.User;
 import isa.tim28.pharmacies.repository.CancelledReservationRepository;
 import isa.tim28.pharmacies.repository.ReservationRepository;
 import isa.tim28.pharmacies.service.interfaces.IMedicineService;
@@ -138,11 +139,11 @@ public class ReservationService implements IReservationService {
 	}
 	
 	@Override
-	public Reservation makeReservation(ReservationDTO dto, long id) {
+	public Reservation makeReservation(ReservationDTO dto, User loggedInUser) {
 		Reservation res = new Reservation();
 		res.setMedicine(medicineService.getByName(dto.getMedicine()));
 		try {
-			res.setPatient(patientService.getPatientById(id));
+			res.setPatient(patientService.getPatientById(loggedInUser.getId()));
 		} catch (UserDoesNotExistException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -156,7 +157,7 @@ public class ReservationService implements IReservationService {
 		
 		Reservation reservation = reservationRepository.save(res);
 		try {
-			emailService.sendReservationMadeEmailAsync(dto.getMedicine(), "vukbarisic1996@gmail.com", reservation.getId());
+			emailService.sendReservationMadeEmailAsync(loggedInUser.getFullName(), "pajapataktevoli@gmail.com",dto.getMedicine(), reservation.getId());
 		} catch (MessagingException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

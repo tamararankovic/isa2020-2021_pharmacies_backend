@@ -1,8 +1,10 @@
 package isa.tim28.pharmacies.service.interfaces;
 
+import java.util.List;
 import java.util.Set;
 
 import isa.tim28.pharmacies.dtos.NewPharmacistDTO;
+import isa.tim28.pharmacies.dtos.PharmacistAppointmentDTO;
 import isa.tim28.pharmacies.dtos.PharmacistDTO;
 import isa.tim28.pharmacies.dtos.PharmacistProfileDTO;
 import isa.tim28.pharmacies.exceptions.BadNameException;
@@ -44,4 +46,6 @@ public interface IPharmacistService {
 	Set<PharmacistDTO> searchByPharmacyAdmin(String fullName, PharmacyAdmin admin);
 	
 	void create(NewPharmacistDTO dto, Pharmacy pharmacy) throws CreatePharmacistException;
+
+	List<PharmacistDTO> getAvailablePharmacistsByPharmacy(PharmacistAppointmentDTO dto);
 }
