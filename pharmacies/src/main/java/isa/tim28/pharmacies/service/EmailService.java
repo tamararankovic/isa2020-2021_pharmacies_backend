@@ -27,6 +27,30 @@ public class EmailService {
 	private Environment env;
 	
 	@Async
+	public void sendERecepyConfirmation(String patientFullName, String medicineCodes, String address) throws MessagingException {
+		System.out.println("Async metoda se izvrsava u drugom Threadu u odnosu na prihvaceni zahtev. Thread id: " + Thread.currentThread().getId());
+		System.out.println("Slanje emaila...");
+		
+		String content = "Pozdrav " + patientFullName + ",<br>"
+	            + "Izdati su Vam sledeci lekovi putem eRecepta:<br>"
+	            + "<h3>" + medicineCodes + "</h3>"
+	            + "Hvala Vam,<br>"
+	            + "ISA, TIM 28.";
+		
+		MimeMessage message = javaMailSender.createMimeMessage();
+	    MimeMessageHelper helper = new MimeMessageHelper(message);
+	    helper.setFrom(env.getProperty("spring.mail.username"));
+	    helper.setTo(address);
+	    helper.setSubject("Recept");
+	    helper.setText(content, true);
+	    
+		javaMailSender.send(message);
+
+		System.out.println("Email poslat!");	
+		
+	}
+	
+	@Async
 	public void sendMailAsync(User user, String siteURL) throws MessagingException {
 		System.out.println("Async metoda se izvrsava u drugom Threadu u odnosu na prihvaceni zahtev. Thread id: " + Thread.currentThread().getId());
 		System.out.println("Slanje emaila...");
