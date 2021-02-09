@@ -1,6 +1,8 @@
 package isa.tim28.pharmacies.service;
 
-import java.util.HashSet;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -25,12 +27,13 @@ public class NotificationService implements INotificationService {
 	}
 
 	@Override
-	public Set<NotificationDTO> getAll(Pharmacy pharmacy) {
+	public List<NotificationDTO> getAll(Pharmacy pharmacy) {
 		Set<MedicineMissingNotification> notifications = repository.findAll().stream().filter(n -> n.getPharmacy().getId() == pharmacy.getId()).collect(Collectors.toSet());
-		Set<NotificationDTO> ret = new HashSet<NotificationDTO>();
+		List<NotificationDTO> ret = new ArrayList<NotificationDTO>();
 		for(MedicineMissingNotification n : notifications) {
 			ret.add(new NotificationDTO(n.getMedicine().getCode(), n.getMedicine().getName(), n.getTimestamp()));
 		}
+		ret.sort((a, b) -> a.getTimestamp().compareTo(b.getTimestamp()));
 		return ret;
 	}
 
