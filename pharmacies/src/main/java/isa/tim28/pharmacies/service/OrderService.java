@@ -134,12 +134,12 @@ public class OrderService implements IOrderService {
 			
 			Set<OfferDTO> offers = new HashSet<OfferDTO>();
 			for(Offer offer : o.getOffers()) {
-				offers.add(new OfferDTO(offer.getId(), offer.getSupplier().getUser().getFullName(), offer.getTotalPrice()));
+				offers.add(new OfferDTO(offer.getId(), offer.getSupplier().getUser().getFullName(), offer.getTotalPrice(), offer.getDeadline()));
 			}
 			Offer w = o.getWinningOffer();
 			OfferDTO winning = null;
 			if(w != null) {
-				winning = new OfferDTO(w.getId(), w.getSupplier().getUser().getFullName(), w.getTotalPrice());
+				winning = new OfferDTO(w.getId(), w.getSupplier().getUser().getFullName(), w.getTotalPrice(), w.getDeadline());
 			}
 			
 			orders.add(new OrderForPharmacyAdminDTO(o.getId(), medicines, o.getDeadline(), editable, state, canChooseOffer, offers, winning));
