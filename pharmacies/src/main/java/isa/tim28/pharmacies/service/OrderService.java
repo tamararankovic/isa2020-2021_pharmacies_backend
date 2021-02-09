@@ -1,5 +1,6 @@
 package isa.tim28.pharmacies.service;
 
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
@@ -65,6 +66,8 @@ public class OrderService implements IOrderService {
 		Set<MedicineQuantity> medicines = new HashSet<MedicineQuantity>();
 		if (order.getMedicines() == null || order.getMedicines().size() == 0)
 			throw new NewOrderInvalidException("You can't make an empty order!");
+		if(order.getDeadline().isBefore(LocalDateTime.now()))
+			throw new NewOrderInvalidException("Deadline can't be set in the past!");
 		for(NewMedicineQuantityDTO mq : order.getMedicines()) {
 			Medicine m = medicineService.findById(mq.getMedicineId());
 			if (m == null) {
@@ -186,6 +189,8 @@ public class OrderService implements IOrderService {
 			throw new ForbiddenOperationException("You can't edit orders that you hadn't made!");
 		if(dto.getOrder().getMedicines() == null || dto.getOrder().getMedicines().size() == 0)
 			throw new ForbiddenOperationException("You can't leave the order empty!");
+		if(dto.getOrder().getDeadline().isBefore(LocalDateTime.now()))
+			throw new ForbiddenOperationException("Deadline can't be set in the past!");
 		Set<MedicineQuantity> medicines = new HashSet<MedicineQuantity>();
 		for(NewMedicineQuantityDTO mq : dto.getOrder().getMedicines()) {
 			Medicine m = medicineService.findById(mq.getMedicineId());
