@@ -63,6 +63,8 @@ public class OrderService implements IOrderService {
 	@Override
 	public void create(NewOrderDTO order, PharmacyAdmin admin) throws NewOrderInvalidException {
 		Set<MedicineQuantity> medicines = new HashSet<MedicineQuantity>();
+		if (order.getMedicines() == null || order.getMedicines().size() == 0)
+			throw new NewOrderInvalidException("You can't make an empty order!");
 		for(NewMedicineQuantityDTO mq : order.getMedicines()) {
 			Medicine m = medicineService.findById(mq.getMedicineId());
 			if (m == null) {
@@ -182,6 +184,8 @@ public class OrderService implements IOrderService {
 			throw new ForbiddenOperationException("Deadline passed!!");
 		if(order.getAdminCreator().getId() != admin.getId())
 			throw new ForbiddenOperationException("You can't edit orders that you hadn't made!");
+		if(dto.getOrder().getMedicines() == null || dto.getOrder().getMedicines().size() == 0)
+			throw new ForbiddenOperationException("You can't leave the order empty!");
 		Set<MedicineQuantity> medicines = new HashSet<MedicineQuantity>();
 		for(NewMedicineQuantityDTO mq : dto.getOrder().getMedicines()) {
 			Medicine m = medicineService.findById(mq.getMedicineId());
