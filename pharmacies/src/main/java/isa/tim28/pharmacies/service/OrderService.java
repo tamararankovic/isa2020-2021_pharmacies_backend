@@ -189,7 +189,7 @@ public class OrderService implements IOrderService {
 			throw new ForbiddenOperationException("You can't edit orders that you hadn't made!");
 		if(dto.getOrder().getMedicines() == null || dto.getOrder().getMedicines().size() == 0)
 			throw new ForbiddenOperationException("You can't leave the order empty!");
-		if(dto.getOrder().getDeadline().isBefore(LocalDateTime.now()))
+		if(dto.getOrder().getDeadline() != null && dto.getOrder().getDeadline().isBefore(LocalDateTime.now()))
 			throw new ForbiddenOperationException("Deadline can't be set in the past!");
 		Set<MedicineQuantity> medicines = new HashSet<MedicineQuantity>();
 		for(NewMedicineQuantityDTO mq : dto.getOrder().getMedicines()) {
@@ -199,7 +199,8 @@ public class OrderService implements IOrderService {
 			}
 			medicines.add(new MedicineQuantity(m, (int)mq.getOrderedQuantity()));
 		}
-		order.setDeadline(dto.getOrder().getDeadline());
+		if(dto.getOrder().getDeadline() != null)
+			order.setDeadline(dto.getOrder().getDeadline());
 		order.setMedicineQuantities(medicines);
 		orderRepository.save(order);
 	}
@@ -223,6 +224,20 @@ public class OrderService implements IOrderService {
 	public Order save(Order order) {
 		Order newOrder = orderRepository.save(order);
 		return newOrder;
+	}
+	
+	@Override
+	public boolean pharmacyHasActiveOrdersForMedicine(Pharmacy pharmacy, Medicine medicine) {
+		Set<Order> orders = orderRepository.findAll().stream().filter(o -> o.getAdminCreator().getPharmacy().getId() == pharmacy.getId()).collect(Collectors.toSet());
+		for(Order o : orders) {
+			for(MedicineQuantity mq: o.getMedicineQuantities()) {
+				if(mq.getMedicine().getId() == medicine.getId()) {
+					if(o.isWaitingOffers()) return true;
+					if(!o.hasWinner()) return true;
+				}
+			}
+		}
+		return false;
 	}
 
 }

@@ -41,7 +41,7 @@ public class PharmacyAdminService implements IPharmacyAdminService {
 
 	@Override
 	public void update(PharmacyAdmin admin, PharmacyAdminDTO dto) throws BadNewEmailException, BadNameException, BadSurnameException {
-		if (userService.isEmailTaken(dto.getEmail()))
+		if (!dto.getEmail().equals(admin.getUser().getEmail()) && userService.isEmailTaken(dto.getEmail()))
 			throw new BadNewEmailException("Email is taken! Try another one");
 		admin.getUser().setName(dto.getName());
 		admin.getUser().setSurname(dto.getSurname());
