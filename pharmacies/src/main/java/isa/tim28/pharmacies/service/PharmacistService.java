@@ -1,6 +1,7 @@
 package isa.tim28.pharmacies.service;
 
 import java.time.DayOfWeek;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -10,6 +11,8 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import isa.tim28.pharmacies.dtos.ComplaintDTO;
+import isa.tim28.pharmacies.dtos.DermatologistForComplaintDTO;
 import isa.tim28.pharmacies.dtos.NewPharmacistDTO;
 import isa.tim28.pharmacies.dtos.PharmacistDTO;
 import isa.tim28.pharmacies.dtos.PharmacistProfileDTO;
@@ -17,21 +20,28 @@ import isa.tim28.pharmacies.exceptions.BadNameException;
 import isa.tim28.pharmacies.exceptions.BadNewEmailException;
 import isa.tim28.pharmacies.exceptions.BadSurnameException;
 import isa.tim28.pharmacies.exceptions.CreatePharmacistException;
+import isa.tim28.pharmacies.exceptions.InvalidComplaintException;
 import isa.tim28.pharmacies.exceptions.InvalidDeleteUserAttemptException;
 import isa.tim28.pharmacies.exceptions.PasswordIncorrectException;
 import isa.tim28.pharmacies.exceptions.UserDoesNotExistException;
 import isa.tim28.pharmacies.mapper.PharmacistMapper;
 import isa.tim28.pharmacies.model.DailyEngagement;
 import isa.tim28.pharmacies.model.EngagementInPharmacy;
+import isa.tim28.pharmacies.model.Patient;
 import isa.tim28.pharmacies.model.Pharmacist;
+import isa.tim28.pharmacies.model.PharmacistAppointment;
+import isa.tim28.pharmacies.model.PharmacistComplaint;
 import isa.tim28.pharmacies.model.Pharmacy;
 import isa.tim28.pharmacies.model.PharmacyAdmin;
 import isa.tim28.pharmacies.model.Role;
 import isa.tim28.pharmacies.model.User;
+import isa.tim28.pharmacies.repository.PharmacistAppointmentRepository;
+import isa.tim28.pharmacies.repository.PharmacistComplaintRepository;
 import isa.tim28.pharmacies.repository.PharmacistRepository;
 import isa.tim28.pharmacies.repository.UserRepository;
 import isa.tim28.pharmacies.service.interfaces.IPharmacistAppointmentService;
 import isa.tim28.pharmacies.service.interfaces.IPharmacistService;
+
 
 @Service
 public class PharmacistService implements IPharmacistService {
@@ -40,16 +50,68 @@ public class PharmacistService implements IPharmacistService {
 	private UserRepository userRepository;
 	private PharmacistMapper pharmacistMapper;
 	private IPharmacistAppointmentService appointmentService;
+	private PharmacistAppointmentRepository appointmentRepository;
+	private PharmacistComplaintRepository pharmacistComplaintRepository;
 	
 	@Autowired
-	public PharmacistService(PharmacistRepository pharmacistRepository, UserRepository userRepository, PharmacistMapper pharmacistMapper, IPharmacistAppointmentService appointmentService) {
+	public PharmacistService(PharmacistRepository pharmacistRepository, UserRepository userRepository,
+			PharmacistMapper pharmacistMapper, IPharmacistAppointmentService appointmentService,  
+			PharmacistAppointmentRepository appointmentRepository, PharmacistComplaintRepository pharmacistComplaintRepository) {
 		super();
 		this.pharmacistRepository = pharmacistRepository;
 		this.userRepository = userRepository;
 		this.pharmacistMapper = pharmacistMapper;
 		this.appointmentService = appointmentService;
+		this.appointmentRepository = appointmentRepository;
+		this.pharmacistComplaintRepository = pharmacistComplaintRepository;
 	}
 	
+	@Override
+	public boolean createComplaint(Patient patient, ComplaintDTO dto) throws InvalidComplaintException, UserDoesNotExistException {
+		if(!dto.isTextValid()) 
+			throw new InvalidComplaintException("Complaint must have between 2 and 3000 characters. Try again.");
+		Optional<Pharmacist> pahrmacistOp = pharmacistRepository.findById(dto.getId());
+		if(pahrmacistOp.isEmpty())
+			throw new UserDoesNotExistException("You attempted to write complaint to a pharmacist that doesn't exist!");
+		Pharmacist pharmacist = pahrmacistOp.get();
+		
+	    boolean  canComplain = false;
+		Set<PharmacistAppointment> pharmAppointments = appointmentRepository.findAllByPharmacist_Id(pharmacist.getId());
+		for(PharmacistAppointment ap : pharmAppointments) {
+			
+				try {	if(ap.getPatient().getId() == patient.getId() && ap.isPatientWasPresent()==true && ap.isDone()==true) {
+				canComplain = true;
+				break;
+				}
+		   	} catch(NullPointerException e) {
+		   		canComplain = false;
+		   		break;
+		}
+		
+		}
+		if(canComplain == true) {
+			PharmacistComplaint complaint = new PharmacistComplaint();
+			complaint.setPharmacist(pharmacist);
+			complaint.setPatient(patient);
+			complaint.setReply("");
+			complaint.setText(dto.getText());
+			pharmacistComplaintRepository.save(complaint);
+			return true;
+		}else {
+			return false;
+		}
+		
+	}
+	@Override
+	public List<DermatologistForComplaintDTO> getAllPharmacists(){
+		List<DermatologistForComplaintDTO> result = new ArrayList<DermatologistForComplaintDTO>();
+		List<Pharmacist> pharmacists = pharmacistRepository.findAll();
+		for(Pharmacist p : pharmacists) {
+			DermatologistForComplaintDTO dto = new DermatologistForComplaintDTO(p.getId(), p.getUser().getName(), p.getUser().getSurname());
+			result.add(dto);
+		}
+		return result;
+	}
 	@Override
 	public Pharmacist getPharmacistById(long id) throws UserDoesNotExistException {
 		if (pharmacistRepository.findById(id).isEmpty())

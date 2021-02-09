@@ -266,6 +266,20 @@ public class SystemAdminController {
 		return new ResponseEntity<>(pharmacyService.getAllPharmacies(), HttpStatus.OK);
 	}
 	
+	@GetMapping(value = "/getPharmaciesUser", produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<List<PharmacyAddAdminDTO>> getAllPharmaciesUser(HttpSession session){
+		
+		User loggedInUser = (User) session.getAttribute("loggedInUser");
+		if(loggedInUser == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No logged in user!");
+		}
+		if(loggedInUser.getRole() != Role.PATIENT) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only patient can see all pharmacies.");
+		}
+		
+		return new ResponseEntity<>(pharmacyService.getAllPharmacies(), HttpStatus.OK);
+	}
+	
 	@PostMapping(value = "registerPharmacyAdmin")
 	public ResponseEntity<String> registerPharmacyAdmin(@RequestBody PharmacyAdminRegisterDTO dto, HttpSession session) throws CreatePharmacyAdminException{
 		

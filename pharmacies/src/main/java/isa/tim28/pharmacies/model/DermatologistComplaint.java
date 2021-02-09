@@ -80,5 +80,8 @@ public class DermatologistComplaint {
 	public void setPatient(Patient patient) {
 		this.patient = patient;
 	}
-
+	public boolean isTextValid() {
+		if(this.text == "" || this.text.length() < 2 || this.text.length() > 3000) return false;
+		return true;
+	}
 }

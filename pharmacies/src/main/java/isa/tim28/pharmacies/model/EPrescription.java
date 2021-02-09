@@ -11,6 +11,7 @@ import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 
 @Entity
@@ -32,18 +33,42 @@ public class EPrescription {
 	@OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
 	private Set<EPrescriptionMedicine> prescriptionMedicine = new HashSet<EPrescriptionMedicine>();
 
+	@ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+	private Pharmacy pharmacy;
+	
+	@ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+	private Patient patient;
+	
 	public EPrescription() {
 		super();
 	}
 	
 	public EPrescription(long id, String code, String patientFullName, LocalDate datePrescribed,
-			Set<EPrescriptionMedicine> prescriptionMedicine) {
+			Set<EPrescriptionMedicine> prescriptionMedicine, Pharmacy pharmacy, Patient patient) {
 		super();
 		this.id = id;
 		this.code = code;
 		this.patientFullName = patientFullName;
 		this.datePrescribed = datePrescribed;
 		this.prescriptionMedicine = prescriptionMedicine;
+		this.pharmacy = pharmacy;
+		this.patient = patient;
+	}
+	
+	public Patient getPatient() {
+		return patient;
+	}
+
+	public void setPatient(Patient patient) {
+		this.patient = patient;
+	}
+
+	public Pharmacy getPharmacy() {
+		return pharmacy;
+	}
+
+	public void setPharmacy(Pharmacy pharmacy) {
+		this.pharmacy = pharmacy;
 	}
 
 	public long getId() {

@@ -9,7 +9,9 @@ import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import isa.tim28.pharmacies.dtos.AllComplaintsDTO;
 import isa.tim28.pharmacies.dtos.CompatibleMedicinesDTO;
+import isa.tim28.pharmacies.dtos.ComplaintDTO;
 import isa.tim28.pharmacies.dtos.DermatologistExaminationForPatientDTO;
 import isa.tim28.pharmacies.dtos.ItemPriceDTO;
 import isa.tim28.pharmacies.dtos.MedicineSearchDTO;
@@ -20,21 +22,37 @@ import isa.tim28.pharmacies.dtos.PharmacyForMedSearchDTO;
 import isa.tim28.pharmacies.dtos.PharmacyInfoForPatientDTO;
 import isa.tim28.pharmacies.dtos.PriceListDTO;
 import isa.tim28.pharmacies.exceptions.ForbiddenOperationException;
+import isa.tim28.pharmacies.exceptions.InvalidComplaintException;
 import isa.tim28.pharmacies.exceptions.MedicineDoesNotExistException;
 import isa.tim28.pharmacies.exceptions.PharmacyDataInvalidException;
 import isa.tim28.pharmacies.exceptions.PharmacyNotFoundException;
 import isa.tim28.pharmacies.exceptions.PriceInvalidException;
+import isa.tim28.pharmacies.exceptions.UserDoesNotExistException;
 import isa.tim28.pharmacies.model.Dermatologist;
 import isa.tim28.pharmacies.model.DermatologistAppointment;
+import isa.tim28.pharmacies.model.DermatologistComplaint;
+import isa.tim28.pharmacies.model.EPrescription;
 import isa.tim28.pharmacies.model.Medicine;
 import isa.tim28.pharmacies.model.MedicinePrice;
 import isa.tim28.pharmacies.model.MedicineQuantity;
+import isa.tim28.pharmacies.model.Patient;
 import isa.tim28.pharmacies.model.Pharmacist;
+import isa.tim28.pharmacies.model.PharmacistAppointment;
+import isa.tim28.pharmacies.model.PharmacistComplaint;
 import isa.tim28.pharmacies.model.Pharmacy;
 import isa.tim28.pharmacies.model.PharmacyAdmin;
+import isa.tim28.pharmacies.model.PharmacyComplaint;
 import isa.tim28.pharmacies.model.PriceList;
 import isa.tim28.pharmacies.model.Rating;
+import isa.tim28.pharmacies.model.Reservation;
+import isa.tim28.pharmacies.repository.DermatologistAppointmentRepository;
+import isa.tim28.pharmacies.repository.DermatologistComplaintRepository;
+import isa.tim28.pharmacies.repository.EPrescriptionRepository;
+import isa.tim28.pharmacies.repository.PharmacistAppointmentRepository;
+import isa.tim28.pharmacies.repository.PharmacistComplaintRepository;
+import isa.tim28.pharmacies.repository.PharmacyComplaintRepository;
 import isa.tim28.pharmacies.repository.PharmacyRepository;
+import isa.tim28.pharmacies.repository.ReservationRepository;
 import isa.tim28.pharmacies.service.interfaces.IDermatologistAppointmentService;
 import isa.tim28.pharmacies.service.interfaces.IDermatologistService;
 import isa.tim28.pharmacies.service.interfaces.IMedicineService;
@@ -49,19 +67,139 @@ public class PharmacyService implements IPharmacyService {
 	private IDermatologistService dermatologistService;
 	private IDermatologistAppointmentService appointmentService;
 	private IMedicineService medicineService;
-
+	private PharmacyComplaintRepository pharmacyComplaintRepository;
+	private ReservationRepository reservationRepository;
+	private EPrescriptionRepository ePrescriptionRepository;
+	private DermatologistAppointmentRepository dermatologistAppointmentRepository;
+	private PharmacistAppointmentRepository pharmacistAppointmentRepository;
+	private PharmacistComplaintRepository pharmacistComplaintRepository;
+	private DermatologistComplaintRepository dermatologistComplaintRepository;
+	
 	@Autowired
 	public PharmacyService(PharmacyRepository pharmacyRepository, IPharmacistService pharmacistService,
 			IDermatologistService dermatologistService, IDermatologistAppointmentService appointmentService,
-		    IMedicineService medicineService) {
+		    IMedicineService medicineService,  PharmacyComplaintRepository pharmacyComplaintRepository, 
+		    ReservationRepository reservationRepository, EPrescriptionRepository ePrescriptionRepository,
+		    DermatologistAppointmentRepository dermatologistAppointmentRepository, PharmacistAppointmentRepository pharmacistAppointmentRepository,
+		    PharmacistComplaintRepository pharmacistComplaintRepository, DermatologistComplaintRepository dermatologistComplaintRepository) {
 		super();
 		this.pharmacyRepository = pharmacyRepository;
 		this.pharmacistService = pharmacistService;
 		this.dermatologistService = dermatologistService;
 		this.appointmentService = appointmentService;
 		this.medicineService = medicineService;
+		this.pharmacyComplaintRepository = pharmacyComplaintRepository;
+		this.reservationRepository = reservationRepository;
+		this.dermatologistAppointmentRepository = dermatologistAppointmentRepository;
+		this.pharmacistAppointmentRepository = pharmacistAppointmentRepository;
+		this.pharmacistComplaintRepository = pharmacistComplaintRepository;
+		this.dermatologistComplaintRepository = dermatologistComplaintRepository;
 	}
 	
+	public List<AllComplaintsDTO> getAllComplaints(){
+		List<PharmacyComplaint> pharmacies = pharmacyComplaintRepository.findAll();
+		List<PharmacistComplaint> pharmacists= pharmacistComplaintRepository.findAll();
+		List<DermatologistComplaint> dermatologists = dermatologistComplaintRepository.findAll();
+		
+		List<AllComplaintsDTO> result = new ArrayList<AllComplaintsDTO>();
+		for(PharmacyComplaint pc : pharmacies) {
+			AllComplaintsDTO dto = new AllComplaintsDTO(pc.getId(), pc.getText(), pc.getPharmacy().getName(), String.join(" ",pc.getPatient().getUser().getName(), pc.getPatient().getUser().getSurname()), "PHARMACY");
+			result.add(dto);
+		}
+		for(PharmacistComplaint pc : pharmacists) {
+			AllComplaintsDTO dto = new AllComplaintsDTO(pc.getId(), pc.getText(), String.join(" ", pc.getPharmacist().getUser().getName(), pc.getPharmacist().getUser().getSurname()), String.join(" ",pc.getPatient().getUser().getName(), pc.getPatient().getUser().getSurname()), "PHARMACIST");
+			result.add(dto);
+		}
+		for(DermatologistComplaint pc : dermatologists) {
+			AllComplaintsDTO dto = new AllComplaintsDTO(pc.getId(), pc.getText(), String.join(" ", pc.getDermatologist().getUser().getName(), pc.getDermatologist().getUser().getSurname()), String.join(" ",pc.getPatient().getUser().getName(), pc.getPatient().getUser().getSurname()), "DERMATOLOGIST");
+			result.add(dto);
+		}
+		
+		return result;
+	}
+	
+	@Override
+	public boolean createComplaint(Patient patient, ComplaintDTO dto) throws InvalidComplaintException, UserDoesNotExistException {
+		if(!dto.isTextValid()) 
+			throw new InvalidComplaintException("Complaint must have between 2 and 3000 characters. Try again.");
+		Optional<Pharmacy> pahrmacyOp = pharmacyRepository.findById(dto.getId());
+		if(pahrmacyOp.isEmpty())
+			throw new UserDoesNotExistException("You attempted to write complaint to a pharmacy that doesn't exist!");
+		Pharmacy pharmacy = pahrmacyOp.get();
+		
+		boolean reservedMed = false;
+		try {
+		List<Reservation> reservations = reservationRepository.findAllByPatient_Id(patient.getId());
+		if(!reservations.isEmpty()) {
+			for(Reservation r : reservations) {
+				if(r.getPharmacy().getId() == dto.getId() && r.isReceived() == true) {
+					reservedMed = true;
+					break;
+					}
+				}
+			}
+		}
+		catch(NullPointerException e) {
+			reservedMed = false;
+		}
+		
+		boolean ePrescription = false;
+		try {
+			List<EPrescription> ePrescriptions = ePrescriptionRepository.findAllByPatient_Id(patient.getId());
+			if(ePrescriptions.isEmpty() == false ) {
+			for(EPrescription ep : ePrescriptions) {
+				if(ep.getPharmacy().getId() == dto.getId()) {
+					ePrescription = true;
+					break;
+			  }
+		  }
+	  }
+    }catch(NullPointerException e){
+			ePrescription=false;
+		}
+	
+		boolean dermAppointment = false;
+	try {
+		Set<DermatologistAppointment> dermAppointments = dermatologistAppointmentRepository.findAllByPatient_Id(patient.getId());
+		if(!dermAppointments.isEmpty()) {
+			for(DermatologistAppointment da : dermAppointments) {
+				if(da.getPharmacy().getId() == dto.getId()) {
+					dermAppointment = true;
+					break;
+				}
+			}
+		}
+	}catch(NullPointerException e){
+		dermAppointment=false;
+	}
+		boolean pharmAppointment = false;
+	try {	
+		Set<PharmacistAppointment> pharmAppointments = pharmacistAppointmentRepository.findAllByPatient_Id(patient.getId());
+		if(!pharmAppointments.isEmpty()) {
+			for(PharmacistAppointment pa : pharmAppointments) {
+				if(pa.getPharmacist().getEngegementInPharmacy().getPharmacy().getId() == dto.getId()) {
+					pharmAppointment = true;
+					break;
+				}
+			}
+		}
+	}   catch(NullPointerException e){
+		pharmAppointment=false;
+	}
+			
+		if(ePrescription == true || reservedMed == true || dermAppointment == true || pharmAppointment == true) {
+			PharmacyComplaint complaint = new PharmacyComplaint();
+			complaint.setPharmacy(pharmacy);
+			complaint.setPatient(patient);
+			complaint.setReply("");
+			complaint.setText(dto.getText());
+			pharmacyComplaintRepository.save(complaint);
+			return true;
+		}else {
+			return false;
+		}
+		
+	}
 	@Override
 	public List<MedicineSearchDTO> searchMedicineByName(String name){
 		List<MedicineSearchDTO> result = new ArrayList<MedicineSearchDTO>();

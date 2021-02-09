@@ -41,7 +41,7 @@ public class EmailService {
 	    MimeMessageHelper helper = new MimeMessageHelper(message);
 	    helper.setFrom(env.getProperty("spring.mail.username"));
 	    helper.setTo(address);
-	    helper.setSubject("Recept");
+	    helper.setSubject("eRecept");
 	    helper.setText(content, true);
 	    
 		javaMailSender.send(message);
