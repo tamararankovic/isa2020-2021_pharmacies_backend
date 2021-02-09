@@ -6,10 +6,14 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+
+import javax.mail.MessagingException;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import isa.tim28.pharmacies.dtos.AllComplaintsDTO;
+import isa.tim28.pharmacies.dtos.AnswerOnComplaintDTO;
 import isa.tim28.pharmacies.dtos.CompatibleMedicinesDTO;
 import isa.tim28.pharmacies.dtos.ComplaintDTO;
 import isa.tim28.pharmacies.dtos.DermatologistExaminationForPatientDTO;
@@ -47,9 +51,12 @@ import isa.tim28.pharmacies.model.Rating;
 import isa.tim28.pharmacies.model.Reservation;
 import isa.tim28.pharmacies.repository.DermatologistAppointmentRepository;
 import isa.tim28.pharmacies.repository.DermatologistComplaintRepository;
+import isa.tim28.pharmacies.repository.DermatologistRepository;
 import isa.tim28.pharmacies.repository.EPrescriptionRepository;
+import isa.tim28.pharmacies.repository.PatientRepository;
 import isa.tim28.pharmacies.repository.PharmacistAppointmentRepository;
 import isa.tim28.pharmacies.repository.PharmacistComplaintRepository;
+import isa.tim28.pharmacies.repository.PharmacistRepository;
 import isa.tim28.pharmacies.repository.PharmacyComplaintRepository;
 import isa.tim28.pharmacies.repository.PharmacyRepository;
 import isa.tim28.pharmacies.repository.ReservationRepository;
@@ -74,6 +81,10 @@ public class PharmacyService implements IPharmacyService {
 	private PharmacistAppointmentRepository pharmacistAppointmentRepository;
 	private PharmacistComplaintRepository pharmacistComplaintRepository;
 	private DermatologistComplaintRepository dermatologistComplaintRepository;
+	private EmailService emailService;
+	private PatientRepository patientRepository;
+	private DermatologistRepository dermatologistRepository;
+	private PharmacistRepository pharmacistRepository;
 	
 	@Autowired
 	public PharmacyService(PharmacyRepository pharmacyRepository, IPharmacistService pharmacistService,
@@ -81,7 +92,9 @@ public class PharmacyService implements IPharmacyService {
 		    IMedicineService medicineService,  PharmacyComplaintRepository pharmacyComplaintRepository, 
 		    ReservationRepository reservationRepository, EPrescriptionRepository ePrescriptionRepository,
 		    DermatologistAppointmentRepository dermatologistAppointmentRepository, PharmacistAppointmentRepository pharmacistAppointmentRepository,
-		    PharmacistComplaintRepository pharmacistComplaintRepository, DermatologistComplaintRepository dermatologistComplaintRepository) {
+		    PharmacistComplaintRepository pharmacistComplaintRepository, DermatologistComplaintRepository dermatologistComplaintRepository, 
+		    EmailService emailService,  PatientRepository patientRepository, DermatologistRepository dermatologistRepository,
+		    PharmacistRepository pharmacistRepository) {
 		super();
 		this.pharmacyRepository = pharmacyRepository;
 		this.pharmacistService = pharmacistService;
@@ -94,8 +107,57 @@ public class PharmacyService implements IPharmacyService {
 		this.pharmacistAppointmentRepository = pharmacistAppointmentRepository;
 		this.pharmacistComplaintRepository = pharmacistComplaintRepository;
 		this.dermatologistComplaintRepository = dermatologistComplaintRepository;
+		this.emailService = emailService;
+		this.patientRepository = patientRepository;
+		this.dermatologistRepository = dermatologistRepository;
+		this.pharmacistRepository = pharmacistRepository;
 	}
 	
+	@Override
+	public boolean answerOnComplaint(AnswerOnComplaintDTO answer) throws MessagingException {
+		System.out.println(answer.getType());
+		if(answer.getType().equals("PHARMACY")) {
+			PharmacyComplaint pc = pharmacyComplaintRepository.findById(answer.getComplaintId()).get();
+			if(pc.getReply().equals(" ")) {
+			    pc.setReply(answer.getAnswer());
+				pharmacyComplaintRepository.save(pc);
+				Patient patient = patientRepository.findById(pc.getPatient().getId()).get();
+				Pharmacy pharmacy = pharmacyRepository.findById(pc.getPharmacy().getId()).get();
+				emailService.sendResponseOnComplaint(String.join(" ", patient.getUser().getName(), patient.getUser().getSurname()), answer.getAnswer(), patient.getUser().getEmail(), pharmacy.getName());
+				return true;
+			}else {
+				return false;
+			}		
+	}	
+		else if(answer.getType().equals("DERMATOLOGIST")) {
+			DermatologistComplaint dc = dermatologistComplaintRepository.findById(answer.getComplaintId()).get();
+			if(dc.getReply().equals("")) {
+				dc.setReply(answer.getAnswer());
+				dermatologistComplaintRepository.save(dc);
+				Patient patient = patientRepository.findById(dc.getPatient().getId()).get();
+				Dermatologist dermatologist = dermatologistRepository.findById(dc.getDermatologist().getId()).get();
+				emailService.sendResponseOnComplaint(String.join(" ", patient.getUser().getName(), patient.getUser().getSurname()), answer.getAnswer(), patient.getUser().getEmail(), String.join(" ", dermatologist.getUser().getName(),dermatologist.getUser().getSurname()));
+				return true;
+			}else {
+				return false;
+			}
+	}	
+		else {
+			PharmacistComplaint pc = pharmacistComplaintRepository.findById(answer.getComplaintId()).get();
+			if(pc.getReply().equals("")) {
+				pc.setReply(answer.getAnswer());
+				pharmacistComplaintRepository.save(pc);
+				Patient patient = patientRepository.findById(pc.getPatient().getId()).get();
+				Pharmacist pharmacist = pharmacistRepository.findById(pc.getPharmacist().getId()).get();
+				emailService.sendResponseOnComplaint(String.join(" ", patient.getUser().getName(), patient.getUser().getSurname()), answer.getAnswer(), patient.getUser().getEmail(), String.join(" ", pharmacist.getUser().getName(),pharmacist.getUser().getSurname()));
+				return true;
+			}else {
+				return false;
+			}
+		}
+	
+}
+	@Override
 	public List<AllComplaintsDTO> getAllComplaints(){
 		List<PharmacyComplaint> pharmacies = pharmacyComplaintRepository.findAll();
 		List<PharmacistComplaint> pharmacists= pharmacistComplaintRepository.findAll();
@@ -191,7 +253,7 @@ public class PharmacyService implements IPharmacyService {
 			PharmacyComplaint complaint = new PharmacyComplaint();
 			complaint.setPharmacy(pharmacy);
 			complaint.setPatient(patient);
-			complaint.setReply("");
+			complaint.setReply(" ");
 			complaint.setText(dto.getText());
 			pharmacyComplaintRepository.save(complaint);
 			return true;

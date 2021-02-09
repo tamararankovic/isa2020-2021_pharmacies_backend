@@ -4,6 +4,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+import javax.mail.MessagingException;
+
+import isa.tim28.pharmacies.dtos.AllComplaintsDTO;
+import isa.tim28.pharmacies.dtos.AnswerOnComplaintDTO;
 import isa.tim28.pharmacies.dtos.ComplaintDTO;
 import isa.tim28.pharmacies.dtos.MedicineSearchDTO;
 import isa.tim28.pharmacies.dtos.PharmacyAddAdminDTO;
@@ -62,5 +66,9 @@ public interface IPharmacyService {
 	List<MedicineSearchDTO> searchMedicineByName(String name);
 
 	boolean createComplaint(Patient patient, ComplaintDTO dto) throws InvalidComplaintException, UserDoesNotExistException;
+
+	List<AllComplaintsDTO> getAllComplaints();
+
+	boolean answerOnComplaint(AnswerOnComplaintDTO answer) throws MessagingException;
 
 }
