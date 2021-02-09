@@ -1,6 +1,6 @@
 package isa.tim28.pharmacies.controller;
 
-import java.util.Set;
+import java.util.List;
 
 import javax.servlet.http.HttpSession;
 
@@ -102,7 +102,7 @@ private INotificationService notificationService;
 	}
 	
 	@GetMapping(value = "notifications")
-	public ResponseEntity<Set<NotificationDTO>> getNotifications(HttpSession session) {
+	public ResponseEntity<List<NotificationDTO>> getNotifications(HttpSession session) {
 		User user = (User)session.getAttribute("loggedInUser");
 		if (user == null) {
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not logged in!");
