@@ -6,11 +6,10 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-
-import javax.mail.MessagingException;
-
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import javax.mail.MessagingException;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -21,13 +20,14 @@ import isa.tim28.pharmacies.exceptions.ForbiddenOperationException;
 import isa.tim28.pharmacies.exceptions.MedicineDoesNotExistException;
 import isa.tim28.pharmacies.exceptions.PharmacyNotFoundException;
 import isa.tim28.pharmacies.exceptions.UserDoesNotExistException;
-
 import isa.tim28.pharmacies.model.CancelledReservation;
 import isa.tim28.pharmacies.model.Medicine;
 import isa.tim28.pharmacies.model.MedicineQuantity;
 import isa.tim28.pharmacies.model.Pharmacist;
 import isa.tim28.pharmacies.model.Pharmacy;
+
 import isa.tim28.pharmacies.model.Rating;
+
 import isa.tim28.pharmacies.model.Reservation;
 import isa.tim28.pharmacies.model.ReservationStatus;
 import isa.tim28.pharmacies.model.User;
@@ -35,6 +35,7 @@ import isa.tim28.pharmacies.repository.CancelledReservationRepository;
 import isa.tim28.pharmacies.repository.MedicineRepository;
 import isa.tim28.pharmacies.repository.ReservationRepository;
 import isa.tim28.pharmacies.service.interfaces.IMedicineService;
+import isa.tim28.pharmacies.service.interfaces.IOrderService;
 import isa.tim28.pharmacies.service.interfaces.IPatientService;
 import isa.tim28.pharmacies.service.interfaces.IPharmacyService;
 import isa.tim28.pharmacies.service.interfaces.IRatingService;
@@ -49,6 +50,7 @@ public class ReservationService implements IReservationService {
 	private CancelledReservationRepository cancelledReservationRepository;
 	private IMedicineService medicineService;
 	private EmailService emailService;
+	private IOrderService orderService;
 	private IRatingService ratingService;
 	private MedicineRepository medicineRepository;
 
@@ -56,7 +58,8 @@ public class ReservationService implements IReservationService {
 	public ReservationService(ReservationRepository reservationRepository, IPatientService patientService,
 			IPharmacyService pharmacyService, IMedicineService medicineService,
 			CancelledReservationRepository cancelledReservationRepository, EmailService emailService,
-			IRatingService ratingService, MedicineRepository medicineRepository) {
+			IRatingService ratingService, MedicineRepository medicineRepository,IOrderService orderService) {
+
 		super();
 		this.reservationRepository = reservationRepository;
 		this.patientService = patientService;
@@ -66,6 +69,8 @@ public class ReservationService implements IReservationService {
 		this.emailService = emailService;
 		this.ratingService = ratingService;
 		this.medicineRepository = medicineRepository;
+		this.orderService = orderService;
+
 	}
 
 	@Override
@@ -210,6 +215,8 @@ public class ReservationService implements IReservationService {
 		MedicineQuantity med = medOpt.get();
 		if (pharmacyHasActiveReservationsForMedicine(pharmacy, med.getMedicine()))
 			throw new ForbiddenOperationException("You can't delete a medicine that has active reservations!");
+		if(orderService.pharmacyHasActiveOrdersForMedicine(pharmacy, medicine))
+			throw new ForbiddenOperationException("You can't delete a medicine that has order that is waiting offers or a winner!");
 		pharmacy.getMedicines().remove(med);
 		pharmacyService.savePharmacy(pharmacy);
 	}

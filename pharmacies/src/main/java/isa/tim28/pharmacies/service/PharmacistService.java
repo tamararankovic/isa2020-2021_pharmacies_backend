@@ -18,11 +18,14 @@ import isa.tim28.pharmacies.dtos.NewPharmacistDTO;
 import isa.tim28.pharmacies.dtos.PharmacistAppointmentDTO;
 import isa.tim28.pharmacies.dtos.PharmacistDTO;
 import isa.tim28.pharmacies.dtos.PharmacistProfileDTO;
+
 import isa.tim28.pharmacies.dtos.ShowCounselingDTO;
+
+import isa.tim28.pharmacies.exceptions.CreatePharmacistException;
+
 import isa.tim28.pharmacies.exceptions.BadNameException;
 import isa.tim28.pharmacies.exceptions.BadNewEmailException;
 import isa.tim28.pharmacies.exceptions.BadSurnameException;
-import isa.tim28.pharmacies.exceptions.CreatePharmacistException;
 import isa.tim28.pharmacies.exceptions.InvalidDeleteUserAttemptException;
 import isa.tim28.pharmacies.exceptions.PasswordIncorrectException;
 import isa.tim28.pharmacies.exceptions.PharmacyNotFoundException;
@@ -30,10 +33,11 @@ import isa.tim28.pharmacies.exceptions.UserDoesNotExistException;
 import isa.tim28.pharmacies.mapper.PharmacistMapper;
 import isa.tim28.pharmacies.model.DailyEngagement;
 import isa.tim28.pharmacies.model.EngagementInPharmacy;
+
 import isa.tim28.pharmacies.model.Medicine;
 import isa.tim28.pharmacies.model.Patient;
+
 import isa.tim28.pharmacies.model.Pharmacist;
-import isa.tim28.pharmacies.model.PharmacistAppointment;
 import isa.tim28.pharmacies.model.Pharmacy;
 import isa.tim28.pharmacies.model.PharmacyAdmin;
 import isa.tim28.pharmacies.model.Rating;
@@ -228,6 +232,21 @@ public class PharmacistService implements IPharmacistService {
 					"Email must have between 3 and 30 characters and contain @. Try again.");
 		if (!user.isPasswordValid())
 			throw new CreatePharmacistException("Password must have between 4 and 30 characters. Try again.");
+		
+		if(dto.getMondayStart().isAfter(dto.getMondayEnd()))
+			throw new CreatePharmacistException("Start time must be before end time!");
+		if(dto.getTuesdayStart().isAfter(dto.getTuesdayEnd()))
+			throw new CreatePharmacistException("Start time must be before end time!");
+		if(dto.getWednesdayStart().isAfter(dto.getWednesdayEnd()))
+			throw new CreatePharmacistException("Start time must be before end time!");
+		if(dto.getThursdayStart().isAfter(dto.getThursdayEnd()))
+			throw new CreatePharmacistException("Start time must be before end time!");
+		if(dto.getFridayStart().isAfter(dto.getFridayEnd()))
+			throw new CreatePharmacistException("Start time must be before end time!");
+		if(dto.getSaturdayStart().isAfter(dto.getSaturdayEnd()))
+			throw new CreatePharmacistException("Start time must be before end time!");
+		if(dto.getSundayStart().isAfter(dto.getSundayEnd()))
+			throw new CreatePharmacistException("Start time must be before end time!");
 
 		EngagementInPharmacy engagement = new EngagementInPharmacy();
 		Set<DailyEngagement> dailyEngagements = new HashSet<DailyEngagement>();

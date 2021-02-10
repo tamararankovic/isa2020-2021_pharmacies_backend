@@ -206,6 +206,7 @@ public class PharmacistAppointmentService implements IPharmacistAppointmentServi
 					MedicineMissingNotification notification = new MedicineMissingNotification();
 					notification.setMedicine(mq.getMedicine());
 					notification.setPharmacy(pharmacy);
+					notification.setTimestamp(LocalDateTime.now());
 					medicineMissingNotificationRepository.save(notification);
 				}
 				return dto;
@@ -407,15 +408,12 @@ public class PharmacistAppointmentService implements IPharmacistAppointmentServi
 	public List<PharmAppDTO> getAppointmentsByWeek(PharmAppByWeekDTO dto, long userId) {
 		try {
 			Pharmacist pharmacist = pharmacistRepository.findOneByUser_Id(userId);
-			Set<PharmacistAppointment> pharmAppointments = appointmentRepository
-					.findAllByPharmacist_Id(pharmacist.getId());
+			Set<PharmacistAppointment> pharmAppointments = appointmentRepository.findAllByPharmacist_Id(pharmacist.getId());
 			List<PharmAppDTO> dtos = new ArrayList<PharmAppDTO>();
 			for (PharmacistAppointment app : pharmAppointments) {
-				if (!isDateInInterval(app.getStartDateTime().toLocalDate(), dto.getStartDate(), dto.getEndDate())
-						&& !app.isDone()) {
+				if (isDateInInterval(app.getStartDateTime().toLocalDate(), dto.getStartDate(), dto.getEndDate()) && !app.isDone()) {
 					String startTime = app.getStartDateTime().format(DateTimeFormatter.ofPattern("HH:mm, dd.MM.yyyy."));
-					dtos.add(new PharmAppDTO(app.getId(), startTime, app.getDefaultDurationInMinutes(),
-							app.getPatient().getUser().getFullName()));
+					dtos.add(new PharmAppDTO(app.getId(), startTime, app.getDefaultDurationInMinutes(), app.getPatient().getUser().getFullName()));
 				}
 			}
 			return dtos;
@@ -428,8 +426,7 @@ public class PharmacistAppointmentService implements IPharmacistAppointmentServi
 	public List<PharmAppDTO> getAppointmentsByMonth(PharmAppByMonthDTO dto, long userId) {
 		try {
 			Pharmacist pharmacist = pharmacistRepository.findOneByUser_Id(userId);
-			Set<PharmacistAppointment> pharmAppointments = appointmentRepository
-					.findAllByPharmacist_Id(pharmacist.getId());
+			Set<PharmacistAppointment> pharmAppointments = appointmentRepository.findAllByPharmacist_Id(pharmacist.getId());
 			List<PharmAppDTO> dtos = new ArrayList<PharmAppDTO>();
 			for (PharmacistAppointment app : pharmAppointments) {
 				if (app.getStartDateTime().getYear() == dto.getYear()
@@ -449,8 +446,7 @@ public class PharmacistAppointmentService implements IPharmacistAppointmentServi
 	public List<PharmAppDTO> getAppointmentsByYear(PharmAppByYearDTO dto, long userId) {
 		try {
 			Pharmacist pharmacist = pharmacistRepository.findOneByUser_Id(userId);
-			Set<PharmacistAppointment> pharmAppointments = appointmentRepository
-					.findAllByPharmacist_Id(pharmacist.getId());
+			Set<PharmacistAppointment> pharmAppointments = appointmentRepository.findAllByPharmacist_Id(pharmacist.getId());
 			List<PharmAppDTO> dtos = new ArrayList<PharmAppDTO>();
 			for (PharmacistAppointment app : pharmAppointments) {
 				if (app.getStartDateTime().getYear() == dto.getYear() && !app.isDone()) {

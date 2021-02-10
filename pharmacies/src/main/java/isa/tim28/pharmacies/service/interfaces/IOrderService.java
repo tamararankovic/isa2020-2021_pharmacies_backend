@@ -11,7 +11,9 @@ import isa.tim28.pharmacies.dtos.UpdateOrderDTO;
 import isa.tim28.pharmacies.exceptions.ForbiddenOperationException;
 import isa.tim28.pharmacies.exceptions.NewOrderInvalidException;
 import isa.tim28.pharmacies.exceptions.OrderNotFoundException;
+import isa.tim28.pharmacies.model.Medicine;
 import isa.tim28.pharmacies.model.Order;
+import isa.tim28.pharmacies.model.Pharmacy;
 import isa.tim28.pharmacies.model.PharmacyAdmin;
 
 public interface IOrderService {
@@ -33,4 +35,6 @@ public interface IOrderService {
 	Order save(Order patient);
 
 	Set<Order> getAllOrdersForSupplier();
+	
+	public boolean pharmacyHasActiveOrdersForMedicine(Pharmacy pharmacy, Medicine medicine);
 }
