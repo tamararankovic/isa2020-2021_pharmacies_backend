@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import isa.tim28.pharmacies.dtos.CurrentlyHasAppointmentDTO;
 import isa.tim28.pharmacies.dtos.DermatologistAppointmentDTO;
 import isa.tim28.pharmacies.dtos.DermatologistReportDTO;
 import isa.tim28.pharmacies.dtos.LeaveDTO;
@@ -72,4 +73,7 @@ public interface IPharmacistAppointmentService {
 
 	List<ShowCounselingDTO> getAllIncomingCounsellings(long id, boolean past);
 
+	CurrentlyHasAppointmentDTO isPharmacistInAppointment(long userId);
+	
+	void endCurrentAppointment(long userId);
 }

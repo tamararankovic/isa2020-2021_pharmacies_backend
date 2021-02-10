@@ -23,6 +23,7 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import isa.tim28.pharmacies.dtos.CurrentlyHasAppointmentDTO;
 import isa.tim28.pharmacies.dtos.DermatologistAppointmentDTO;
 import isa.tim28.pharmacies.dtos.DermatologistReportDTO;
 import isa.tim28.pharmacies.dtos.LeaveDTO;
@@ -146,26 +147,16 @@ public class PharmacistAppointmentService implements IPharmacistAppointmentServi
 			therapies.add(therapy);
 			reservationCodes = reservationCodes + medicine.getCode() + "; ";
 			updateMedicineQuantity(medicine.getId(), app.getId());
-			/*
-			 * Reservation reservation = new Reservation();
-			 * reservation.setMedicine(medicine); reservation.setPatient(app.getPatient());
-			 * reservation.setPharmacy(app.getPharmacy()); reservation.setReceived(false);
-			 * reservation.setAppointment(app.getId());
-			 * reservation.setDueDate(LocalDate.now().plusDays(1));
-			 * reservationRepository.save(reservation);
-			 */
 		}
 		report.setTherapies(therapies);
 		pharmacistReportRepository.save(report);
 		app.setDone(true);
 		appointmentRepository.save(app);
+		
+		Pharmacist pharmacist = app.getPharmacist();
+		pharmacist.setCurrentlyHasAppointment(false);
+		pharmacistRepository.save(pharmacist);
 
-		/*
-		 * Set<Reservation> reservations =
-		 * reservationRepository.findAllByAppointment(app.getId()); String
-		 * reservationCodes = ""; for(Reservation res : reservations) { reservationCodes
-		 * = reservationCodes + res.getId() + "; "; }
-		 */
 		return reservationCodes;
 	}
 
@@ -635,5 +626,35 @@ public class PharmacistAppointmentService implements IPharmacistAppointmentServi
 		//moze 10 minuta ranije i moze da kasni do 29 minuta
 		if(!startTime.isBefore(LocalDateTime.now().minusMinutes(29)) && !startTime.isAfter(LocalDateTime.now().plusMinutes(10))) return true;
 		return false;
+	}
+
+	@Override
+	public CurrentlyHasAppointmentDTO isPharmacistInAppointment(long userId) {
+		try {
+			Pharmacist pharmacist = pharmacistRepository.findOneByUser_Id(userId);
+			if(!pharmacist.isCurrentlyHasAppointment()) {
+				pharmacist.setCurrentlyHasAppointment(true);
+				pharmacistRepository.save(pharmacist);
+				return new CurrentlyHasAppointmentDTO(false);
+			}
+			else return new CurrentlyHasAppointmentDTO(true);
+		} catch(Exception e) {
+			return new CurrentlyHasAppointmentDTO(true);
+		}
+	}
+
+	@Override
+	public void endCurrentAppointment(long userId) {
+		try {
+			Pharmacist pharmacist = pharmacistRepository.findOneByUser_Id(userId);
+			if(pharmacist.isCurrentlyHasAppointment()) {
+				pharmacist.setCurrentlyHasAppointment(false);
+				pharmacistRepository.save(pharmacist);
+			}
+			else return;
+		} catch(Exception e) {
+			return;
+		}
+		
 	}
 }

@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 
+import isa.tim28.pharmacies.dtos.CurrentlyHasAppointmentDTO;
 import isa.tim28.pharmacies.dtos.DermatologistAppointmentDTO;
 import isa.tim28.pharmacies.dtos.DermatologistReportDTO;
 import isa.tim28.pharmacies.dtos.ExistingDermatologistAppointmentDTO;
@@ -78,4 +79,7 @@ public interface IDermatologistAppointmentService {
 	
 	void createPredefinedAppointment(Dermatologist dermatologist, LocalDateTime startDateTime, int durationInMinutes, long price, Pharmacy pharmacy) throws ForbiddenOperationException;
 	
+	CurrentlyHasAppointmentDTO isDermatologistInAppointment(long userId);
+	
+	void endCurrentAppointment(long userId);
 }

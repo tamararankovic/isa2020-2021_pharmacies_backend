@@ -14,6 +14,7 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import isa.tim28.pharmacies.dtos.CurrentlyHasAppointmentDTO;
 import isa.tim28.pharmacies.dtos.DermatologistAppointmentDTO;
 import isa.tim28.pharmacies.dtos.DermatologistReportDTO;
 import isa.tim28.pharmacies.dtos.ExistingDermatologistAppointmentDTO;
@@ -127,28 +128,16 @@ public class DermatologistAppointmentService implements IDermatologistAppointmen
 			therapies.add(therapy);
 			reservationCodes = reservationCodes + medicine.getCode() + "; ";
 			updateMedicineQuantity(medicine.getId(), app.getId());
-			/*
-			Reservation reservation = new Reservation();
-			reservation.setMedicine(medicine);
-			reservation.setPatient(app.getPatient());
-			reservation.setPharmacy(app.getPharmacy());
-			reservation.setReceived(false);
-			reservation.setAppointment(app.getId());
-			reservation.setDueDate(LocalDate.now().plusDays(1));
-			reservationRepository.save(reservation);
-			*/
 		}
 		report.setTherapies(therapies);
 		dermatologistReportRepository.save(report);
 		app.setDone(true);
 		appointmentRepository.save(app);
+		Dermatologist dermatologist = app.getDermatologist();
 		
-		/*
-		Set<Reservation> reservations = reservationRepository.findAllByAppointment(app.getId());
-		String reservationCodes = "";
-		for(Reservation res : reservations) {
-			reservationCodes = reservationCodes + res.getId() + "; ";
-		}*/
+		dermatologist.setCurrentlyHasAppointment(false);
+		dermatologistRepository.save(dermatologist);
+		
 		return reservationCodes;
 	}
 
@@ -282,18 +271,15 @@ public class DermatologistAppointmentService implements IDermatologistAppointmen
 		try{ 
 			DermatologistAppointment lastAppointment = appointmentRepository.findById(lastAppointmentId).get();
 			if(lastAppointment == null) return null;
-			System.out.println("Pronasao je appointment...");
 			Set<ExistingDermatologistAppointmentDTO> dtos = new HashSet<ExistingDermatologistAppointmentDTO>();
 			Set<DermatologistAppointment> dermAppointments = appointmentRepository.findAllByDermatologist_Id(lastAppointment.getDermatologist().getId());
 			for(DermatologistAppointment appointment : dermAppointments) {
-				System.out.println("Prvi appointment je appointment id = " + appointment.getId());
 				if(!appointment.isScheduled()) {
 					String dateTime = appointment.getStartDateTime().format(DateTimeFormatter.ofPattern("HH:mm, dd.MM.yyyy.")).toString();
 					ExistingDermatologistAppointmentDTO dto = new ExistingDermatologistAppointmentDTO(appointment.getId(), dateTime, appointment.getDefaultDurationInMinutes(), appointment.getPrice());
 					dtos.add(dto);
 				}
 			}
-			System.out.println("NEMA VISE...");
 			return dtos;
 		} catch(Exception e) {
 			return null;
@@ -578,5 +564,35 @@ public class DermatologistAppointmentService implements IDermatologistAppointmen
 		predefined.setScheduled(false);
 		predefined.setStartDateTime(startDateTime);
 		appointmentRepository.save(predefined);
+	}
+
+	@Override
+	public CurrentlyHasAppointmentDTO isDermatologistInAppointment(long userId) {
+		try {
+			Dermatologist dermatologist = dermatologistRepository.findOneByUser_Id(userId);
+			if(!dermatologist.isCurrentlyHasAppointment()) {
+				dermatologist.setCurrentlyHasAppointment(true);
+				dermatologistRepository.save(dermatologist);
+				return new CurrentlyHasAppointmentDTO(false);
+			}
+			else return new CurrentlyHasAppointmentDTO(true);
+		} catch(Exception e) {
+			return new CurrentlyHasAppointmentDTO(true);
+		}
+	}
+
+	@Override
+	public void endCurrentAppointment(long userId) {
+		try {
+			Dermatologist dermatologist = dermatologistRepository.findOneByUser_Id(userId);
+			if(dermatologist.isCurrentlyHasAppointment()) {
+				dermatologist.setCurrentlyHasAppointment(false);
+				dermatologistRepository.save(dermatologist);
+			}
+			else return;
+		} catch(Exception e) {
+			return;
+		}
+		
 	}
 }

@@ -19,6 +19,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
+
+import isa.tim28.pharmacies.dtos.CurrentlyHasAppointmentDTO;
 import isa.tim28.pharmacies.dtos.DermatologistAppointmentDTO;
 import isa.tim28.pharmacies.dtos.DermatologistReportDTO;
 import isa.tim28.pharmacies.dtos.IsAllergicDTO;
@@ -729,9 +731,47 @@ public class PharmacistController {
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No logged in user!");
 		}
 		if(loggedInUser.getRole() != Role.PHARMACIST) {
-			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only pharmacist can startAppointment.");
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only pharmacist can start appointment.");
 		}
 		PharmAppDTO dto = pharmacistAppointmentService.hasAppointmentWithPatient(loggedInUser.getId(), patientId);
 		return new ResponseEntity<>(dto, HttpStatus.OK);
+	}
+	
+	/*
+	 url: GET localhost:8081/pharm/isPharmacistInAppointment
+	 HTTP request checking if pharmacist can start new appointment
+	 returns ResponseEntity object
+	*/
+	@GetMapping(value = "/isPharmacistInAppointment", produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<CurrentlyHasAppointmentDTO> isPharmacistInAppointment(HttpSession session){
+		
+		User loggedInUser = (User) session.getAttribute("loggedInUser");
+		if(loggedInUser == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No logged in user!");
+		}
+		if(loggedInUser.getRole() != Role.PHARMACIST) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only pharmacist can start appointment.");
+		}
+		CurrentlyHasAppointmentDTO dto = pharmacistAppointmentService.isPharmacistInAppointment(loggedInUser.getId());
+		return new ResponseEntity<>(dto, HttpStatus.OK);
+	}
+	
+	/*
+	 url: GET localhost:8081/pharm/endCurrent
+	 HTTP request for ending current appointment
+	 returns ResponseEntity object
+	*/
+	@GetMapping(value = "/endCurrent", produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<String> endCurrent(HttpSession session){
+		
+		User loggedInUser = (User) session.getAttribute("loggedInUser");
+		if(loggedInUser == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No logged in user!");
+		}
+		if(loggedInUser.getRole() != Role.PHARMACIST) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only pharmacist can end appointment.");
+		}
+		pharmacistAppointmentService.endCurrentAppointment(loggedInUser.getId());
+		return new ResponseEntity<>("", HttpStatus.OK);
 	}
 }

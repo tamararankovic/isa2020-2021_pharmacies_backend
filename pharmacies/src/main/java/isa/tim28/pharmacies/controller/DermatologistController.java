@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+import isa.tim28.pharmacies.dtos.CurrentlyHasAppointmentDTO;
 import isa.tim28.pharmacies.dtos.DermPharmacyDTO;
 import isa.tim28.pharmacies.dtos.DermatologistAppointmentDTO;
 import isa.tim28.pharmacies.dtos.DermatologistDTO;
@@ -716,5 +717,43 @@ public class DermatologistController {
 			}
 		}
 		throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You don't have required permissions!");
+	}
+	
+	/*
+	 url: GET localhost:8081/derm/isDermatologistInAppointment
+	 HTTP request checking if dermatologist can start new appointment
+	 returns ResponseEntity object
+	*/
+	@GetMapping(value = "/isDermatologistInAppointment", produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<CurrentlyHasAppointmentDTO> startAppointmentForPatient(HttpSession session){
+		
+		User loggedInUser = (User) session.getAttribute("loggedInUser");
+		if(loggedInUser == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No logged in user!");
+		}
+		if(loggedInUser.getRole() != Role.DERMATOLOGIST) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only dermatologist can start appointment.");
+		}
+		CurrentlyHasAppointmentDTO dto = dermatologistAppointmentService.isDermatologistInAppointment(loggedInUser.getId());
+		return new ResponseEntity<>(dto, HttpStatus.OK);
+	}
+	
+	/*
+	 url: GET localhost:8081/derm/endCurrent
+	 HTTP request for ending current appointment
+	 returns ResponseEntity object
+	*/
+	@GetMapping(value = "/endCurrent", produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<String> endCurrent(HttpSession session){
+		
+		User loggedInUser = (User) session.getAttribute("loggedInUser");
+		if(loggedInUser == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No logged in user!");
+		}
+		if(loggedInUser.getRole() != Role.DERMATOLOGIST) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only dermatologist can end appointment.");
+		}
+		dermatologistAppointmentService.endCurrentAppointment(loggedInUser.getId());
+		return new ResponseEntity<>("", HttpStatus.OK);
 	}
 }

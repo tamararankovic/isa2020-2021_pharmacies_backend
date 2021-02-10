@@ -4,6 +4,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import javax.persistence.CascadeType;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
@@ -27,6 +28,9 @@ public class Pharmacist {
 	
 	@OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
 	private Set<Rating> ratings = new HashSet<Rating>();
+	
+	@Column(name = "currentlyHasAppointment", nullable = false)
+	private boolean currentlyHasAppointment = false;
 
 	public Pharmacist() {
 		super();
@@ -38,6 +42,7 @@ public class Pharmacist {
 		this.user = user;
 		this.engegementInPharmacy = engegementInPharmacy;
 		this.ratings = ratings;
+		this.currentlyHasAppointment = false;
 	}
 
 	public long getId() {
@@ -70,6 +75,14 @@ public class Pharmacist {
 
 	public void setRatings(Set<Rating> ratings) {
 		this.ratings = ratings;
+	}
+	
+	public boolean isCurrentlyHasAppointment() {
+		return currentlyHasAppointment;
+	}
+
+	public void setCurrentlyHasAppointment(boolean currentlyHasAppointment) {
+		this.currentlyHasAppointment = currentlyHasAppointment;
 	}
 	
 }
