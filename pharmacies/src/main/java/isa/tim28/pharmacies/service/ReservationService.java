@@ -58,15 +58,11 @@ public class ReservationService implements IReservationService {
 	}
 	
 	@Override
-	public List<ReservationDTO> getReservationByPatient(long userId) {
+	public List<ReservationDTO> getReservationByPatient(long userId) throws UserDoesNotExistException {
 		
 		long id = 0;
-		try {
-			id = patientService.getPatientById(userId).getId();
-		} catch (UserDoesNotExistException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		id = patientService.getPatientById(userId).getId();
+		
 		
 		List<ReservationDTO> result = new ArrayList<ReservationDTO>();
 		List<Reservation> reservations = reservationRepository.findByPatient_Id(id);
@@ -110,17 +106,14 @@ public class ReservationService implements IReservationService {
 	}
 
 	@Override
-	public List<ReservationDTO> cancelReservation(ReservationDTO dto, long id) {
+	public List<ReservationDTO> cancelReservation(ReservationDTO dto, long id) throws UserDoesNotExistException {
 		
 		CancelledReservation cancelled  = new CancelledReservation();
 		cancelled.setMedicine(dto.getMedicine());
 		cancelled.setPharmacy(dto.getPharmacy());
-		try {
-			cancelled.setPatient(patientService.getPatientById(id));
-		} catch (UserDoesNotExistException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		
+		cancelled.setPatient(patientService.getPatientById(id));
+		
 		
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm"); 
 		LocalDateTime dateTime = LocalDateTime.parse(dto.getDate(), formatter);
@@ -138,15 +131,12 @@ public class ReservationService implements IReservationService {
 	}
 	
 	@Override
-	public Reservation makeReservation(ReservationDTO dto, User loggedInUser) {
+	public Reservation makeReservation(ReservationDTO dto, User loggedInUser) throws UserDoesNotExistException, MessagingException {
 		Reservation res = new Reservation();
 		res.setMedicine(medicineService.getByName(dto.getMedicine()));
-		try {
+		
 			res.setPatient(patientService.getPatientById(loggedInUser.getId()));
-		} catch (UserDoesNotExistException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		
 		res.setPharmacy(pharmacyService.getByName(dto.getPharmacy()));
 		res.setReceived(false);
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm"); 
@@ -155,12 +145,9 @@ public class ReservationService implements IReservationService {
 		res.setDueDate(dateTime);
 		
 		Reservation reservation = reservationRepository.save(res);
-		try {
+
 			emailService.sendReservationMadeEmailAsync(loggedInUser.getFullName(), "pajapataktevoli@gmail.com",dto.getMedicine(), reservation.getId());
-		} catch (MessagingException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+	
 		
 		return res;
 	}

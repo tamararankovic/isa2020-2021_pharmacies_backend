@@ -473,7 +473,7 @@ public class PharmacistAppointmentService implements IPharmacistAppointmentServi
 	}
 
 	public PharmacistAppointment patientSaveApp(PharmacistAppointmentDTO dto, User loggedInUser)
-			throws UserDoesNotExistException {
+			throws UserDoesNotExistException, MessagingException {
 		PharmacistAppointment app = new PharmacistAppointment();
 		app.setPatient(patientRepository.findOneByUser_Id(loggedInUser.getId()));
 		app.setDone(false);
@@ -493,13 +493,9 @@ public class PharmacistAppointmentService implements IPharmacistAppointmentServi
 
 		PharmacistAppointment savedApp = appointmentRepository.save(app);
 
-		try {
 			emailService.sendCounselingScheduled(loggedInUser.getFullName(), "pajapataktevoli@gmail.com",
 					savedApp.getPharmacist().getUser().getFullName(), dto.getDate());
-		} catch (MessagingException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		
 		return app;
 
 	}

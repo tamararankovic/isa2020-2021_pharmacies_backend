@@ -161,8 +161,8 @@ public class ComplaintController {
 				return new ResponseEntity<>("This complaint has already been answered.", HttpStatus.BAD_REQUEST);
 			}
 		} catch (MessagingException e) {
-			e.printStackTrace();
-		}
+			return new ResponseEntity<>("Mail not sent.", HttpStatus.BAD_REQUEST);
+}
 		
 		return new ResponseEntity<>("", HttpStatus.CREATED);
 		

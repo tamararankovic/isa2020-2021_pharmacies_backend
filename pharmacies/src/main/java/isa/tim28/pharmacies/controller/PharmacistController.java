@@ -617,8 +617,10 @@ public class PharmacistController {
 		try {
 			appointment = pharmacistAppointmentService.patientSaveApp(dto, loggedInUser);
 		} catch (UserDoesNotExistException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No user found!");
+		} catch (MessagingException e) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Mail not sent");
+
 		}
 		return new ResponseEntity<String>("sacuvan",HttpStatus.OK);
 	}
