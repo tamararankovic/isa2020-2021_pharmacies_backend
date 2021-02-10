@@ -123,44 +123,65 @@ public class PharmacyService implements IPharmacyService {
 	public boolean answerOnComplaint(AnswerOnComplaintDTO answer) throws MessagingException {
 		System.out.println(answer.getType());
 		if(answer.getType().equals("PHARMACY")) {
-			PharmacyComplaint pc = pharmacyComplaintRepository.findById(answer.getComplaintId()).get();
+			Optional<PharmacyComplaint> pcc = pharmacyComplaintRepository.findById(answer.getComplaintId());
+		 if(!pcc.isEmpty()) {
+			PharmacyComplaint pc = pcc.get();
 			if(pc.getReply().equals(" ")) {
 			    pc.setReply(answer.getAnswer());
 				pharmacyComplaintRepository.save(pc);
-				Patient patient = patientRepository.findById(pc.getPatient().getId()).get();
-				Pharmacy pharmacy = pharmacyRepository.findById(pc.getPharmacy().getId()).get();
+				Optional<Patient> patientOp = patientRepository.findById(pc.getPatient().getId());
+				Patient patient = patientOp.get();
+				Optional<Pharmacy> pharmacyOp = pharmacyRepository.findById(pc.getPharmacy().getId());
+				Pharmacy pharmacy = pharmacyOp.get();
 				emailService.sendResponseOnComplaint(String.join(" ", patient.getUser().getName(), patient.getUser().getSurname()), answer.getAnswer(), patient.getUser().getEmail(), pharmacy.getName());
 				return true;
 			}else {
 				return false;
-			}		
+			}
+		}else {
+			return false;
+		}
 	}	
 		else if(answer.getType().equals("DERMATOLOGIST")) {
-			DermatologistComplaint dc = dermatologistComplaintRepository.findById(answer.getComplaintId()).get();
-			if(dc.getReply().equals("")) {
+			Optional<DermatologistComplaint> dcc = dermatologistComplaintRepository.findById(answer.getComplaintId());
+			if(!dcc.isEmpty()) {
+				DermatologistComplaint dc = dcc.get();
+				if(dc.getReply().equals("")) {
 				dc.setReply(answer.getAnswer());
 				dermatologistComplaintRepository.save(dc);
-				Patient patient = patientRepository.findById(dc.getPatient().getId()).get();
-				Dermatologist dermatologist = dermatologistRepository.findById(dc.getDermatologist().getId()).get();
+				Optional<Patient> patientOp = patientRepository.findById(dc.getPatient().getId());
+				Patient patient = patientOp.get();
+				Optional<Dermatologist> dermatologistOp = dermatologistRepository.findById(dc.getDermatologist().getId());
+				Dermatologist dermatologist = dermatologistOp.get();
 				emailService.sendResponseOnComplaint(String.join(" ", patient.getUser().getName(), patient.getUser().getSurname()), answer.getAnswer(), patient.getUser().getEmail(), String.join(" ", dermatologist.getUser().getName(),dermatologist.getUser().getSurname()));
 				return true;
 			}else {
 				return false;
 			}
+		}else {
+			return false;
+		}
 	}	
 		else {
-			PharmacistComplaint pc = pharmacistComplaintRepository.findById(answer.getComplaintId()).get();
-			if(pc.getReply().equals("")) {
+			Optional<PharmacistComplaint> pcc = pharmacistComplaintRepository.findById(answer.getComplaintId());
+			if(!pcc.isEmpty()) {
+				PharmacistComplaint pc = pcc.get();
+				if(pc.getReply().equals("")) {
 				pc.setReply(answer.getAnswer());
 				pharmacistComplaintRepository.save(pc);
-				Patient patient = patientRepository.findById(pc.getPatient().getId()).get();
-				Pharmacist pharmacist = pharmacistRepository.findById(pc.getPharmacist().getId()).get();
+				Optional<Patient> patientOp = patientRepository.findById(pc.getPatient().getId());
+				Patient patient= patientOp.get();
+				Optional<Pharmacist> pharmacistOp = pharmacistRepository.findById(pc.getPharmacist().getId());
+				Pharmacist pharmacist= pharmacistOp.get();
 				emailService.sendResponseOnComplaint(String.join(" ", patient.getUser().getName(), patient.getUser().getSurname()), answer.getAnswer(), patient.getUser().getEmail(), String.join(" ", pharmacist.getUser().getName(),pharmacist.getUser().getSurname()));
 				return true;
 			}else {
 				return false;
 			}
+		}else {
+			return false;
 		}
+	}
 	
 }
 	@Override
