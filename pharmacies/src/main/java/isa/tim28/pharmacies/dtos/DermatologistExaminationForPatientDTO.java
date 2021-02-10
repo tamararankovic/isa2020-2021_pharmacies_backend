@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 
 public class DermatologistExaminationForPatientDTO {
 
+	private long id;
 	private LocalDateTime startDateTime;
 	private String dermatologist;
 	private double duration;
@@ -14,13 +15,22 @@ public class DermatologistExaminationForPatientDTO {
 		// TODO Auto-generated constructor stub
 	}
 
-	public DermatologistExaminationForPatientDTO(LocalDateTime startDateTime, String dermatologist,
+	public DermatologistExaminationForPatientDTO(long id,LocalDateTime startDateTime, String dermatologist,
 			double duration, double price) {
 		super();
+		this.id = id;
 		this.startDateTime = startDateTime;
 		this.dermatologist = dermatologist;
 		this.duration = duration;
 		this.price = price;
+	}
+	
+	public long getId() {
+		return id;
+	}
+
+	public void setId(long id) {
+		this.id = id;
 	}
 
 	public LocalDateTime getStartDateTime() {

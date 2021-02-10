@@ -7,6 +7,7 @@ import java.util.Set;
 
 import isa.tim28.pharmacies.dtos.DermatologistAppointmentDTO;
 import isa.tim28.pharmacies.dtos.DermatologistReportDTO;
+import isa.tim28.pharmacies.dtos.DoctorRatingDTO;
 import isa.tim28.pharmacies.dtos.ExistingDermatologistAppointmentDTO;
 import isa.tim28.pharmacies.dtos.LeaveDTO;
 import isa.tim28.pharmacies.dtos.LeaveViewDTO;
@@ -18,6 +19,7 @@ import isa.tim28.pharmacies.dtos.PharmAppByMonthDTO;
 import isa.tim28.pharmacies.dtos.PharmAppByWeekDTO;
 import isa.tim28.pharmacies.dtos.PharmAppByYearDTO;
 import isa.tim28.pharmacies.dtos.PharmAppDTO;
+import isa.tim28.pharmacies.dtos.ShowCounselingDTO;
 import isa.tim28.pharmacies.exceptions.ForbiddenOperationException;
 import isa.tim28.pharmacies.exceptions.UserDoesNotExistException;
 import isa.tim28.pharmacies.model.Dermatologist;
@@ -77,5 +79,9 @@ public interface IDermatologistAppointmentService {
 	PharmAppDTO hasAppointmentWithPatient(long userId, long patientId);
 	
 	void createPredefinedAppointment(Dermatologist dermatologist, LocalDateTime startDateTime, int durationInMinutes, long price, Pharmacy pharmacy) throws ForbiddenOperationException;
+
+	List<ShowCounselingDTO> getAllIncomingAppointments(long id, boolean past);
+	
+	List<DoctorRatingDTO> getAllDoctorsForRating(long id);
 	
 }

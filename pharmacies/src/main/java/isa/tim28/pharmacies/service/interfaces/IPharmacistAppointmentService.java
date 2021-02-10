@@ -6,6 +6,7 @@ import java.util.List;
 
 import isa.tim28.pharmacies.dtos.DermatologistAppointmentDTO;
 import isa.tim28.pharmacies.dtos.DermatologistReportDTO;
+import isa.tim28.pharmacies.dtos.DoctorRatingDTO;
 import isa.tim28.pharmacies.dtos.LeaveDTO;
 import isa.tim28.pharmacies.dtos.LeaveViewDTO;
 import isa.tim28.pharmacies.dtos.MedicineDTOM;
@@ -71,5 +72,9 @@ public interface IPharmacistAppointmentService {
 	boolean isPharmacistAvailable(Pharmacist pharmacist, LocalDateTime startDateTime);
 
 	List<ShowCounselingDTO> getAllIncomingCounsellings(long id, boolean past);
+	
+	boolean isPharmacistInPharmacy(Pharmacist pharmacist, LocalDateTime startDateTime);
+	
+	List<DoctorRatingDTO> getAllDoctorsForRating(long id);
 
 }

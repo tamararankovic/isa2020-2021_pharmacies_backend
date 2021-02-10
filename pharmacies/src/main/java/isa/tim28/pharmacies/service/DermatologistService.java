@@ -331,8 +331,5 @@ public class DermatologistService implements IDermatologistService {
 		appointmentService.createPredefinedAppointment(getDermatologistById(dermatologistId), startDateTime, durationInMinutes, price, pharmacy);
 	}
 	
-	public void cancelApp(long id) {
-		dermatologistRepository.deleteById(id);
-	}
 
 }

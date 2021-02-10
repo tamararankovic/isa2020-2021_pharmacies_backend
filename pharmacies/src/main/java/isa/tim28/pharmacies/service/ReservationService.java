@@ -157,7 +157,7 @@ public class ReservationService implements IReservationService {
 		
 		Reservation reservation = reservationRepository.save(res);
 		try {
-			emailService.sendReservationMadeEmailAsync(loggedInUser.getFullName(), "pajapataktevoli@gmail.com",dto.getMedicine(), reservation.getId());
+			emailService.sendReservationMadeEmailAsync(loggedInUser.getFullName(),loggedInUser.getEmail(),dto.getMedicine(), reservation.getId());
 		} catch (MessagingException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

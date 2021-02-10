@@ -239,6 +239,7 @@ public class PharmacyService implements IPharmacyService {
 		Set<DermatologistExaminationForPatientDTO> appDtos = new HashSet<DermatologistExaminationForPatientDTO>();
 		for (DermatologistAppointment a : appointments) {
 			DermatologistExaminationForPatientDTO appDto = new DermatologistExaminationForPatientDTO();
+			appDto.setId(a.getId());
 			appDto.setStartDateTime(a.getStartDateTime());
 			appDto.setDermatologist(
 					a.getDermatologist().getUser().getName() + " " + a.getDermatologist().getUser().getSurname());
@@ -483,7 +484,7 @@ public class PharmacyService implements IPharmacyService {
 			hasAvailablePharmacists = false;
 			Set<Pharmacist> pharmacists = pharmacistService.findAllByPharmacyId(p.getId());
 			for (Pharmacist pharm : pharmacists) {
-				if (pharmacistAppointmentService.isPharmacistAvailable(pharm, date)) {
+				if (pharmacistAppointmentService.isPharmacistAvailable(pharm, date) && pharmacistAppointmentService.isPharmacistInPharmacy(pharm, date)) {
 					hasAvailablePharmacists = true;
 				}
 			}

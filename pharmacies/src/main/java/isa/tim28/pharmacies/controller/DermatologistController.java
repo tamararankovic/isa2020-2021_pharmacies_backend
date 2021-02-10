@@ -23,10 +23,12 @@ import org.springframework.web.server.ResponseStatusException;
 import isa.tim28.pharmacies.dtos.DermPharmacyDTO;
 import isa.tim28.pharmacies.dtos.DermatologistAppointmentDTO;
 import isa.tim28.pharmacies.dtos.DermatologistDTO;
+import isa.tim28.pharmacies.dtos.DermatologistExaminationForPatientDTO;
 import isa.tim28.pharmacies.dtos.DermatologistProfileDTO;
 import isa.tim28.pharmacies.dtos.DermatologistReportDTO;
 import isa.tim28.pharmacies.dtos.DermatologistSaveAppointmentDTO;
 import isa.tim28.pharmacies.dtos.DermatologistToEmployDTO;
+import isa.tim28.pharmacies.dtos.DoctorRatingDTO;
 import isa.tim28.pharmacies.dtos.ExistingDermatologistAppointmentDTO;
 import isa.tim28.pharmacies.dtos.IsAllergicDTO;
 import isa.tim28.pharmacies.dtos.IsAppointmentAvailableDTO;
@@ -717,4 +719,34 @@ public class DermatologistController {
 		}
 		throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You don't have required permissions!");
 	}
+	
+	@PostMapping(value = "schedule", produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<String> scheduleApp(@RequestBody DermatologistExaminationForPatientDTO dto,HttpSession session){
+		
+		User loggedInUser = (User) session.getAttribute("loggedInUser");
+		if(loggedInUser == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No logged in user!");
+		}
+		if(loggedInUser.getRole() != Role.PATIENT) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only patient can schedule an appointment.");
+		}
+		dermatologistAppointmentService.scheduleApp(dto.getId(),loggedInUser);
+		return new ResponseEntity<>("zakazan",HttpStatus.OK);
+	}
+	
+	@GetMapping(value = "derm-rating")
+	public ResponseEntity<List<DoctorRatingDTO>> getAllDoctorsForRating(HttpSession session){
+		User loggedInUser = (User) session.getAttribute("loggedInUser");
+		if(loggedInUser == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No logged in user!");
+		}
+		if(loggedInUser.getRole() != Role.PATIENT) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only patinet can schedule appointments.");
+		}
+		
+		List< DoctorRatingDTO> res = dermatologistAppointmentService.getAllDoctorsForRating(loggedInUser.getId());
+		return new ResponseEntity<>(res,HttpStatus.OK);
+	}
+	
+	
 }

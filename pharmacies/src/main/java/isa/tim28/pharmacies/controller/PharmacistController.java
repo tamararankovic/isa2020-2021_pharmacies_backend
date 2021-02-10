@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 import isa.tim28.pharmacies.dtos.DermatologistAppointmentDTO;
 import isa.tim28.pharmacies.dtos.DermatologistReportDTO;
+import isa.tim28.pharmacies.dtos.DoctorRatingDTO;
 import isa.tim28.pharmacies.dtos.IsAllergicDTO;
 import isa.tim28.pharmacies.dtos.IsAppointmentAvailableDTO;
 import isa.tim28.pharmacies.dtos.LeaveDTO;
@@ -55,6 +56,7 @@ import isa.tim28.pharmacies.model.PharmacistAppointment;
 import isa.tim28.pharmacies.model.Reservation;
 import isa.tim28.pharmacies.model.Role;
 import isa.tim28.pharmacies.model.User;
+import isa.tim28.pharmacies.service.DermatologistAppointmentService;
 import isa.tim28.pharmacies.service.DermatologistService;
 import isa.tim28.pharmacies.service.EmailService;
 import isa.tim28.pharmacies.service.PharmacistAppointmentService;
@@ -70,14 +72,16 @@ public class PharmacistController {
 	private DermatologistService dermatologistService;
 	private IPharmacyAdminService pharmacyAdminService;
 	private PharmacistAppointmentService pharmacistAppointmentService;
+	private DermatologistAppointmentService dermatologistAppointmentService;
 	private EmailService emailService;
 	
 	@Autowired
-	public PharmacistController(PharmacistService pharmacistService, DermatologistService dermatologistService, PharmacistAppointmentService pharmacistAppointmentService, EmailService emailService, IPharmacyAdminService pharmacyAdminService) {
+	public PharmacistController(PharmacistService pharmacistService, DermatologistService dermatologistService, DermatologistAppointmentService dermatologistAppointmentService,PharmacistAppointmentService pharmacistAppointmentService, EmailService emailService, IPharmacyAdminService pharmacyAdminService) {
 		super();
 		this.pharmacistService = pharmacistService;
 		this.pharmacyAdminService = pharmacyAdminService;
 		this.dermatologistService = dermatologistService;
+		this.dermatologistAppointmentService = dermatologistAppointmentService;
 		this.emailService = emailService;
 		this.pharmacistAppointmentService = pharmacistAppointmentService;
 	}
@@ -639,14 +643,11 @@ public class PharmacistController {
 		}
 		
 		List< ShowCounselingDTO> res = pharmacistAppointmentService.getAllIncomingCounsellings(loggedInUser.getId(), false);
+		res.addAll(dermatologistAppointmentService.getAllIncomingAppointments(loggedInUser.getId(), false));
 		return new ResponseEntity<>(res,HttpStatus.OK);
 	}
 	
-	/*
-	 url: GET localhost:8081/pharm/allLeaveRequests
-	 HTTP request for all leave request list
-	 returns ResponseEntity object
-	*/
+	
 	@GetMapping(value = "/allLeaveRequests", produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<List<LeaveViewDTO>> allLeaveRequests(HttpSession session){
 		
@@ -662,7 +663,7 @@ public class PharmacistController {
 		
 	}
 	
-	@PostMapping(value = "past-app", produces = MediaType.APPLICATION_JSON_VALUE)
+	@GetMapping(value = "past-app")
 	public ResponseEntity<List<ShowCounselingDTO>> getPast(HttpSession session){
 		User loggedInUser = (User) session.getAttribute("loggedInUser");
 		if(loggedInUser == null) {
@@ -673,6 +674,20 @@ public class PharmacistController {
 		}
 		
 		List< ShowCounselingDTO> res = pharmacistAppointmentService.getAllIncomingCounsellings(loggedInUser.getId(), true);
+		return new ResponseEntity<>(res,HttpStatus.OK);
+	}
+	
+	@GetMapping(value = "past-app-derm")
+	public ResponseEntity<List<ShowCounselingDTO>> getPastApp(HttpSession session){
+		User loggedInUser = (User) session.getAttribute("loggedInUser");
+		if(loggedInUser == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No logged in user!");
+		}
+		if(loggedInUser.getRole() != Role.PATIENT) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only patinet can schedule appointments.");
+		}
+		
+		List< ShowCounselingDTO> res = dermatologistAppointmentService.getAllIncomingAppointments(loggedInUser.getId(), true);
 		return new ResponseEntity<>(res,HttpStatus.OK);
 	}
 	
@@ -709,7 +724,7 @@ public class PharmacistController {
 		if(dto.getType().equals("PHARMACIST")) {
 			pharmacistAppointmentService.cancelApp(dto.getId());
 		}else {
-			dermatologistService.cancelApp(dto.getId());
+			dermatologistAppointmentService.cancelDermApp(dto.getId());
 		}
 		
 		List< ShowCounselingDTO> res = pharmacistAppointmentService.getAllIncomingCounsellings(loggedInUser.getId(), false);
@@ -733,5 +748,20 @@ public class PharmacistController {
 		}
 		PharmAppDTO dto = pharmacistAppointmentService.hasAppointmentWithPatient(loggedInUser.getId(), patientId);
 		return new ResponseEntity<>(dto, HttpStatus.OK);
+	}
+	
+	
+	@GetMapping(value = "pharm-rating")
+	public ResponseEntity<List<DoctorRatingDTO>> getAllDoctorsForRating(HttpSession session){
+		User loggedInUser = (User) session.getAttribute("loggedInUser");
+		if(loggedInUser == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No logged in user!");
+		}
+		if(loggedInUser.getRole() != Role.PATIENT) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only patinet can schedule appointments.");
+		}
+		
+		List< DoctorRatingDTO> res = pharmacistAppointmentService.getAllDoctorsForRating(loggedInUser.getId());
+		return new ResponseEntity<>(res,HttpStatus.OK);
 	}
 }

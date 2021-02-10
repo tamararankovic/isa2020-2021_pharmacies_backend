@@ -258,7 +258,7 @@ public class PharmacistService implements IPharmacistService {
 			for (Rating r : pharm.getRatings())
 				sumOfRatings += r.getRating();
 
-			if (appointmentService.isPharmacistAvailable(pharm, date)) {
+			if (appointmentService.isPharmacistAvailable(pharm, date) && appointmentService.isPharmacistInPharmacy(pharm, date)) {
 				res.add(new PharmacistDTO(pharm.getId(), pharm.getUser().getName(), pharm.getUser().getSurname(),
 						pharm.getRatings().size() > 0 ? sumOfRatings / pharm.getRatings().size() : 0, ""));
 			}
