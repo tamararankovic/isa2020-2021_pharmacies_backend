@@ -1,5 +1,6 @@
 package isa.tim28.pharmacies.service.interfaces;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -10,6 +11,7 @@ import isa.tim28.pharmacies.dtos.AllComplaintsDTO;
 import isa.tim28.pharmacies.dtos.AnswerOnComplaintDTO;
 import isa.tim28.pharmacies.dtos.ComplaintDTO;
 import isa.tim28.pharmacies.dtos.MedicineSearchDTO;
+import isa.tim28.pharmacies.dtos.PharmaciesCounselingDTO;
 import isa.tim28.pharmacies.dtos.PharmacyAddAdminDTO;
 import isa.tim28.pharmacies.dtos.PharmacyBasicInfoDTO;
 import isa.tim28.pharmacies.dtos.PharmacyInfoForPatientDTO;
@@ -70,5 +72,7 @@ public interface IPharmacyService {
 	List<AllComplaintsDTO> getAllComplaints();
 
 	boolean answerOnComplaint(AnswerOnComplaintDTO answer) throws MessagingException;
+	
+	List<PharmaciesCounselingDTO> getPharmaciesWithAvailablePharmacists(LocalDateTime date);
 
 }

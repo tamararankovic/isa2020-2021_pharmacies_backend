@@ -406,7 +406,7 @@ public class DermatologistAppointmentService implements IDermatologistAppointmen
 			Set<DermatologistAppointment> dermAppointments = appointmentRepository.findAllByDermatologist_Id(dermatologist.getId());
 			List<PharmAppDTO> dtos = new ArrayList<PharmAppDTO>();
 			for (DermatologistAppointment app : dermAppointments) {
-				if(!isDateInInterval(app.getStartDateTime().toLocalDate(), dto.getStartDate(), dto.getEndDate()) && !app.isDone() && app.getPharmacy().getId() == pharmacyId) {
+				if(isDateInInterval(app.getStartDateTime().toLocalDate(), dto.getStartDate(), dto.getEndDate()) && !app.isDone() && app.getPharmacy().getId() == pharmacyId) {
 					String startTime = app.getStartDateTime().format(DateTimeFormatter.ofPattern("HH:mm, dd.MM.yyyy."));
 					String patientName = "";
 					if(app.isScheduled()) patientName = app.getPatient().getUser().getFullName();

@@ -6,6 +6,7 @@ import java.util.Set;
 import isa.tim28.pharmacies.dtos.ComplaintDTO;
 import isa.tim28.pharmacies.dtos.DermatologistForComplaintDTO;
 import isa.tim28.pharmacies.dtos.NewPharmacistDTO;
+import isa.tim28.pharmacies.dtos.PharmacistAppointmentDTO;
 import isa.tim28.pharmacies.dtos.PharmacistDTO;
 import isa.tim28.pharmacies.dtos.PharmacistProfileDTO;
 import isa.tim28.pharmacies.exceptions.BadNameException;
@@ -53,4 +54,6 @@ public interface IPharmacistService {
 	List<DermatologistForComplaintDTO> getAllPharmacists();
 
 	boolean createComplaint(Patient patient, ComplaintDTO dto) throws InvalidComplaintException, UserDoesNotExistException;
+	
+	List<PharmacistDTO> getAvailablePharmacistsByPharmacy(PharmacistAppointmentDTO dto);
 }

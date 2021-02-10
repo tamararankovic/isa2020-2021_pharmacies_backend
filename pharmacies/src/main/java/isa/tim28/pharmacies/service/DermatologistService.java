@@ -282,36 +282,50 @@ public class DermatologistService implements IDermatologistService {
 					if (dailyEngagement.isOverlappingWith(dto.getMondayStart().toLocalTime(), dto.getMondayEnd().toLocalTime())) {
 						throw new AddingDermatologistToPharmacyException("Working hours overlapping with other pharmacies. Day: MONDAY");
 					}
+					if(dto.getMondayStart().isAfter(dto.getMondayEnd()))
+						throw new AddingDermatologistToPharmacyException("Start time must be before end time!");
 				}
 				else if(dto.isTuesday() && dailyEngagement.getDayOfWeek() == DayOfWeek.TUESDAY) {
 					if (dailyEngagement.isOverlappingWith(dto.getTuesdayStart().toLocalTime(), dto.getTuesdayEnd().toLocalTime())) {
 						throw new AddingDermatologistToPharmacyException("Working hours overlapping with other pharmacies. Day: TUESDAY");
 					}
+					if(dto.getTuesdayStart().isAfter(dto.getTuesdayEnd()))
+						throw new AddingDermatologistToPharmacyException("Start time must be before end time!");
 				}
 				else if(dto.isWednesday() && dailyEngagement.getDayOfWeek() == DayOfWeek.WEDNESDAY) {
 					if (dailyEngagement.isOverlappingWith(dto.getWednesdayStart().toLocalTime(), dto.getWednesdayEnd().toLocalTime())) {
 						throw new AddingDermatologistToPharmacyException("Working hours overlapping with other pharmacies. Day: WEDNESDAY");
 					}
+					if(dto.getWednesdayStart().isAfter(dto.getWednesdayEnd()))
+						throw new AddingDermatologistToPharmacyException("Start time must be before end time!");
 				}
 				else if(dto.isThursday() && dailyEngagement.getDayOfWeek() == DayOfWeek.THURSDAY) {
 					if (dailyEngagement.isOverlappingWith(dto.getThursdayStart().toLocalTime(), dto.getThursdayEnd().toLocalTime())) {
 						throw new AddingDermatologistToPharmacyException("Working hours overlapping with other pharmacies. Day: THURSDAY");
 					}
+					if(dto.getThursdayStart().isAfter(dto.getThursdayEnd()))
+						throw new AddingDermatologistToPharmacyException("Start time must be before end time!");
 				}
 				else if(dto.isFriday() && dailyEngagement.getDayOfWeek() == DayOfWeek.FRIDAY) {
 					if (dailyEngagement.isOverlappingWith(dto.getFridayStart().toLocalTime(), dto.getFridayEnd().toLocalTime())) {
 						throw new AddingDermatologistToPharmacyException("Working hours overlapping with other pharmacies. Day: FRIDAY");
 					}
+					if(dto.getFridayStart().isAfter(dto.getFridayEnd()))
+						throw new AddingDermatologistToPharmacyException("Start time must be before end time!");
 				}
 				else if(dto.isSaturday() && dailyEngagement.getDayOfWeek() == DayOfWeek.SATURDAY) {
 					if (dailyEngagement.isOverlappingWith(dto.getSaturdayStart().toLocalTime(), dto.getSaturdayEnd().toLocalTime())) {
 						throw new AddingDermatologistToPharmacyException("Working hours overlapping with other pharmacies. Day: SATURDAY");
 					}
+					if(dto.getSaturdayStart().isAfter(dto.getSaturdayEnd()))
+						throw new AddingDermatologistToPharmacyException("Start time must be before end time!");
 				}
 				else if(dto.isSunday() && dailyEngagement.getDayOfWeek() == DayOfWeek.SUNDAY) {
 					if (dailyEngagement.isOverlappingWith(dto.getSundayStart().toLocalTime(), dto.getSundayEnd().toLocalTime())) {
 						throw new AddingDermatologistToPharmacyException("Working hours overlapping with other pharmacies. Day: SUNDAY");
 					}
+					if(dto.getSundayStart().isAfter(dto.getSundayEnd()))
+						throw new AddingDermatologistToPharmacyException("Start time must be before end time!");
 				}
 			}
 		}
@@ -392,6 +406,10 @@ public class DermatologistService implements IDermatologistService {
 		if (price <= 0 || durationInMinutes <= 0)
 			throw new ForbiddenOperationException("Duration and price must be greater than 0!");
 		appointmentService.createPredefinedAppointment(getDermatologistById(dermatologistId), startDateTime, durationInMinutes, price, pharmacy);
+	}
+	
+	public void cancelApp(long id) {
+		dermatologistRepository.deleteById(id);
 	}
 
 }

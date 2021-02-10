@@ -77,7 +77,7 @@ public class ReservationController {
 		if (loggedInUser.getRole() != Role.PATIENT) {
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only patient can view his profile data.");
 		}
-		Reservation res = reservationService.makeReservation(dto, loggedInUser.getId());
+		Reservation res = reservationService.makeReservation(dto, loggedInUser);
 		
 		return new ResponseEntity<>(HttpStatus.OK);
 		

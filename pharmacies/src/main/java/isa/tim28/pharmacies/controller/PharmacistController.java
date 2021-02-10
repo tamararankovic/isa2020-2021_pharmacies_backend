@@ -2,6 +2,7 @@ package isa.tim28.pharmacies.controller;
 
 import java.util.Set;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 import javax.mail.MessagingException;
@@ -38,9 +39,12 @@ import isa.tim28.pharmacies.dtos.PharmAppByMonthDTO;
 import isa.tim28.pharmacies.dtos.PharmAppByWeekDTO;
 import isa.tim28.pharmacies.dtos.PharmAppByYearDTO;
 import isa.tim28.pharmacies.dtos.PharmAppDTO;
+import isa.tim28.pharmacies.dtos.PharmaciesCounselingDTO;
+import isa.tim28.pharmacies.dtos.PharmacistAppointmentDTO;
 import isa.tim28.pharmacies.dtos.PharmacistProfileDTO;
 import isa.tim28.pharmacies.dtos.PharmacistSaveAppointmentDTO;
 import isa.tim28.pharmacies.dtos.ReservationValidDTO;
+import isa.tim28.pharmacies.dtos.ShowCounselingDTO;
 import isa.tim28.pharmacies.exceptions.BadNameException;
 import isa.tim28.pharmacies.exceptions.BadNewEmailException;
 import isa.tim28.pharmacies.exceptions.BadSurnameException;
@@ -481,6 +485,8 @@ public class PharmacistController {
 		else throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No appointment.");
 	}
 	
+	
+	
 	/*
 	 url: POST localhost:8081/pharm/appointment
 	 HTTP request for saving new appointment
@@ -581,6 +587,42 @@ public class PharmacistController {
 		return new ResponseEntity<>("", HttpStatus.OK);
 	}
 	
+	@PostMapping(value = "available-pharmacists",  produces = MediaType.APPLICATION_JSON_VALUE,consumes = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<List<PharmacistDTO>> getPharmaciesWithAvailablePharmacist(@RequestBody PharmacistAppointmentDTO dto, HttpSession session) {
+		User loggedInUser = (User) session.getAttribute("loggedInUser");
+		if (loggedInUser == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No logged in user!");
+		}
+		if (loggedInUser.getRole() != Role.PATIENT) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only patient can view his profile data.");
+		}
+		
+		List<PharmacistDTO> res = pharmacistService.getAvailablePharmacistsByPharmacy(dto);
+		
+		return new ResponseEntity<>(res,HttpStatus.OK);
+	}
+	
+	@PostMapping(value = "save-appointment", produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<String> patientSaveAppointment(@RequestBody PharmacistAppointmentDTO dto, HttpSession session){
+
+		User loggedInUser = (User) session.getAttribute("loggedInUser");
+		if(loggedInUser == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No logged in user!");
+		}
+		if(loggedInUser.getRole() != Role.PATIENT) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only patinet can schedule appointments.");
+		}
+		
+		PharmacistAppointment appointment;
+		try {
+			appointment = pharmacistAppointmentService.patientSaveApp(dto, loggedInUser);
+		} catch (UserDoesNotExistException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		return new ResponseEntity<String>("sacuvan",HttpStatus.OK);
+	}
+	
 	/*
 	 url: POST localhost:8081/pharm/newLeaveRequest
 	 HTTP request for saving new pharmacist leave request
@@ -598,6 +640,22 @@ public class PharmacistController {
 		}
 		pharmacistAppointmentService.saveLeaveRequest(dto, loggedInUser.getId());
 		return new ResponseEntity<>("", HttpStatus.OK);
+		
+	}
+	
+	@GetMapping(value = "incoming-app")
+	public ResponseEntity<List<ShowCounselingDTO>> getIncoming(HttpSession session){
+		
+		User loggedInUser = (User) session.getAttribute("loggedInUser");
+		if(loggedInUser == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No logged in user!");
+		}
+		if(loggedInUser.getRole() != Role.PATIENT) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only patinet can schedule appointments.");
+		}
+		
+		List< ShowCounselingDTO> res = pharmacistAppointmentService.getAllIncomingCounsellings(loggedInUser.getId(), false);
+		return new ResponseEntity<>(res,HttpStatus.OK);
 	}
 	
 	/*
@@ -617,6 +675,21 @@ public class PharmacistController {
 		}
 		List<LeaveViewDTO> dtos = pharmacistAppointmentService.allLeaveRequests(loggedInUser.getId());
 		return new ResponseEntity<>(dtos, HttpStatus.OK);
+		
+	}
+	
+	@PostMapping(value = "past-app", produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<List<ShowCounselingDTO>> getPast(HttpSession session){
+		User loggedInUser = (User) session.getAttribute("loggedInUser");
+		if(loggedInUser == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No logged in user!");
+		}
+		if(loggedInUser.getRole() != Role.PATIENT) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only patinet can schedule appointments.");
+		}
+		
+		List< ShowCounselingDTO> res = pharmacistAppointmentService.getAllIncomingCounsellings(loggedInUser.getId(), true);
+		return new ResponseEntity<>(res,HttpStatus.OK);
 	}
 	
 	/*
@@ -636,6 +709,27 @@ public class PharmacistController {
 		}
 		List<MyPatientDTO> dtos = pharmacistAppointmentService.myPatients(loggedInUser.getId());
 		return new ResponseEntity<>(dtos, HttpStatus.OK);
+	}
+	
+	@PostMapping(value = "cancel-app")
+	public ResponseEntity<List<ShowCounselingDTO>> getIncoming(@RequestBody ShowCounselingDTO dto,HttpSession session){
+		
+		User loggedInUser = (User) session.getAttribute("loggedInUser");
+		if(loggedInUser == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No logged in user!");
+		}
+		if(loggedInUser.getRole() != Role.PATIENT) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only patinet can schedule appointments.");
+		}
+		
+		if(dto.getType().equals("PHARMACIST")) {
+			pharmacistAppointmentService.cancelApp(dto.getId());
+		}else {
+			dermatologistService.cancelApp(dto.getId());
+		}
+		
+		List< ShowCounselingDTO> res = pharmacistAppointmentService.getAllIncomingCounsellings(loggedInUser.getId(), false);
+		return new ResponseEntity<>(res,HttpStatus.OK);
 	}
 	
 	/*
