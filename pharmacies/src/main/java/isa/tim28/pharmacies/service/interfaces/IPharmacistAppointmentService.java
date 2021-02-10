@@ -76,4 +76,6 @@ public interface IPharmacistAppointmentService {
 	CurrentlyHasAppointmentDTO isPharmacistInAppointment(long userId);
 	
 	void endCurrentAppointment(long userId);
+	
+	void updateMedicineQuantity(long medicineId, long appointmentId);
 }

@@ -11,6 +11,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
+import javax.persistence.Version;
 
 @Entity
 public class Dermatologist {
@@ -19,6 +20,9 @@ public class Dermatologist {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private long id;
 	
+	@Version
+	private Long version;
+
 	@OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
 	private User user;
 	
@@ -91,4 +95,12 @@ public class Dermatologist {
 		this.currentlyHasAppointment = currentlyHasAppointment;
 	}
 	
+	
+	public Long getVersion() {
+		return version;
+	}
+
+	public void setVersion(Long version) {
+		this.version = version;
+	}
 }

@@ -82,4 +82,6 @@ public interface IDermatologistAppointmentService {
 	CurrentlyHasAppointmentDTO isDermatologistInAppointment(long userId);
 	
 	void endCurrentAppointment(long userId);
+
+	void updateMedicineQuantity(long medicineId, long appointmentId);
 }

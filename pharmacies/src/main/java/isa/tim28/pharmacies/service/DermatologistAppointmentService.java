@@ -11,8 +11,12 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import javax.persistence.OptimisticLockException;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import isa.tim28.pharmacies.dtos.CurrentlyHasAppointmentDTO;
 import isa.tim28.pharmacies.dtos.DermatologistAppointmentDTO;
@@ -58,6 +62,7 @@ import isa.tim28.pharmacies.repository.PharmacistAppointmentRepository;
 import isa.tim28.pharmacies.service.interfaces.IDermatologistAppointmentService;
 
 @Service
+@Transactional(readOnly = true)
 public class DermatologistAppointmentService implements IDermatologistAppointmentService {
 
 	private DermatologistAppointmentRepository appointmentRepository;
@@ -112,33 +117,41 @@ public class DermatologistAppointmentService implements IDermatologistAppointmen
 	}
 
 	@Override
+	@Transactional(readOnly = false)
 	public String fillReport(DermatologistReportDTO dto) {
-		DermatologistReport report = new DermatologistReport();
-		DermatologistAppointment app = appointmentRepository.findById(dto.getAppointmentId()).get();
-		report.setAppointment(app);
-		report.setDiagnosis(dto.getDiagnosis());
-		Set<Therapy> therapies = new HashSet<Therapy>();
-		String reservationCodes = "";
-		
-		for(TherapyDTO t : dto.getTherapies()) {
-			Therapy therapy = new Therapy();
-			Medicine medicine = medicineRepository.findById(t.getMedicineId()).get();
-			therapy.setDurationInDays(t.getDurationInDays());
-			therapy.setMedicine(medicine);
-			therapies.add(therapy);
-			reservationCodes = reservationCodes + medicine.getCode() + "; ";
-			updateMedicineQuantity(medicine.getId(), app.getId());
+		try {
+			DermatologistReport report = new DermatologistReport();
+			DermatologistAppointment app = appointmentRepository.findById(dto.getAppointmentId()).get();
+			report.setAppointment(app);
+			report.setDiagnosis(dto.getDiagnosis());
+			Set<Therapy> therapies = new HashSet<Therapy>();
+			String reservationCodes = "";
+			
+			for(TherapyDTO t : dto.getTherapies()) {
+				Therapy therapy = new Therapy();
+				Medicine medicine = medicineRepository.findById(t.getMedicineId()).get();
+				therapy.setDurationInDays(t.getDurationInDays());
+				therapy.setMedicine(medicine);
+				therapies.add(therapy);
+				reservationCodes = reservationCodes + medicine.getCode() + "; ";
+				updateMedicineQuantity(medicine.getId(), app.getId());
+			}
+			report.setTherapies(therapies);
+			dermatologistReportRepository.save(report);
+			app.setDone(true);
+			appointmentRepository.save(app);
+			Dermatologist dermatologist = app.getDermatologist();
+			
+			dermatologist.setCurrentlyHasAppointment(false);
+			dermatologistRepository.save(dermatologist);
+			
+			return reservationCodes;
+			
+		} catch(OptimisticLockException e1) {
+			return "";
+		} catch(Exception e) {
+			return "";
 		}
-		report.setTherapies(therapies);
-		dermatologistReportRepository.save(report);
-		app.setDone(true);
-		appointmentRepository.save(app);
-		Dermatologist dermatologist = app.getDermatologist();
-		
-		dermatologist.setCurrentlyHasAppointment(false);
-		dermatologistRepository.save(dermatologist);
-		
-		return reservationCodes;
 	}
 
 	@Override
@@ -162,6 +175,7 @@ public class DermatologistAppointmentService implements IDermatologistAppointmen
 	}
 
 	@Override
+	@Transactional(readOnly = false)
 	public MedicineQuantityCheckDTO checkIfMedicineIsAvailable(long medicineId, long appointmentId) {
 		Pharmacy pharmacy = appointmentRepository.findById(appointmentId).get().getPharmacy();
 		Set<MedicineQuantity> medicines = pharmacy.getMedicines();
@@ -181,7 +195,9 @@ public class DermatologistAppointmentService implements IDermatologistAppointmen
 		return new MedicineQuantityCheckDTO(0);
 	}
 	
-	private void updateMedicineQuantity(long medicineId, long appointmentId) {
+	@Override
+	@Transactional(readOnly = false)
+	public void updateMedicineQuantity(long medicineId, long appointmentId) {
 		Set<MedicineQuantity> medicines = appointmentRepository.findById(appointmentId).get().getPharmacy().getMedicines();
 		for (MedicineQuantity mq : medicines) {
 			if (mq.getMedicine().getId() == medicineId) {
@@ -219,6 +235,7 @@ public class DermatologistAppointmentService implements IDermatologistAppointmen
 	}
 
 	@Override
+	@Transactional(readOnly = false)
 	public void deleteUnscheduledAppointments(Dermatologist dermatologist) {
 		Set<DermatologistAppointment> appointments = appointmentRepository.findAll().stream()
 														.filter(a -> a.getDermatologist().getId() == dermatologist.getId()
@@ -230,6 +247,7 @@ public class DermatologistAppointmentService implements IDermatologistAppointmen
 	}
 
 	@Override
+	@Transactional(readOnly = false)
 	public DermatologistAppointment saveDermatologistAppointment(long lastAppointmentId, long price, LocalDateTime startDateTime) {
 		try{ 
 			DermatologistAppointment lastAppointment = appointmentRepository.findById(lastAppointmentId).get();
@@ -251,6 +269,7 @@ public class DermatologistAppointmentService implements IDermatologistAppointmen
 	}
 	
 	@Override
+	@Transactional(readOnly = false)
 	public DermatologistAppointment saveExistingDermatologistAppointment(long lastAppointmentId, long newAppointmentId) {
 		try{ 
 			DermatologistAppointment lastAppointment = appointmentRepository.findById(lastAppointmentId).get();
@@ -446,6 +465,7 @@ public class DermatologistAppointmentService implements IDermatologistAppointmen
 	}
 
 	@Override
+	@Transactional(readOnly = false)
 	public void patientWasNotPresent(long appointmentId) {
 		try {
 			DermatologistAppointment app = appointmentRepository.findById(appointmentId).get();
@@ -463,6 +483,7 @@ public class DermatologistAppointmentService implements IDermatologistAppointmen
 	}
 
 	@Override
+	@Transactional(readOnly = false)
 	public void saveLeaveRequest(LeaveDTO dto, long userId) {
 		try {
 			Dermatologist dermatologist = dermatologistRepository.findOneByUser_Id(userId);
@@ -549,6 +570,7 @@ public class DermatologistAppointmentService implements IDermatologistAppointmen
 		return false;
 	}
 	
+	@Transactional(readOnly = false)
 	public void createPredefinedAppointment(Dermatologist dermatologist, LocalDateTime startDateTime, int durationInMinutes,
 			long price, Pharmacy pharmacy) throws ForbiddenOperationException {
 		if(!isDermatologistInPharmacy(dermatologist, startDateTime, startDateTime.plusMinutes(durationInMinutes), pharmacy))
@@ -567,6 +589,7 @@ public class DermatologistAppointmentService implements IDermatologistAppointmen
 	}
 
 	@Override
+	@Transactional(readOnly = false, propagation = Propagation.REQUIRES_NEW)
 	public CurrentlyHasAppointmentDTO isDermatologistInAppointment(long userId) {
 		try {
 			Dermatologist dermatologist = dermatologistRepository.findOneByUser_Id(userId);
@@ -576,12 +599,15 @@ public class DermatologistAppointmentService implements IDermatologistAppointmen
 				return new CurrentlyHasAppointmentDTO(false);
 			}
 			else return new CurrentlyHasAppointmentDTO(true);
+		} catch(OptimisticLockException e1) {
+			return new CurrentlyHasAppointmentDTO(true);
 		} catch(Exception e) {
 			return new CurrentlyHasAppointmentDTO(true);
 		}
 	}
 
 	@Override
+	@Transactional(readOnly = false)
 	public void endCurrentAppointment(long userId) {
 		try {
 			Dermatologist dermatologist = dermatologistRepository.findOneByUser_Id(userId);
@@ -590,6 +616,8 @@ public class DermatologistAppointmentService implements IDermatologistAppointmen
 				dermatologistRepository.save(dermatologist);
 			}
 			else return;
+		} catch(OptimisticLockException e1) {
+			return;
 		} catch(Exception e) {
 			return;
 		}

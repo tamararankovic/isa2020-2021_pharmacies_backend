@@ -12,6 +12,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
+import javax.persistence.Version;
 
 @Entity
 public class Pharmacist {
@@ -19,6 +20,9 @@ public class Pharmacist {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private long id;
+	
+	@Version
+	private Long version;
 	
 	@OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
 	private User user;
@@ -83,6 +87,14 @@ public class Pharmacist {
 
 	public void setCurrentlyHasAppointment(boolean currentlyHasAppointment) {
 		this.currentlyHasAppointment = currentlyHasAppointment;
+	}
+
+	public Long getVersion() {
+		return version;
+	}
+
+	public void setVersion(Long version) {
+		this.version = version;
 	}
 	
 }
