@@ -719,29 +719,7 @@ public class DermatologistAppointmentService implements IDermatologistAppointmen
 		}
 
 	}
-	@Override
-	public List<DoctorRatingDTO> getAllDoctorsForRating(long id){
-		List<DoctorRatingDTO> result = new ArrayList<DoctorRatingDTO>();
-		List<ShowCounselingDTO> past = getAllIncomingAppointments(id, true);
-		for(ShowCounselingDTO s : past) {
-			DoctorRatingDTO doctor = new DoctorRatingDTO(s.getDoctorId(),s.getPharmacistName(),0);
-			
-			if(!result.isEmpty()) {
-				boolean contains = false;
-				for(DoctorRatingDTO d : result) {
-					if(d.getId() == doctor.getId()) {
-						contains = true;
-					}
-				}
-				if(!contains) {
-					result.add(doctor);
-				}
-			}else {
-				result.add(doctor);
-			}
-		}
-		return result;
-	}
+	
 
 	public void cancelDermApp(long id) {
 		DermatologistAppointment da = appointmentRepository.findById(id).get();

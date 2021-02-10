@@ -209,5 +209,7 @@ public class MedicineService implements IMedicineService {
 				ret.add(new MedicineForPharmacyAdminDTO(m.getId(), m.getCode(), m.getName(), m.getType().toString(), m.getManufacturer(), false));
 		return ret;
 	}
+	
+	
 
 }

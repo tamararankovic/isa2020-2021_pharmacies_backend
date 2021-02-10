@@ -75,6 +75,5 @@ public interface IPharmacistAppointmentService {
 	
 	boolean isPharmacistInPharmacy(Pharmacist pharmacist, LocalDateTime startDateTime);
 	
-	List<DoctorRatingDTO> getAllDoctorsForRating(long id);
 
 }

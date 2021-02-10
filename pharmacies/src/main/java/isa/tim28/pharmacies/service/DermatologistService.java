@@ -15,9 +15,11 @@ import isa.tim28.pharmacies.dtos.DermPharmacyDTO;
 import isa.tim28.pharmacies.dtos.DermatologistDTO;
 import isa.tim28.pharmacies.dtos.DermatologistProfileDTO;
 import isa.tim28.pharmacies.dtos.DermatologistToEmployDTO;
+import isa.tim28.pharmacies.dtos.DoctorRatingDTO;
 import isa.tim28.pharmacies.dtos.NewDermatologistInPharmacyDTO;
 import isa.tim28.pharmacies.exceptions.AddingDermatologistToPharmacyException;
 import isa.tim28.pharmacies.dtos.PatientSearchDTO;
+import isa.tim28.pharmacies.dtos.ShowCounselingDTO;
 import isa.tim28.pharmacies.exceptions.BadNameException;
 import isa.tim28.pharmacies.exceptions.BadNewEmailException;
 import isa.tim28.pharmacies.exceptions.BadSurnameException;
@@ -31,14 +33,17 @@ import isa.tim28.pharmacies.model.Dermatologist;
 import isa.tim28.pharmacies.model.EngagementInPharmacy;
 import isa.tim28.pharmacies.model.Pharmacy;
 import isa.tim28.pharmacies.model.PharmacyAdmin;
+import isa.tim28.pharmacies.model.Rating;
 import isa.tim28.pharmacies.repository.EngagementInPharmacyRepository;
 import isa.tim28.pharmacies.model.Patient;
+import isa.tim28.pharmacies.model.Pharmacist;
 import isa.tim28.pharmacies.model.User;
 import isa.tim28.pharmacies.repository.DermatologistRepository;
 import isa.tim28.pharmacies.repository.PatientRepository;
 import isa.tim28.pharmacies.repository.UserRepository;
 import isa.tim28.pharmacies.service.interfaces.IDermatologistAppointmentService;
 import isa.tim28.pharmacies.service.interfaces.IDermatologistService;
+import isa.tim28.pharmacies.service.interfaces.IRatingService;
 
 @Service
 public class DermatologistService implements IDermatologistService {
@@ -49,9 +54,10 @@ public class DermatologistService implements IDermatologistService {
 	private IDermatologistAppointmentService appointmentService;
 	private EngagementInPharmacyRepository engagementRepository;
 	private PatientRepository patientRepository;
+	private IRatingService ratingService;
 	
 	@Autowired
-	public DermatologistService(DermatologistRepository dermatolgistRepository, UserRepository userRepository, DermatologistMapper dermatologistMapper, IDermatologistAppointmentService appointmentService, EngagementInPharmacyRepository engagementRepository, PatientRepository patientRepository) {
+	public DermatologistService(DermatologistRepository dermatolgistRepository, UserRepository userRepository, IRatingService ratingService, DermatologistMapper dermatologistMapper, IDermatologistAppointmentService appointmentService, EngagementInPharmacyRepository engagementRepository, PatientRepository patientRepository) {
 		super();
 		this.dermatologistRepository = dermatolgistRepository;
 		this.userRepository = userRepository;
@@ -59,6 +65,7 @@ public class DermatologistService implements IDermatologistService {
 		this.appointmentService = appointmentService;
 		this.engagementRepository = engagementRepository;
 		this.patientRepository = patientRepository;
+		this.ratingService = ratingService;
 	}
 	
 	@Override
@@ -331,5 +338,76 @@ public class DermatologistService implements IDermatologistService {
 		appointmentService.createPredefinedAppointment(getDermatologistById(dermatologistId), startDateTime, durationInMinutes, price, pharmacy);
 	}
 	
+	
+	@Override
+	public List<DoctorRatingDTO> getAllDoctorsForRating(long id){
+		List<DoctorRatingDTO> result = new ArrayList<DoctorRatingDTO>();
+		List<ShowCounselingDTO> past = appointmentService.getAllIncomingAppointments(id, true);
+		for(ShowCounselingDTO s : past) {
+			
+			List<Rating> savedRatings = new ArrayList<Rating>();
+			try {
+				savedRatings = getRatingsByDermatologist(s.getDoctorId(), patientRepository.findOneByUser_Id(id).getId());
+			} catch (UserDoesNotExistException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			for (Rating r : savedRatings) {
+				DoctorRatingDTO dto = new DoctorRatingDTO(s.getDoctorId(), s.getPharmacistName(), r.getRating());
+				result.add(dto);
+			}
+			
+			DoctorRatingDTO doctor = new DoctorRatingDTO(s.getDoctorId(),s.getPharmacistName(),0);
+			
+			if(!result.isEmpty()) {
+				boolean contains = false;
+				for(DoctorRatingDTO d : result) {
+					if(d.getId() == doctor.getId()) {
+						contains = true;
+					}
+				}
+				if(!contains) {
+					result.add(doctor);
+				}
+			}else {
+				result.add(doctor);
+			}
+		}
+		return result;
+	}
+	
+	@Override
+	public List<Rating> getRatingsByDermatologist(long dermId, long patientId) throws UserDoesNotExistException{
+		
+		List<Rating> allRatings = ratingService.getRatingsByPatientId(patientId);
+		List<Rating> result = new ArrayList<Rating>();
+		
+		Dermatologist dermatologist = getDermatologistById(dermId);
+		Set<Rating> pharmRatings = dermatologist.getRatings();
+		
+		for(Rating r : pharmRatings ) {
+			for(Rating r1 : allRatings) {
+				if(r.getId() == r1.getId()) {
+					result.add(r1);
+				}
+			}
+		}
+		return result;
+	}
+	
+	@Override
+	public Rating saveDermatologistRating(DoctorRatingDTO dto, long id) {
+		Dermatologist derm = dermatologistRepository.findById(dto.getId()).get();
+		
+		Rating r = new Rating();
+		r.setRating(dto.getRating());
+		r.setPatient(patientRepository.findOneByUser_Id(id));
+		Rating saved = ratingService.saveRating(r);
+		
+		derm.getRatings().add(saved);
+		dermatologistRepository.save(derm);
+		
+		return saved;
+	}
 
 }

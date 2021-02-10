@@ -54,6 +54,7 @@ import isa.tim28.pharmacies.model.PharmacistAppointment;
 import isa.tim28.pharmacies.model.PharmacistLeaveRequest;
 import isa.tim28.pharmacies.model.PharmacistReport;
 import isa.tim28.pharmacies.model.Pharmacy;
+import isa.tim28.pharmacies.model.Rating;
 import isa.tim28.pharmacies.model.Reservation;
 import isa.tim28.pharmacies.model.Therapy;
 import isa.tim28.pharmacies.model.User;
@@ -560,29 +561,7 @@ public class PharmacistAppointmentService implements IPharmacistAppointmentServi
 		}
 
 	}
-	@Override
-	public List<DoctorRatingDTO> getAllDoctorsForRating(long id){
-		List<DoctorRatingDTO> result = new ArrayList<DoctorRatingDTO>();
-		List<ShowCounselingDTO> past = getAllIncomingCounsellings(id, true);
-		for(ShowCounselingDTO s : past) {
-			DoctorRatingDTO doctor = new DoctorRatingDTO(s.getDoctorId(),s.getPharmacistName(),0);
-			
-			if(!result.isEmpty()) {
-				boolean contains = false;
-				for(DoctorRatingDTO d : result) {
-					if(d.getId() == doctor.getId()) {
-						contains = true;
-					}
-				}
-				if(!contains) {
-					result.add(doctor);
-				}
-			}else {
-				result.add(doctor);
-			}
-		}
-		return result;
-	}
+	
 
 	public void cancelApp(long id) {
 		appointmentRepository.deleteById(id);

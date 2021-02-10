@@ -82,6 +82,5 @@ public interface IDermatologistAppointmentService {
 
 	List<ShowCounselingDTO> getAllIncomingAppointments(long id, boolean past);
 	
-	List<DoctorRatingDTO> getAllDoctorsForRating(long id);
 	
 }

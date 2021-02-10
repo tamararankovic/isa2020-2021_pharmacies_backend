@@ -62,6 +62,7 @@ import isa.tim28.pharmacies.service.EmailService;
 import isa.tim28.pharmacies.service.PharmacistAppointmentService;
 import isa.tim28.pharmacies.service.PharmacistService;
 import isa.tim28.pharmacies.model.PharmacyAdmin;
+import isa.tim28.pharmacies.model.Rating;
 import isa.tim28.pharmacies.service.interfaces.IPharmacyAdminService;
 
 @RestController
@@ -761,7 +762,21 @@ public class PharmacistController {
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only patinet can schedule appointments.");
 		}
 		
-		List< DoctorRatingDTO> res = pharmacistAppointmentService.getAllDoctorsForRating(loggedInUser.getId());
+		List< DoctorRatingDTO> res = pharmacistService.getAllDoctorsForRating(loggedInUser.getId());
 		return new ResponseEntity<>(res,HttpStatus.OK);
+	}
+	
+	@PostMapping(value = "save-pharm-rating")
+	public ResponseEntity<String> saveMedicineForRating(@RequestBody DoctorRatingDTO dto,HttpSession session){
+		User loggedInUser = (User) session.getAttribute("loggedInUser");
+		if(loggedInUser == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No logged in user!");
+		}
+		if(loggedInUser.getRole() != Role.PATIENT) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only patinet can schedule appointments.");
+		}
+		
+		Rating res = pharmacistService.savePharmacistRating(dto,loggedInUser.getId());
+		return new ResponseEntity<>("sacuvano",HttpStatus.OK);
 	}
 }

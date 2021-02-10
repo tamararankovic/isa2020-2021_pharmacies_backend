@@ -13,10 +13,12 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import isa.tim28.pharmacies.dtos.DoctorRatingDTO;
 import isa.tim28.pharmacies.dtos.NewPharmacistDTO;
 import isa.tim28.pharmacies.dtos.PharmacistAppointmentDTO;
 import isa.tim28.pharmacies.dtos.PharmacistDTO;
 import isa.tim28.pharmacies.dtos.PharmacistProfileDTO;
+import isa.tim28.pharmacies.dtos.ShowCounselingDTO;
 import isa.tim28.pharmacies.exceptions.BadNameException;
 import isa.tim28.pharmacies.exceptions.BadNewEmailException;
 import isa.tim28.pharmacies.exceptions.BadSurnameException;
@@ -27,6 +29,7 @@ import isa.tim28.pharmacies.exceptions.UserDoesNotExistException;
 import isa.tim28.pharmacies.mapper.PharmacistMapper;
 import isa.tim28.pharmacies.model.DailyEngagement;
 import isa.tim28.pharmacies.model.EngagementInPharmacy;
+import isa.tim28.pharmacies.model.Medicine;
 import isa.tim28.pharmacies.model.Patient;
 import isa.tim28.pharmacies.model.Pharmacist;
 import isa.tim28.pharmacies.model.PharmacistAppointment;
@@ -35,10 +38,13 @@ import isa.tim28.pharmacies.model.PharmacyAdmin;
 import isa.tim28.pharmacies.model.Rating;
 import isa.tim28.pharmacies.model.Role;
 import isa.tim28.pharmacies.model.User;
+import isa.tim28.pharmacies.repository.PatientRepository;
 import isa.tim28.pharmacies.repository.PharmacistRepository;
 import isa.tim28.pharmacies.repository.UserRepository;
+import isa.tim28.pharmacies.service.interfaces.IPatientService;
 import isa.tim28.pharmacies.service.interfaces.IPharmacistAppointmentService;
 import isa.tim28.pharmacies.service.interfaces.IPharmacistService;
+import isa.tim28.pharmacies.service.interfaces.IRatingService;
 
 @Service
 public class PharmacistService implements IPharmacistService {
@@ -47,15 +53,20 @@ public class PharmacistService implements IPharmacistService {
 	private UserRepository userRepository;
 	private PharmacistMapper pharmacistMapper;
 	private IPharmacistAppointmentService appointmentService;
+	private IRatingService ratingService;
+	private PatientRepository patientRepository;
 
 	@Autowired
 	public PharmacistService(PharmacistRepository pharmacistRepository, UserRepository userRepository,
-			PharmacistMapper pharmacistMapper, IPharmacistAppointmentService appointmentService) {
+			PharmacistMapper pharmacistMapper, IPharmacistAppointmentService appointmentService,
+			IRatingService ratingService, PatientRepository patientRepository) {
 		super();
 		this.pharmacistRepository = pharmacistRepository;
 		this.userRepository = userRepository;
 		this.pharmacistMapper = pharmacistMapper;
 		this.appointmentService = appointmentService;
+		this.ratingService = ratingService;
+		this.patientRepository = patientRepository;
 	}
 
 	@Override
@@ -258,7 +269,8 @@ public class PharmacistService implements IPharmacistService {
 			for (Rating r : pharm.getRatings())
 				sumOfRatings += r.getRating();
 
-			if (appointmentService.isPharmacistAvailable(pharm, date) && appointmentService.isPharmacistInPharmacy(pharm, date)) {
+			if (appointmentService.isPharmacistAvailable(pharm, date)
+					&& appointmentService.isPharmacistInPharmacy(pharm, date)) {
 				res.add(new PharmacistDTO(pharm.getId(), pharm.getUser().getName(), pharm.getUser().getSurname(),
 						pharm.getRatings().size() > 0 ? sumOfRatings / pharm.getRatings().size() : 0, ""));
 			}
@@ -266,6 +278,76 @@ public class PharmacistService implements IPharmacistService {
 		return res;
 
 	}
+
+	@Override
+	public List<Rating> getRatingsByPharmacist(long pharmId, long patientId) throws UserDoesNotExistException {
+
+		List<Rating> allRatings = ratingService.getRatingsByPatientId(patientId);
+		List<Rating> result = new ArrayList<Rating>();
+
+		Pharmacist pharmacist = getPharmacistById(pharmId);
+		Set<Rating> pharmRatings = pharmacist.getRatings();
+
+		for (Rating r : pharmRatings) {
+			for (Rating r1 : allRatings) {
+				if (r.getId() == r1.getId()) {
+					result.add(r1);
+				}
+			}
+		}
+		return result;
+	}
+
+	@Override
+	public List<DoctorRatingDTO> getAllDoctorsForRating(long id) {
+		List<DoctorRatingDTO> result = new ArrayList<DoctorRatingDTO>();
+		List<ShowCounselingDTO> past = appointmentService.getAllIncomingCounsellings(id, true);
+		for (ShowCounselingDTO s : past) {
+
+			List<Rating> savedRatings = new ArrayList<Rating>();
+			try {
+				savedRatings = getRatingsByPharmacist(s.getDoctorId(), patientRepository.findOneByUser_Id(id).getId());
+			} catch (UserDoesNotExistException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			for (Rating r : savedRatings) {
+				DoctorRatingDTO dto = new DoctorRatingDTO(s.getDoctorId(), s.getPharmacistName(), r.getRating());
+				result.add(dto);
+			}
+
+			DoctorRatingDTO doctor = new DoctorRatingDTO(s.getDoctorId(), s.getPharmacistName(), 0);
+
+			if (!result.isEmpty()) {
+				boolean contains = false;
+				for (DoctorRatingDTO d : result) {
+					if (d.getId() == doctor.getId()) {
+						contains = true;
+					}
+				}
+				if (!contains) {
+					result.add(doctor);
+				}
+			} else {
+				result.add(doctor);
+			}
+		}
+		return result;
+	}
 	
-	
+	@Override
+	public Rating savePharmacistRating(DoctorRatingDTO dto, long id) {
+		Pharmacist pharmacist = pharmacistRepository.findById(dto.getId()).get();
+		
+		Rating r = new Rating();
+		r.setRating(dto.getRating());
+		r.setPatient(patientRepository.findOneByUser_Id(id));
+		Rating saved = ratingService.saveRating(r);
+		
+		pharmacist.getRatings().add(saved);
+		pharmacistRepository.save(pharmacist);
+		
+		return saved;
+	}
+
 }
