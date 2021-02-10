@@ -25,6 +25,7 @@ import isa.tim28.pharmacies.exceptions.BadSurnameException;
 import isa.tim28.pharmacies.exceptions.CreatePharmacistException;
 import isa.tim28.pharmacies.exceptions.InvalidDeleteUserAttemptException;
 import isa.tim28.pharmacies.exceptions.PasswordIncorrectException;
+import isa.tim28.pharmacies.exceptions.PharmacyNotFoundException;
 import isa.tim28.pharmacies.exceptions.UserDoesNotExistException;
 import isa.tim28.pharmacies.mapper.PharmacistMapper;
 import isa.tim28.pharmacies.model.DailyEngagement;
@@ -40,6 +41,7 @@ import isa.tim28.pharmacies.model.Role;
 import isa.tim28.pharmacies.model.User;
 import isa.tim28.pharmacies.repository.PatientRepository;
 import isa.tim28.pharmacies.repository.PharmacistRepository;
+import isa.tim28.pharmacies.repository.PharmacyRepository;
 import isa.tim28.pharmacies.repository.UserRepository;
 import isa.tim28.pharmacies.service.interfaces.IPatientService;
 import isa.tim28.pharmacies.service.interfaces.IPharmacistAppointmentService;
@@ -55,11 +57,12 @@ public class PharmacistService implements IPharmacistService {
 	private IPharmacistAppointmentService appointmentService;
 	private IRatingService ratingService;
 	private PatientRepository patientRepository;
+	private PharmacyRepository pharmacyRepository;
 
 	@Autowired
 	public PharmacistService(PharmacistRepository pharmacistRepository, UserRepository userRepository,
 			PharmacistMapper pharmacistMapper, IPharmacistAppointmentService appointmentService,
-			IRatingService ratingService, PatientRepository patientRepository) {
+			IRatingService ratingService, PatientRepository patientRepository,PharmacyRepository pharmacyRepository) {
 		super();
 		this.pharmacistRepository = pharmacistRepository;
 		this.userRepository = userRepository;
@@ -67,6 +70,7 @@ public class PharmacistService implements IPharmacistService {
 		this.appointmentService = appointmentService;
 		this.ratingService = ratingService;
 		this.patientRepository = patientRepository;
+		this.pharmacyRepository = pharmacyRepository;
 	}
 
 	@Override
@@ -312,11 +316,11 @@ public class PharmacistService implements IPharmacistService {
 				e.printStackTrace();
 			}
 			for (Rating r : savedRatings) {
-				DoctorRatingDTO dto = new DoctorRatingDTO(s.getDoctorId(), s.getPharmacistName(), r.getRating());
+				DoctorRatingDTO dto = new DoctorRatingDTO(s.getDoctorId(), s.getPharmacyId(),s.getPharmacistName(), r.getRating());
 				result.add(dto);
 			}
 
-			DoctorRatingDTO doctor = new DoctorRatingDTO(s.getDoctorId(), s.getPharmacistName(), 0);
+			DoctorRatingDTO doctor = new DoctorRatingDTO(s.getDoctorId(),s.getPharmacyId(), s.getPharmacistName(), 0);
 
 			if (!result.isEmpty()) {
 				boolean contains = false;
@@ -348,6 +352,37 @@ public class PharmacistService implements IPharmacistService {
 		pharmacistRepository.save(pharmacist);
 		
 		return saved;
+	}
+	
+	@Override
+	public List<DoctorRatingDTO> getPharmaciesFromReservations(long id) throws PharmacyNotFoundException {
+		List<DoctorRatingDTO> res = new ArrayList<DoctorRatingDTO>();
+		if (!getAllDoctorsForRating(id).isEmpty()) {
+
+			List<DoctorRatingDTO> medicine = getAllDoctorsForRating(id);
+			
+
+			for (DoctorRatingDTO dto : medicine) {
+				Pharmacy pharmacy = pharmacyRepository.findById(dto.getPharmacyId()).get();
+				DoctorRatingDTO newPharmacy = new DoctorRatingDTO(dto.getPharmacyId(), dto.getPharmacyId(),
+						pharmacy.getName(), 0);
+
+				if (!res.isEmpty()) {
+					boolean contains = false;
+					for (DoctorRatingDTO d : res) {
+						if (d.getId() == newPharmacy.getId()) {
+							contains = true;
+						}
+					}
+					if (!contains) {
+						res.add(newPharmacy);
+					}
+				} else {
+					res.add(newPharmacy);
+				}
+			}
+		}
+		return res;
 	}
 
 }

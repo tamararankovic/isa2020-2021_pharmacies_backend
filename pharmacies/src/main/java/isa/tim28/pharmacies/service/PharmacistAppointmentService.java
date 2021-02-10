@@ -539,7 +539,7 @@ public class PharmacistAppointmentService implements IPharmacistAppointmentServi
 					cancellable = true;
 				}
 
-				ShowCounselingDTO dto = new ShowCounselingDTO(pa.getId(), date,
+				ShowCounselingDTO dto = new ShowCounselingDTO(pa.getId(), pa.getPharmacist().getEngegementInPharmacy().getPharmacy().getId(), date,
 						pa.getPharmacist().getId(),pa.getPharmacist().getUser().getFullName(), cancellable, pa.getDefaultDurationInMinutes(),
 						price, "PHARMACIST");
 				resIncoming.add(dto);
@@ -547,7 +547,7 @@ public class PharmacistAppointmentService implements IPharmacistAppointmentServi
 
 				DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm");
 				String date = pa.getStartDateTime().format(formatter);
-				ShowCounselingDTO dto = new ShowCounselingDTO(pa.getId(), date,
+				ShowCounselingDTO dto = new ShowCounselingDTO(pa.getId(),pa.getPharmacist().getEngegementInPharmacy().getPharmacy().getId(), date,
 						pa.getPharmacist().getId(),  pa.getPharmacist().getUser().getFullName(), false, pa.getDefaultDurationInMinutes(), price, 
 						"PHARMACIST");
 				resPast.add(dto);

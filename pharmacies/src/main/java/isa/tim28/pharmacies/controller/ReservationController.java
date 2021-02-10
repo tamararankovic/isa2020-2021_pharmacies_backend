@@ -18,6 +18,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import isa.tim28.pharmacies.dtos.DoctorRatingDTO;
 import isa.tim28.pharmacies.dtos.ReservationDTO;
+import isa.tim28.pharmacies.exceptions.PharmacyNotFoundException;
 import isa.tim28.pharmacies.model.Rating;
 import isa.tim28.pharmacies.model.Reservation;
 import isa.tim28.pharmacies.model.Role;
@@ -110,5 +111,25 @@ public class ReservationController {
 		
 		Rating res = reservationService.saveMedicineRating(dto,loggedInUser.getId());
 		return new ResponseEntity<>("sacuvano",HttpStatus.OK);
+	}
+	
+	@GetMapping(value = "pharmacy-rating")
+	public ResponseEntity<List<DoctorRatingDTO>> getAllPharmacyForRating(HttpSession session){
+		User loggedInUser = (User) session.getAttribute("loggedInUser");
+		if(loggedInUser == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No logged in user!");
+		}
+		if(loggedInUser.getRole() != Role.PATIENT) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only patinet can schedule appointments.");
+		}
+		
+		List<DoctorRatingDTO> res = new ArrayList<DoctorRatingDTO>();
+		try {
+			res = reservationService.getPharmaciesFromReservations(loggedInUser.getId());
+		} catch (PharmacyNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return new ResponseEntity<>(res,HttpStatus.OK);
 	}
 }

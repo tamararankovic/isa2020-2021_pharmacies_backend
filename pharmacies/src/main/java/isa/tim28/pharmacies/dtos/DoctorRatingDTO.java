@@ -2,6 +2,7 @@ package isa.tim28.pharmacies.dtos;
 
 public class DoctorRatingDTO {
 	private long id;
+	private long pharmacyId;
 	private String fullName;
 	private int rating;
 	
@@ -9,12 +10,24 @@ public class DoctorRatingDTO {
 		super();
 	}
 	
-	public DoctorRatingDTO(long id, String fullName, int rating) {
+	public DoctorRatingDTO(long id,long pharmacyId, String fullName, int rating) {
 		super();
 		this.id = id;
+		this.pharmacyId = pharmacyId;
 		this.fullName = fullName;
 		this.rating = rating;
 	}
+	
+	
+	
+	public long getPharmacyId() {
+		return pharmacyId;
+	}
+
+	public void setPharmacyId(long pharmacyId) {
+		this.pharmacyId = pharmacyId;
+	}
+
 	public long getId() {
 		return id;
 	}

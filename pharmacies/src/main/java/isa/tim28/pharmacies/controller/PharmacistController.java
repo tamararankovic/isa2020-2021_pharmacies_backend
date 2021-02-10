@@ -3,6 +3,7 @@ package isa.tim28.pharmacies.controller;
 import java.util.Set;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.mail.MessagingException;
@@ -50,6 +51,7 @@ import isa.tim28.pharmacies.exceptions.BadSurnameException;
 import isa.tim28.pharmacies.exceptions.CreatePharmacistException;
 import isa.tim28.pharmacies.exceptions.InvalidDeleteUserAttemptException;
 import isa.tim28.pharmacies.exceptions.PasswordIncorrectException;
+import isa.tim28.pharmacies.exceptions.PharmacyNotFoundException;
 import isa.tim28.pharmacies.exceptions.UserDoesNotExistException;
 import isa.tim28.pharmacies.model.Pharmacist;
 import isa.tim28.pharmacies.model.PharmacistAppointment;
@@ -778,5 +780,25 @@ public class PharmacistController {
 		
 		Rating res = pharmacistService.savePharmacistRating(dto,loggedInUser.getId());
 		return new ResponseEntity<>("sacuvano",HttpStatus.OK);
+	}
+	
+	@GetMapping(value = "pharmacy-rating")
+	public ResponseEntity<List<DoctorRatingDTO>> getAllPharmacyForRating(HttpSession session){
+		User loggedInUser = (User) session.getAttribute("loggedInUser");
+		if(loggedInUser == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No logged in user!");
+		}
+		if(loggedInUser.getRole() != Role.PATIENT) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only patinet can schedule appointments.");
+		}
+		
+		List<DoctorRatingDTO> res = new ArrayList<DoctorRatingDTO>();
+		try {
+			res = pharmacistService.getPharmaciesFromReservations(loggedInUser.getId());
+		} catch (PharmacyNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return new ResponseEntity<>(res,HttpStatus.OK);
 	}
 }

@@ -3,6 +3,7 @@ package isa.tim28.pharmacies.dtos;
 public class ShowCounselingDTO {
 	
 	private long id;
+	private long pharmacyId;
 	private String date;
 	private long doctorId;
 	private String pharmacistName;
@@ -17,9 +18,10 @@ public class ShowCounselingDTO {
 		super();
 	}
 	
-	public ShowCounselingDTO(long id, String date, long doctorId,String pharmacistName, boolean cancellable,int duration, double price,String type) {
+	public ShowCounselingDTO(long id,long pharmacyId, String date, long doctorId,String pharmacistName, boolean cancellable,int duration, double price,String type) {
 		super();
 		this.id = id;
+		this.pharmacyId = pharmacyId;
 		this.date = date;
 		this.doctorId = doctorId;
 		this.pharmacistName = pharmacistName;
@@ -31,6 +33,15 @@ public class ShowCounselingDTO {
 	
 	
 	
+	
+	public long getPharmacyId() {
+		return pharmacyId;
+	}
+
+	public void setPharmacyId(long pharmacyId) {
+		this.pharmacyId = pharmacyId;
+	}
+
 	public long getDoctorId() {
 		return doctorId;
 	}

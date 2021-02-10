@@ -19,6 +19,7 @@ import isa.tim28.pharmacies.dtos.DoctorRatingDTO;
 import isa.tim28.pharmacies.dtos.ReservationDTO;
 import isa.tim28.pharmacies.exceptions.ForbiddenOperationException;
 import isa.tim28.pharmacies.exceptions.MedicineDoesNotExistException;
+import isa.tim28.pharmacies.exceptions.PharmacyNotFoundException;
 import isa.tim28.pharmacies.exceptions.UserDoesNotExistException;
 
 import isa.tim28.pharmacies.model.CancelledReservation;
@@ -55,7 +56,7 @@ public class ReservationService implements IReservationService {
 	public ReservationService(ReservationRepository reservationRepository, IPatientService patientService,
 			IPharmacyService pharmacyService, IMedicineService medicineService,
 			CancelledReservationRepository cancelledReservationRepository, EmailService emailService,
-			IRatingService ratingService,MedicineRepository medicineRepository) {
+			IRatingService ratingService, MedicineRepository medicineRepository) {
 		super();
 		this.reservationRepository = reservationRepository;
 		this.patientService = patientService;
@@ -232,17 +233,19 @@ public class ReservationService implements IReservationService {
 
 				List<Rating> savedRatings = new ArrayList<Rating>();
 				try {
-					savedRatings = getRatingsByMedicine(r.getMedicine().getId(),id);
+					savedRatings = getRatingsByMedicine(r.getMedicine().getId(), id);
 				} catch (UserDoesNotExistException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 				for (Rating ra : savedRatings) {
-					DoctorRatingDTO dto = new DoctorRatingDTO(r.getMedicine().getId(), r.getMedicine().getName(), ra.getRating());
+					DoctorRatingDTO dto = new DoctorRatingDTO(r.getMedicine().getId(), r.getPharmacy().getId(),
+							r.getMedicine().getName(), ra.getRating());
 					result.add(dto);
 				}
-				
-				DoctorRatingDTO dto = new DoctorRatingDTO(r.getMedicine().getId(), r.getMedicine().getName(), 0);
+
+				DoctorRatingDTO dto = new DoctorRatingDTO(r.getMedicine().getId(), r.getPharmacy().getId(),
+						r.getMedicine().getName(), 0);
 
 				if (!result.isEmpty()) {
 					boolean contains = false;
@@ -280,11 +283,11 @@ public class ReservationService implements IReservationService {
 		}
 		return result;
 	}
-	
+
 	@Override
 	public Rating saveMedicineRating(DoctorRatingDTO dto, long id) {
 		Medicine medicine = medicineRepository.findById(dto.getId()).get();
-		
+
 		Rating r = new Rating();
 		r.setRating(dto.getRating());
 		try {
@@ -294,11 +297,42 @@ public class ReservationService implements IReservationService {
 			e.printStackTrace();
 		}
 		Rating saved = ratingService.saveRating(r);
-		
+
 		medicine.getRatings().add(saved);
 		medicineRepository.save(medicine);
-		
+
 		return saved;
+	}
+
+	@Override
+	public List<DoctorRatingDTO> getPharmaciesFromReservations(long id) throws PharmacyNotFoundException {
+		List<DoctorRatingDTO> res = new ArrayList<DoctorRatingDTO>();
+		if (!getMedicineForRating(id).isEmpty()) {
+
+			List<DoctorRatingDTO> medicine = getMedicineForRating(id);
+			
+
+			for (DoctorRatingDTO dto : medicine) {
+				Pharmacy pharmacy = pharmacyService.getPharmacyById(dto.getPharmacyId());
+				DoctorRatingDTO newPharmacy = new DoctorRatingDTO(dto.getPharmacyId(), dto.getPharmacyId(),
+						pharmacy.getName(), 0);
+
+				if (!res.isEmpty()) {
+					boolean contains = false;
+					for (DoctorRatingDTO d : res) {
+						if (d.getId() == newPharmacy.getId()) {
+							contains = true;
+						}
+					}
+					if (!contains) {
+						res.add(newPharmacy);
+					}
+				} else {
+					res.add(newPharmacy);
+				}
+			}
+		}
+		return res;
 	}
 
 }

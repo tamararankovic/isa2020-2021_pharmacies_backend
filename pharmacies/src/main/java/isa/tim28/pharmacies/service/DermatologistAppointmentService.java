@@ -698,7 +698,7 @@ public class DermatologistAppointmentService implements IDermatologistAppointmen
 					cancellable = true;
 				}
 
-				ShowCounselingDTO dto = new ShowCounselingDTO(pa.getId(), date,
+				ShowCounselingDTO dto = new ShowCounselingDTO(pa.getId(),pa.getPharmacy().getId(), date,
 						pa.getDermatologist().getId(),pa.getDermatologist().getUser().getFullName(), cancellable, pa.getDurationInMinutes(),
 						pa.getPrice(), "DERMATOLOGIST APPOINTMENT");
 				resIncoming.add(dto);
@@ -706,7 +706,7 @@ public class DermatologistAppointmentService implements IDermatologistAppointmen
 
 				DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm");
 				String date = pa.getStartDateTime().format(formatter);
-				ShowCounselingDTO dto = new ShowCounselingDTO(pa.getId(), date,
+				ShowCounselingDTO dto = new ShowCounselingDTO(pa.getId(),pa.getPharmacy().getId(), date,
 						pa.getDermatologist().getId(),pa.getDermatologist().getUser().getFullName(), false,pa.getDurationInMinutes(),pa.getPrice(), "DERMATOLOGIST APPOINTMENT");
 				resPast.add(dto);
 			}

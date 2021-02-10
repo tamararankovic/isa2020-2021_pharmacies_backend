@@ -26,6 +26,7 @@ import isa.tim28.pharmacies.exceptions.BadSurnameException;
 import isa.tim28.pharmacies.exceptions.ForbiddenOperationException;
 import isa.tim28.pharmacies.exceptions.InvalidDeleteUserAttemptException;
 import isa.tim28.pharmacies.exceptions.PasswordIncorrectException;
+import isa.tim28.pharmacies.exceptions.PharmacyNotFoundException;
 import isa.tim28.pharmacies.exceptions.UserDoesNotExistException;
 import isa.tim28.pharmacies.mapper.DermatologistMapper;
 import isa.tim28.pharmacies.model.DailyEngagement;
@@ -40,6 +41,7 @@ import isa.tim28.pharmacies.model.Pharmacist;
 import isa.tim28.pharmacies.model.User;
 import isa.tim28.pharmacies.repository.DermatologistRepository;
 import isa.tim28.pharmacies.repository.PatientRepository;
+import isa.tim28.pharmacies.repository.PharmacyRepository;
 import isa.tim28.pharmacies.repository.UserRepository;
 import isa.tim28.pharmacies.service.interfaces.IDermatologistAppointmentService;
 import isa.tim28.pharmacies.service.interfaces.IDermatologistService;
@@ -55,9 +57,10 @@ public class DermatologistService implements IDermatologistService {
 	private EngagementInPharmacyRepository engagementRepository;
 	private PatientRepository patientRepository;
 	private IRatingService ratingService;
+	private PharmacyRepository pharmacyRepository;
 	
 	@Autowired
-	public DermatologistService(DermatologistRepository dermatolgistRepository, UserRepository userRepository, IRatingService ratingService, DermatologistMapper dermatologistMapper, IDermatologistAppointmentService appointmentService, EngagementInPharmacyRepository engagementRepository, PatientRepository patientRepository) {
+	public DermatologistService(DermatologistRepository dermatolgistRepository, UserRepository userRepository,PharmacyRepository pharmacyRepository, IRatingService ratingService, DermatologistMapper dermatologistMapper, IDermatologistAppointmentService appointmentService, EngagementInPharmacyRepository engagementRepository, PatientRepository patientRepository) {
 		super();
 		this.dermatologistRepository = dermatolgistRepository;
 		this.userRepository = userRepository;
@@ -66,6 +69,7 @@ public class DermatologistService implements IDermatologistService {
 		this.engagementRepository = engagementRepository;
 		this.patientRepository = patientRepository;
 		this.ratingService = ratingService;
+		this.pharmacyRepository = pharmacyRepository;
 	}
 	
 	@Override
@@ -353,11 +357,11 @@ public class DermatologistService implements IDermatologistService {
 				e.printStackTrace();
 			}
 			for (Rating r : savedRatings) {
-				DoctorRatingDTO dto = new DoctorRatingDTO(s.getDoctorId(), s.getPharmacistName(), r.getRating());
+				DoctorRatingDTO dto = new DoctorRatingDTO(s.getDoctorId(),s.getPharmacyId(), s.getPharmacistName(), r.getRating());
 				result.add(dto);
 			}
 			
-			DoctorRatingDTO doctor = new DoctorRatingDTO(s.getDoctorId(),s.getPharmacistName(),0);
+			DoctorRatingDTO doctor = new DoctorRatingDTO(s.getDoctorId(),s.getPharmacyId(),s.getPharmacistName(),0);
 			
 			if(!result.isEmpty()) {
 				boolean contains = false;
@@ -383,9 +387,9 @@ public class DermatologistService implements IDermatologistService {
 		List<Rating> result = new ArrayList<Rating>();
 		
 		Dermatologist dermatologist = getDermatologistById(dermId);
-		Set<Rating> pharmRatings = dermatologist.getRatings();
+		Set<Rating> dermRatings = dermatologist.getRatings();
 		
-		for(Rating r : pharmRatings ) {
+		for(Rating r : dermRatings ) {
 			for(Rating r1 : allRatings) {
 				if(r.getId() == r1.getId()) {
 					result.add(r1);
@@ -408,6 +412,37 @@ public class DermatologistService implements IDermatologistService {
 		dermatologistRepository.save(derm);
 		
 		return saved;
+	}
+	
+	@Override
+	public List<DoctorRatingDTO> getPharmaciesFromReservations(long id) throws PharmacyNotFoundException {
+		List<DoctorRatingDTO> res = new ArrayList<DoctorRatingDTO>();
+		if (!getAllDoctorsForRating(id).isEmpty()) {
+
+			List<DoctorRatingDTO> medicine = getAllDoctorsForRating(id);
+			
+
+			for (DoctorRatingDTO dto : medicine) {
+				Pharmacy pharmacy = pharmacyRepository.findById(dto.getPharmacyId()).get();
+				DoctorRatingDTO newPharmacy = new DoctorRatingDTO(dto.getPharmacyId(), dto.getPharmacyId(),
+						pharmacy.getName(), 0);
+
+				if (!res.isEmpty()) {
+					boolean contains = false;
+					for (DoctorRatingDTO d : res) {
+						if (d.getId() == newPharmacy.getId()) {
+							contains = true;
+						}
+					}
+					if (!contains) {
+						res.add(newPharmacy);
+					}
+				} else {
+					res.add(newPharmacy);
+				}
+			}
+		}
+		return res;
 	}
 
 }

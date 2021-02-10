@@ -14,6 +14,7 @@ import isa.tim28.pharmacies.exceptions.BadSurnameException;
 import isa.tim28.pharmacies.exceptions.CreatePharmacistException;
 import isa.tim28.pharmacies.exceptions.InvalidDeleteUserAttemptException;
 import isa.tim28.pharmacies.exceptions.PasswordIncorrectException;
+import isa.tim28.pharmacies.exceptions.PharmacyNotFoundException;
 import isa.tim28.pharmacies.exceptions.UserDoesNotExistException;
 import isa.tim28.pharmacies.model.Pharmacist;
 import isa.tim28.pharmacies.model.Pharmacy;
@@ -56,4 +57,6 @@ public interface IPharmacistService {
 	List<DoctorRatingDTO> getAllDoctorsForRating(long id);
 
 	Rating savePharmacistRating(DoctorRatingDTO dto, long id);
+
+	List<DoctorRatingDTO> getPharmaciesFromReservations(long id) throws PharmacyNotFoundException;
 }

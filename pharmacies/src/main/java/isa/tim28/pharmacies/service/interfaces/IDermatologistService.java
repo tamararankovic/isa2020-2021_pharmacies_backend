@@ -18,6 +18,7 @@ import isa.tim28.pharmacies.exceptions.BadSurnameException;
 import isa.tim28.pharmacies.exceptions.ForbiddenOperationException;
 import isa.tim28.pharmacies.exceptions.InvalidDeleteUserAttemptException;
 import isa.tim28.pharmacies.exceptions.PasswordIncorrectException;
+import isa.tim28.pharmacies.exceptions.PharmacyNotFoundException;
 import isa.tim28.pharmacies.exceptions.UserDoesNotExistException;
 import isa.tim28.pharmacies.model.Dermatologist;
 import isa.tim28.pharmacies.model.Pharmacy;
@@ -66,4 +67,6 @@ public interface IDermatologistService {
 	List<Rating> getRatingsByDermatologist(long dermId, long patientId) throws UserDoesNotExistException;
 
 	Rating saveDermatologistRating(DoctorRatingDTO dto, long id);
+
+	List<DoctorRatingDTO> getPharmaciesFromReservations(long id) throws PharmacyNotFoundException;
 }
