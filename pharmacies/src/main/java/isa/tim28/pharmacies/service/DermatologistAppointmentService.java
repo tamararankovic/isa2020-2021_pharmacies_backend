@@ -249,7 +249,8 @@ public class DermatologistAppointmentService implements IDermatologistAppointmen
 	@Override
 	@Transactional(readOnly = false)
 	public DermatologistAppointment saveDermatologistAppointment(long lastAppointmentId, long price, LocalDateTime startDateTime) {
-		try{ 
+		boolean canSchedule = checkIfFreeAppointmentExists(lastAppointmentId, startDateTime);
+		if(canSchedule) { 
 			DermatologistAppointment lastAppointment = appointmentRepository.findById(lastAppointmentId).get();
 			if(lastAppointment == null) return null;
 			DermatologistAppointment newAppointment = new DermatologistAppointment();
@@ -263,25 +264,20 @@ public class DermatologistAppointmentService implements IDermatologistAppointmen
 			newAppointment.setPharmacy(lastAppointment.getPharmacy());
 			appointmentRepository.save(newAppointment);
 			return newAppointment;
-		} catch(Exception e) {
-			return null;
 		}
+		else return null;
 	}
 	
 	@Override
 	@Transactional(readOnly = false)
 	public DermatologistAppointment saveExistingDermatologistAppointment(long lastAppointmentId, long newAppointmentId) {
-		try{ 
-			DermatologistAppointment lastAppointment = appointmentRepository.findById(lastAppointmentId).get();
-			DermatologistAppointment newAppointment = appointmentRepository.findById(newAppointmentId).get();
-			if(lastAppointment == null || newAppointment == null) return null;
-			newAppointment.setScheduled(true);
-			newAppointment.setPatient(lastAppointment.getPatient());
-			appointmentRepository.save(newAppointment);
-			return newAppointment;
-		} catch(Exception e) {
-			return null;
-		}
+		DermatologistAppointment lastAppointment = appointmentRepository.findById(lastAppointmentId).get();
+		DermatologistAppointment newAppointment = appointmentRepository.findById(newAppointmentId).get();
+		if(lastAppointment == null || newAppointment == null) return null;
+		newAppointment.setScheduled(true);
+		newAppointment.setPatient(lastAppointment.getPatient());
+		appointmentRepository.save(newAppointment);
+		return newAppointment;
 	}
 	
 

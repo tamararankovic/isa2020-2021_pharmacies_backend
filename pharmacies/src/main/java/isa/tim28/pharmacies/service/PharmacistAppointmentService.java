@@ -279,7 +279,8 @@ public class PharmacistAppointmentService implements IPharmacistAppointmentServi
 	@Override
 	@Transactional(readOnly = false)
 	public PharmacistAppointment savePharmacistAppointment(long lastAppointmentId, LocalDateTime startDateTime) {
-		try {
+		boolean canSchedule = checkIfFreeAppointmentExists(lastAppointmentId, startDateTime);
+		if(canSchedule) {
 			PharmacistAppointment lastAppointment = appointmentRepository.findById(lastAppointmentId).get();
 			if (lastAppointment == null)
 				return null;
@@ -290,29 +291,25 @@ public class PharmacistAppointmentService implements IPharmacistAppointmentServi
 			newAppointment.setStartDateTime(startDateTime);
 			appointmentRepository.save(newAppointment);
 			return newAppointment;
-		} catch (Exception e) {
-			return null;
 		}
+		else return null;
 	}
 
 	@Override
+	@Transactional(readOnly = false)
 	public boolean checkIfFreeAppointmentExists(long lastAppointmentId, LocalDateTime startDateTime) {
-		try {
-			PharmacistAppointment lastAppointment = appointmentRepository.findById(lastAppointmentId).get();
-			if (lastAppointment == null)
-				return false;
-			if (!isPharmacistInPharmacy(lastAppointment.getPharmacist(), startDateTime))
-				return false;
-			if (!isPharmacistAvailable(lastAppointment.getPharmacist(), startDateTime))
-				return false;
-			if (!isPatientAvailable(lastAppointment.getPatient(), startDateTime))
-				return false;
-			if (!startDateTime.isAfter(LocalDateTime.now().plusMinutes(1)))
-				return false;
-			return true;
-		} catch (Exception e) {
+		PharmacistAppointment lastAppointment = appointmentRepository.findById(lastAppointmentId).get();
+		if (lastAppointment == null)
 			return false;
-		}
+		if (!isPharmacistInPharmacy(lastAppointment.getPharmacist(), startDateTime))
+			return false;
+		if (!isPharmacistAvailable(lastAppointment.getPharmacist(), startDateTime))
+			return false;
+		if (!isPatientAvailable(patientRepository.findPatientById(lastAppointment.getPatient().getId()), startDateTime))
+			return false;
+		if (!startDateTime.isAfter(LocalDateTime.now().plusMinutes(1)))
+			return false;
+		return true;
 	}
 
 	private boolean isPharmacistInPharmacy(Pharmacist pharmacist, LocalDateTime startDateTime) {
