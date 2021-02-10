@@ -126,7 +126,7 @@ public class PharmacyService implements IPharmacyService {
 			Optional<PharmacyComplaint> pcc = pharmacyComplaintRepository.findById(answer.getComplaintId());
 		 if(!pcc.isEmpty()) {
 			PharmacyComplaint pc = pcc.get();
-			if(pc.getReply().equals(" ")) {
+			if(pc.getReply().equals("")) {
 			    pc.setReply(answer.getAnswer());
 				pharmacyComplaintRepository.save(pc);
 				Optional<Patient> patientOp = patientRepository.findById(pc.getPatient().getId());
@@ -280,7 +280,7 @@ public class PharmacyService implements IPharmacyService {
 			PharmacyComplaint complaint = new PharmacyComplaint();
 			complaint.setPharmacy(pharmacy);
 			complaint.setPatient(patient);
-			complaint.setReply(" ");
+			complaint.setReply("");
 			complaint.setText(dto.getText());
 			pharmacyComplaintRepository.save(complaint);
 			return true;

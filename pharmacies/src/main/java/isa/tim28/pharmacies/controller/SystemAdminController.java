@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 import isa.tim28.pharmacies.dtos.DermatologistRegisterDTO;
+import isa.tim28.pharmacies.dtos.LoyaltyDTO;
 import isa.tim28.pharmacies.dtos.MedicineCodeDTO;
 import isa.tim28.pharmacies.dtos.MedicineDTO;
 import isa.tim28.pharmacies.dtos.PharmacyAddAdminDTO;
@@ -425,5 +426,19 @@ public class SystemAdminController {
 		
 		return new ResponseEntity<>("", HttpStatus.CREATED);
 		
+	}
+	
+	@PostMapping(value = "addLoyalty")
+	public ResponseEntity<String> addLoyalty(@RequestBody LoyaltyDTO dto, HttpSession session) throws CreateDermatologistException{
+		
+		User loggedInUser = (User) session.getAttribute("loggedInUser");
+		if(loggedInUser == null) {
+			return new ResponseEntity<>("No logged in user!", HttpStatus.FORBIDDEN);
+		}
+		if(loggedInUser.getRole() != Role.SYSTEM_ADMIN) {
+			return new ResponseEntity<>("Only system admin can add loyalty program parameters.", HttpStatus.FORBIDDEN);
+		}
+		systemAdminService.createLoyalty(dto);
+		return new ResponseEntity<>("", HttpStatus.OK);
 	}
 }

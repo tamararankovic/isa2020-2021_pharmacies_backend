@@ -37,6 +37,8 @@ import isa.tim28.pharmacies.model.DermatologistLeaveRequest;
 import isa.tim28.pharmacies.model.DermatologistReport;
 import isa.tim28.pharmacies.model.EngagementInPharmacy;
 import isa.tim28.pharmacies.model.LeaveType;
+import isa.tim28.pharmacies.model.Loyalty;
+import isa.tim28.pharmacies.model.LoyaltyPoints;
 import isa.tim28.pharmacies.model.LeaveRequestState;
 import isa.tim28.pharmacies.model.Medicine;
 import isa.tim28.pharmacies.model.MedicineMissingNotification;
@@ -45,6 +47,7 @@ import isa.tim28.pharmacies.model.Patient;
 import isa.tim28.pharmacies.model.PharmacistAppointment;
 import isa.tim28.pharmacies.model.Pharmacy;
 import isa.tim28.pharmacies.model.Therapy;
+import isa.tim28.pharmacies.repository.LoyaltyPointsRepository;
 import isa.tim28.pharmacies.repository.DermatologistAppointmentRepository;
 import isa.tim28.pharmacies.repository.DermatologistLeaveRequestRepository;
 import isa.tim28.pharmacies.repository.DermatologistReportRepository;
@@ -68,12 +71,15 @@ public class DermatologistAppointmentService implements IDermatologistAppointmen
 	private DermatologistLeaveRequestRepository dermatologistLeaveRequestRepository;
 	private PharmacistAppointmentRepository pharmacistAppointmentRepository;
 	private DermatologistRepository dermatologistRepository;
+	private LoyaltyPointsRepository loyaltyPointsRepository;
+	private SystemAdminService systemAdminService;
 	
 	@Autowired
 	public DermatologistAppointmentService(DermatologistAppointmentRepository appointmentRepository, MedicineRepository medicineRepository, 
 			DermatologistReportRepository dermatologistReportRepository, PatientRepository patientRepository, MedicineQuantityRepository medicineQuantityRepository,
 			MedicineMissingNotificationRepository medicineMissingNotificationRepository, DermatologistRepository dermatologistRepository,
-			DermatologistLeaveRequestRepository dermatologistLeaveRequestRepository, PharmacistAppointmentRepository pharmacistAppointmentRepository) {
+			DermatologistLeaveRequestRepository dermatologistLeaveRequestRepository, PharmacistAppointmentRepository pharmacistAppointmentRepository,
+			LoyaltyPointsRepository loyaltyPointsRepository,  SystemAdminService systemAdminService) {
 		super();
 		this.appointmentRepository = appointmentRepository;
 		this.medicineRepository = medicineRepository;
@@ -84,6 +90,8 @@ public class DermatologistAppointmentService implements IDermatologistAppointmen
 		this.dermatologistLeaveRequestRepository = dermatologistLeaveRequestRepository;
 		this.pharmacistAppointmentRepository = pharmacistAppointmentRepository;
 		this.dermatologistRepository = dermatologistRepository;
+		this.loyaltyPointsRepository = loyaltyPointsRepository;
+		this.systemAdminService = systemAdminService;
 	}
 
 	@Override
@@ -141,6 +149,13 @@ public class DermatologistAppointmentService implements IDermatologistAppointmen
 		report.setTherapies(therapies);
 		dermatologistReportRepository.save(report);
 		app.setDone(true);
+		
+		//loyalty
+		Patient patient = app.getPatient();
+		patient.addPoints(app.getPointsAfterAppointment());
+		systemAdminService.updateCathegoryOfPatient(patient);
+		patientRepository.save(patient);
+		
 		appointmentRepository.save(app);
 		
 		/*
@@ -250,10 +265,40 @@ public class DermatologistAppointmentService implements IDermatologistAppointmen
 			newAppointment.setPatientWasPresent(false);
 			newAppointment.setDermatologist(lastAppointment.getDermatologist());
 			newAppointment.setStartDateTime(startDateTime);
-			newAppointment.setPrice(price);
+			
+			
 			newAppointment.setScheduled(true);
 			newAppointment.setDurationInMinutes(30);
 			newAppointment.setPharmacy(lastAppointment.getPharmacy());
+			
+			//loyalty program
+			if(loyaltyPointsRepository.findAll() == null) {
+				newAppointment.setPointsAfterAppointment(0);
+				newAppointment.setPrice(price);
+			}else 
+			{
+				List<LoyaltyPoints> points = loyaltyPointsRepository.findAll();
+				if(!points.isEmpty()) {
+					LoyaltyPoints lp = points.get(points.size() - 1);
+					newAppointment.setPointsAfterAppointment(lp.getPointsAfterAppointment());
+					
+					if(lastAppointment.getPatient().getCategory().equals(Loyalty.REGULAR)) {
+						newAppointment.setPrice(price);
+					}else if(lastAppointment.getPatient().getCategory().equals(Loyalty.SILVER)) {
+						double procentage = price*(lp.getDiscountForSilver()/100);
+						long result = (long) procentage;
+						newAppointment.setPrice(price-result);
+					}else if(lastAppointment.getPatient().getCategory().equals(Loyalty.GOLD)) {
+						double procentage = price*(lp.getDiscountForGold()/100);
+						long result = (long) procentage;
+						newAppointment.setPrice(price-result);
+					}
+				}else { 
+					newAppointment.setPointsAfterAppointment(0);
+					newAppointment.setPrice(price);
+				}
+			}
+			
 			appointmentRepository.save(newAppointment);
 			return newAppointment;
 		} catch(Exception e) {

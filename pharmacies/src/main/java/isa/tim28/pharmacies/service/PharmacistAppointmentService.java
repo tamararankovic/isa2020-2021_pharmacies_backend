@@ -14,11 +14,6 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.Period;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -35,7 +30,6 @@ import isa.tim28.pharmacies.dtos.PharmAppByWeekDTO;
 import isa.tim28.pharmacies.dtos.PharmAppByYearDTO;
 import isa.tim28.pharmacies.dtos.PharmAppDTO;
 import isa.tim28.pharmacies.dtos.PharmacistAppointmentDTO;
-import isa.tim28.pharmacies.dtos.PharmacistDTO;
 import isa.tim28.pharmacies.dtos.ReservationValidDTO;
 import isa.tim28.pharmacies.dtos.ShowCounselingDTO;
 import isa.tim28.pharmacies.dtos.TherapyDTO;
@@ -43,6 +37,8 @@ import isa.tim28.pharmacies.exceptions.UserDoesNotExistException;
 import isa.tim28.pharmacies.model.DailyEngagement;
 import isa.tim28.pharmacies.model.DermatologistAppointment;
 import isa.tim28.pharmacies.model.LeaveType;
+import isa.tim28.pharmacies.model.Loyalty;
+import isa.tim28.pharmacies.model.LoyaltyPoints;
 import isa.tim28.pharmacies.model.Medicine;
 import isa.tim28.pharmacies.model.MedicineConsumption;
 import isa.tim28.pharmacies.model.MedicineMissingNotification;
@@ -57,6 +53,7 @@ import isa.tim28.pharmacies.model.Reservation;
 import isa.tim28.pharmacies.model.Therapy;
 import isa.tim28.pharmacies.model.User;
 import isa.tim28.pharmacies.repository.DermatologistAppointmentRepository;
+import isa.tim28.pharmacies.repository.LoyaltyPointsRepository;
 import isa.tim28.pharmacies.repository.MedicineConsumptionRepository;
 import isa.tim28.pharmacies.repository.MedicineMissingNotificationRepository;
 import isa.tim28.pharmacies.repository.MedicineQuantityRepository;
@@ -84,6 +81,8 @@ public class PharmacistAppointmentService implements IPharmacistAppointmentServi
 	private PharmacistRepository pharmacistRepository;
 	private MedicineConsumptionRepository medicineConsumptionRepository;
 	private EmailService emailService;
+	private LoyaltyPointsRepository loyaltyPointsRepository;
+	private SystemAdminService systemAdminService;
 
 	@Autowired
 	public PharmacistAppointmentService(PharmacistAppointmentRepository appointmentRepository,
@@ -93,7 +92,10 @@ public class PharmacistAppointmentService implements IPharmacistAppointmentServi
 			MedicineMissingNotificationRepository medicineMissingNotificationRepository,
 			PharmacistLeaveRequestRepository pharmacistLeaveRequestRepository,
 			DermatologistAppointmentRepository dermatologistAppointmentRepository,
-			PharmacistRepository pharmacistRepository, EmailService emailService,MedicineConsumptionRepository medicineConsumptionRepository) {
+			PharmacistRepository pharmacistRepository, EmailService emailService,
+			MedicineConsumptionRepository medicineConsumptionRepository, LoyaltyPointsRepository loyaltyPointsRepository,
+			SystemAdminService systemAdminService) {
+		
 		super();
 		this.appointmentRepository = appointmentRepository;
 		this.medicineRepository = medicineRepository;
@@ -107,6 +109,7 @@ public class PharmacistAppointmentService implements IPharmacistAppointmentServi
 		this.pharmacistRepository = pharmacistRepository;
 		this.emailService = emailService;
 		this.medicineConsumptionRepository = medicineConsumptionRepository;
+		this.systemAdminService = systemAdminService;
 	}
 
 	@Override
@@ -158,6 +161,13 @@ public class PharmacistAppointmentService implements IPharmacistAppointmentServi
 		report.setTherapies(therapies);
 		pharmacistReportRepository.save(report);
 		app.setDone(true);
+		
+		//loyalty
+		Patient patient = app.getPatient();
+		patient.addPoints(app.getPointsAfterAdvising());
+		systemAdminService.updateCathegoryOfPatient(patient);
+		patientRepository.save(patient);
+		
 		appointmentRepository.save(app);
 
 		/*
@@ -260,6 +270,12 @@ public class PharmacistAppointmentService implements IPharmacistAppointmentServi
 				return null;
 			else {
 				reservation.setReceived(true);
+				//loyalty program
+				Patient patient = reservation.getPatient();
+				patient.addPoints(reservation.getMedicine().getPoints());
+				systemAdminService.updateCathegoryOfPatient(patient);
+				patientRepository.save(patient);
+				
 				reservationRepository.save(reservation);
 				medicineConsumptionRepository.save(new MedicineConsumption(reservation.getMedicine(), reservation.getPharmacy(), 1));
 				return reservation;
@@ -286,6 +302,35 @@ public class PharmacistAppointmentService implements IPharmacistAppointmentServi
 			newAppointment.setPatientWasPresent(false);
 			newAppointment.setPharmacist(lastAppointment.getPharmacist());
 			newAppointment.setStartDateTime(startDateTime);
+			
+			//loyalty program
+			if(loyaltyPointsRepository.findAll() == null) {
+				newAppointment.setPointsAfterAdvising(0);
+				newAppointment.setPrice(lastAppointment.getPharmacist().getEngegementInPharmacy().getPharmacy().getPharmacistAppointmentCurrentPrice());
+			}else 
+			{
+				List<LoyaltyPoints> points = loyaltyPointsRepository.findAll();
+				if(!points.isEmpty()) {
+					LoyaltyPoints lp = points.get(points.size() - 1);
+					newAppointment.setPointsAfterAdvising(lp.getPointsAfterAdvising());
+					
+					double price = lastAppointment.getPharmacist().getEngegementInPharmacy().getPharmacy().getPharmacistAppointmentCurrentPrice();
+					if(lastAppointment.getPatient().getCategory().equals(Loyalty.REGULAR)) {
+						newAppointment.setPrice(price);
+					}else if(lastAppointment.getPatient().getCategory().equals(Loyalty.SILVER)) {
+						double procentage = price*(lp.getDiscountForSilver()/100);
+						newAppointment.setPrice(price-procentage);
+					}else if(lastAppointment.getPatient().getCategory().equals(Loyalty.GOLD)) {
+						double procentage = price*(lp.getDiscountForGold()/100);
+						newAppointment.setPrice(price-procentage);
+					}
+				}else { 
+					newAppointment.setPointsAfterAdvising(0);
+					newAppointment.setPrice(lastAppointment.getPharmacist().getEngegementInPharmacy().getPharmacy().getPharmacistAppointmentCurrentPrice());
+
+				}
+			}
+			
 			appointmentRepository.save(newAppointment);
 			return newAppointment;
 		} catch (Exception e) {

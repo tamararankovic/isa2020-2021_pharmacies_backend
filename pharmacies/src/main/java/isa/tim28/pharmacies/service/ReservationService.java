@@ -19,6 +19,8 @@ import isa.tim28.pharmacies.exceptions.ForbiddenOperationException;
 import isa.tim28.pharmacies.exceptions.MedicineDoesNotExistException;
 import isa.tim28.pharmacies.exceptions.UserDoesNotExistException;
 import isa.tim28.pharmacies.model.CancelledReservation;
+import isa.tim28.pharmacies.model.Loyalty;
+import isa.tim28.pharmacies.model.LoyaltyPoints;
 import isa.tim28.pharmacies.model.Medicine;
 import isa.tim28.pharmacies.model.MedicineQuantity;
 import isa.tim28.pharmacies.model.Pharmacy;
@@ -26,6 +28,7 @@ import isa.tim28.pharmacies.model.Reservation;
 import isa.tim28.pharmacies.model.ReservationStatus;
 import isa.tim28.pharmacies.model.User;
 import isa.tim28.pharmacies.repository.CancelledReservationRepository;
+import isa.tim28.pharmacies.repository.LoyaltyPointsRepository;
 import isa.tim28.pharmacies.repository.ReservationRepository;
 import isa.tim28.pharmacies.service.interfaces.IMedicineService;
 import isa.tim28.pharmacies.service.interfaces.IOrderService;
@@ -43,10 +46,12 @@ public class ReservationService implements IReservationService {
 	private IMedicineService medicineService;
 	private EmailService emailService;
 	private IOrderService orderService;
+	private LoyaltyPointsRepository loyaltyPointsRepository;
 	
 	@Autowired
 	public ReservationService(ReservationRepository reservationRepository, IPatientService patientService,IPharmacyService pharmacyService
-			,IMedicineService medicineService,CancelledReservationRepository cancelledReservationRepository, EmailService emailService, IOrderService orderService) {
+			,IMedicineService medicineService,CancelledReservationRepository cancelledReservationRepository, EmailService emailService, IOrderService orderService,
+			 LoyaltyPointsRepository loyaltyPointsRepository) {
 		super();
 		this.reservationRepository = reservationRepository;
 		this.patientService = patientService;
@@ -55,6 +60,7 @@ public class ReservationService implements IReservationService {
 		this.pharmacyService = pharmacyService;
 		this.emailService = emailService;
 		this.orderService = orderService;
+		this.loyaltyPointsRepository = loyaltyPointsRepository;
 	}
 	
 	@Override
@@ -135,7 +141,32 @@ public class ReservationService implements IReservationService {
 		Reservation res = new Reservation();
 		res.setMedicine(medicineService.getByName(dto.getMedicine()));
 		
-			res.setPatient(patientService.getPatientById(loggedInUser.getId()));
+		res.setPatient(patientService.getPatientById(loggedInUser.getId()));
+		
+		//loyalty program
+		if(loyaltyPointsRepository.findAll() == null) {
+			res.setPrice(pharmacyService.getByName(dto.getPharmacy()).getCurrentPrice(medicineService.getByName(dto.getMedicine())));
+		}else 
+		{
+			List<LoyaltyPoints> points = loyaltyPointsRepository.findAll();
+			if(!points.isEmpty()) {
+				LoyaltyPoints lp = points.get(points.size() - 1);
+				
+				double price = pharmacyService.getByName(dto.getPharmacy()).getCurrentPrice(medicineService.getByName(dto.getMedicine()));
+				if(patientService.getPatientById(loggedInUser.getId()).getCategory().equals(Loyalty.REGULAR)) {
+					res.setPrice(price);
+				}else if(patientService.getPatientById(loggedInUser.getId()).getCategory().equals(Loyalty.SILVER)) {
+					double procentage = price*(lp.getDiscountForSilver()/100);
+					res.setPrice(price-procentage);
+				}else if(patientService.getPatientById(loggedInUser.getId()).getCategory().equals(Loyalty.GOLD)) {
+					double procentage = price*(lp.getDiscountForGold()/100);
+					res.setPrice(price-procentage);
+				}
+			}else { 	
+				res.setPrice(pharmacyService.getByName(dto.getPharmacy()).getCurrentPrice(medicineService.getByName(dto.getMedicine())));
+
+			}
+		}
 		
 		res.setPharmacy(pharmacyService.getByName(dto.getPharmacy()));
 		res.setReceived(false);
@@ -146,7 +177,7 @@ public class ReservationService implements IReservationService {
 		
 		Reservation reservation = reservationRepository.save(res);
 
-			emailService.sendReservationMadeEmailAsync(loggedInUser.getFullName(), "pajapataktevoli@gmail.com",dto.getMedicine(), reservation.getId());
+		emailService.sendReservationMadeEmailAsync(loggedInUser.getFullName(), "pajapataktevoli@gmail.com",dto.getMedicine(), reservation.getId());
 	
 		
 		return res;
