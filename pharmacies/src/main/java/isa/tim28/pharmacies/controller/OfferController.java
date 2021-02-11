@@ -111,7 +111,7 @@ public class OfferController {
 		} catch (OfferDoesNotExistException e) {
 			return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
 		} catch (ForbiddenOperationException e) {
-			return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+			return new ResponseEntity<>("Deadline passed!You cannot change offer informations", HttpStatus.BAD_REQUEST);
 		}
 		
 		return new ResponseEntity<>("", HttpStatus.OK);
