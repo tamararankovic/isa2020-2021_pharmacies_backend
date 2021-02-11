@@ -24,10 +24,12 @@ import isa.tim28.pharmacies.dtos.DermPharmacyDTO;
 import isa.tim28.pharmacies.dtos.DermatologistAppointmentDTO;
 import isa.tim28.pharmacies.dtos.DermatologistDTO;
 import isa.tim28.pharmacies.dtos.DermatologistForComplaintDTO;
+import isa.tim28.pharmacies.dtos.DermatologistExaminationForPatientDTO;
 import isa.tim28.pharmacies.dtos.DermatologistProfileDTO;
 import isa.tim28.pharmacies.dtos.DermatologistReportDTO;
 import isa.tim28.pharmacies.dtos.DermatologistSaveAppointmentDTO;
 import isa.tim28.pharmacies.dtos.DermatologistToEmployDTO;
+import isa.tim28.pharmacies.dtos.DoctorRatingDTO;
 import isa.tim28.pharmacies.dtos.ExistingDermatologistAppointmentDTO;
 import isa.tim28.pharmacies.dtos.IsAllergicDTO;
 import isa.tim28.pharmacies.dtos.IsAppointmentAvailableDTO;
@@ -56,6 +58,7 @@ import isa.tim28.pharmacies.exceptions.PasswordIncorrectException;
 import isa.tim28.pharmacies.exceptions.UserDoesNotExistException;
 import isa.tim28.pharmacies.model.DermatologistAppointment;
 import isa.tim28.pharmacies.model.PharmacyAdmin;
+import isa.tim28.pharmacies.model.Rating;
 import isa.tim28.pharmacies.model.Role;
 import isa.tim28.pharmacies.model.User;
 import isa.tim28.pharmacies.service.DermatologistAppointmentService;
@@ -732,4 +735,48 @@ public class DermatologistController {
 		}
 		throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You don't have required permissions!");
 	}
+	
+	@PostMapping(value = "schedule", produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<String> scheduleApp(@RequestBody DermatologistExaminationForPatientDTO dto,HttpSession session){
+		
+		User loggedInUser = (User) session.getAttribute("loggedInUser");
+		if(loggedInUser == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No logged in user!");
+		}
+		if(loggedInUser.getRole() != Role.PATIENT) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only patient can schedule an appointment.");
+		}
+		dermatologistAppointmentService.scheduleApp(dto.getId(),loggedInUser);
+		return new ResponseEntity<>("zakazan",HttpStatus.OK);
+	}
+	
+	@GetMapping(value = "derm-rating")
+	public ResponseEntity<List<DoctorRatingDTO>> getAllDoctorsForRating(HttpSession session){
+		User loggedInUser = (User) session.getAttribute("loggedInUser");
+		if(loggedInUser == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No logged in user!");
+		}
+		if(loggedInUser.getRole() != Role.PATIENT) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only patinet can schedule appointments.");
+		}
+		
+		List< DoctorRatingDTO> res = dermatologistService.getAllDoctorsForRating(loggedInUser.getId());
+		return new ResponseEntity<>(res,HttpStatus.OK);
+	}
+	
+	@PostMapping(value = "save-derm-rating")
+	public ResponseEntity<String> saveMedicineForRating(@RequestBody DoctorRatingDTO dto,HttpSession session){
+		User loggedInUser = (User) session.getAttribute("loggedInUser");
+		if(loggedInUser == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No logged in user!");
+		}
+		if(loggedInUser.getRole() != Role.PATIENT) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only patinet can schedule appointments.");
+		}
+		
+		Rating res = dermatologistService.saveDermatologistRating(dto,loggedInUser.getId());
+		return new ResponseEntity<>("sacuvano",HttpStatus.OK);
+	}
+	
+	
 }

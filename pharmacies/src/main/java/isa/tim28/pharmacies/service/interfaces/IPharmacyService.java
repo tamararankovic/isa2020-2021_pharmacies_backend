@@ -10,6 +10,7 @@ import javax.mail.MessagingException;
 import isa.tim28.pharmacies.dtos.AllComplaintsDTO;
 import isa.tim28.pharmacies.dtos.AnswerOnComplaintDTO;
 import isa.tim28.pharmacies.dtos.ComplaintDTO;
+import isa.tim28.pharmacies.dtos.DoctorRatingDTO;
 import isa.tim28.pharmacies.dtos.MedicineSearchDTO;
 import isa.tim28.pharmacies.dtos.PharmaciesCounselingDTO;
 import isa.tim28.pharmacies.dtos.PharmacyAddAdminDTO;
@@ -28,6 +29,7 @@ import isa.tim28.pharmacies.model.MedicineQuantity;
 import isa.tim28.pharmacies.model.Patient;
 import isa.tim28.pharmacies.model.Pharmacy;
 import isa.tim28.pharmacies.model.PharmacyAdmin;
+import isa.tim28.pharmacies.model.Rating;
 
 public interface IPharmacyService {
 
@@ -74,5 +76,7 @@ public interface IPharmacyService {
 	boolean answerOnComplaint(AnswerOnComplaintDTO answer) throws MessagingException;
 	
 	List<PharmaciesCounselingDTO> getPharmaciesWithAvailablePharmacists(LocalDateTime date);
+
+	Rating savePharmacyRating(DoctorRatingDTO dto, long id);
 
 }

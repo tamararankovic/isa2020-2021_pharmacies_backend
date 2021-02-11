@@ -181,6 +181,28 @@ public class EmailService {
 
 		System.out.println("Email poslat!");
 	}
+	
+	@Async
+	public void sendAppointmentScheduled(String name, String address, String dermatologist, String date)
+			throws MessagingException {
+		System.out.println("Async metoda se izvrsava u drugom Threadu u odnosu na prihvaceni zahtev. Thread id: "
+				+ Thread.currentThread().getId());
+		System.out.println("Slanje emaila...");
+		String content = "Pozdrav " + name + ",<br>" + "Uspešno ste zakazali pregled kod dermatologa: " + dermatologist + "." + "<br>"+
+				"Savetovanje će se održati " + date + "<br>"
+				+"Hvala Vam,<br>" + "ISA, TIM 28.";
+
+		MimeMessage message = javaMailSender.createMimeMessage();
+		MimeMessageHelper helper = new MimeMessageHelper(message);
+		helper.setFrom(env.getProperty("spring.mail.username"));
+		helper.setTo(address);
+		helper.setSubject("Uspešno zakazan pregled");
+		helper.setText(content, true);
+
+		javaMailSender.send(message);
+
+		System.out.println("Email poslat!");
+	}
 
 	public void sendEmailToSupplier(String email, String name, String text, long offerId) throws MessagingException {
 		String content = "Poštovani/Poštovana " + name + ",<br>" + "Vaša ponuda je " + text + "<br>" + "Broj ponude: "

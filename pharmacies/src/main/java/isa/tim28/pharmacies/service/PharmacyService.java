@@ -18,6 +18,7 @@ import isa.tim28.pharmacies.dtos.AnswerOnComplaintDTO;
 import isa.tim28.pharmacies.dtos.CompatibleMedicinesDTO;
 import isa.tim28.pharmacies.dtos.ComplaintDTO;
 import isa.tim28.pharmacies.dtos.DermatologistExaminationForPatientDTO;
+import isa.tim28.pharmacies.dtos.DoctorRatingDTO;
 import isa.tim28.pharmacies.dtos.ItemPriceDTO;
 import isa.tim28.pharmacies.dtos.MedicineSearchDTO;
 import isa.tim28.pharmacies.dtos.MedicineSpecificationDTO;
@@ -27,6 +28,7 @@ import isa.tim28.pharmacies.dtos.PharmacyBasicInfoDTO;
 import isa.tim28.pharmacies.dtos.PharmacyForMedSearchDTO;
 import isa.tim28.pharmacies.dtos.PharmacyInfoForPatientDTO;
 import isa.tim28.pharmacies.dtos.PriceListDTO;
+import isa.tim28.pharmacies.dtos.ShowCounselingDTO;
 import isa.tim28.pharmacies.exceptions.ForbiddenOperationException;
 import isa.tim28.pharmacies.exceptions.InvalidComplaintException;
 import isa.tim28.pharmacies.exceptions.MedicineDoesNotExistException;
@@ -68,6 +70,8 @@ import isa.tim28.pharmacies.service.interfaces.IMedicineService;
 import isa.tim28.pharmacies.service.interfaces.IPharmacistAppointmentService;
 import isa.tim28.pharmacies.service.interfaces.IPharmacistService;
 import isa.tim28.pharmacies.service.interfaces.IPharmacyService;
+import isa.tim28.pharmacies.service.interfaces.IRatingService;
+import isa.tim28.pharmacies.service.interfaces.IReservationService;
 
 @Service
 public class PharmacyService implements IPharmacyService {
@@ -89,6 +93,7 @@ public class PharmacyService implements IPharmacyService {
 	private DermatologistRepository dermatologistRepository;
 	private PharmacistRepository pharmacistRepository;
 	private IPharmacistAppointmentService pharmacistAppointmentService;
+	private IRatingService ratingService;
 	
 	@Autowired
 	public PharmacyService(PharmacyRepository pharmacyRepository, IPharmacistService pharmacistService,
@@ -98,7 +103,7 @@ public class PharmacyService implements IPharmacyService {
 		    DermatologistAppointmentRepository dermatologistAppointmentRepository, PharmacistAppointmentRepository pharmacistAppointmentRepository,
 		    PharmacistComplaintRepository pharmacistComplaintRepository, DermatologistComplaintRepository dermatologistComplaintRepository, 
 		    EmailService emailService,  PatientRepository patientRepository, DermatologistRepository dermatologistRepository,
-		    PharmacistRepository pharmacistRepository,  IPharmacistAppointmentService pharmacistAppointmentService) {
+		    PharmacistRepository pharmacistRepository,  IPharmacistAppointmentService pharmacistAppointmentService, IRatingService ratingService) {
 
 		super();
 		this.pharmacyRepository = pharmacyRepository;
@@ -117,6 +122,9 @@ public class PharmacyService implements IPharmacyService {
 		this.dermatologistRepository = dermatologistRepository;
 		this.pharmacistRepository = pharmacistRepository;
 		this.pharmacistAppointmentService = pharmacistAppointmentService;
+		this.patientRepository = patientRepository;
+		this.ratingService = ratingService;
+		
 	}
 
 	@Override
@@ -315,9 +323,9 @@ public class PharmacyService implements IPharmacyService {
 						m.getAdvisedDailyDose(), m.getIngredients(), compatibleMedicines);
 
 				Set<PharmacyForMedSearchDTO> pharmacies = new HashSet<PharmacyForMedSearchDTO>();
-				for(Pharmacy pharmacy : getAll()) {
-					for(MedicineQuantity medi : pharmacy.getMedicines()) {
-						if(medi.getMedicine().getId() == m.getId()) {
+				for (Pharmacy pharmacy : getAll()) {
+					for (MedicineQuantity medi : pharmacy.getMedicines()) {
+						if (medi.getMedicine().getId() == m.getId()) {
 							double price = 0.0;
 							for (PriceList pl : pharmacy.getPriceLists()) {
 								for (MedicinePrice mp : pl.getMedicinePrices()) {
@@ -362,9 +370,9 @@ public class PharmacyService implements IPharmacyService {
 						m.getAdvisedDailyDose(), m.getIngredients(), compatibleMedicines);
 
 				Set<PharmacyForMedSearchDTO> pharmacies = new HashSet<PharmacyForMedSearchDTO>();
-				for(Pharmacy pharmacy : getAll()) {
-					for(MedicineQuantity medi : pharmacy.getMedicines()) {
-						if(medi.getMedicine().getId() == m.getId()) {
+				for (Pharmacy pharmacy : getAll()) {
+					for (MedicineQuantity medi : pharmacy.getMedicines()) {
+						if (medi.getMedicine().getId() == m.getId()) {
 							double price = 0.0;
 							for (PriceList pl : pharmacy.getPriceLists()) {
 								for (MedicinePrice mp : pl.getMedicinePrices()) {
@@ -461,6 +469,7 @@ public class PharmacyService implements IPharmacyService {
 		Set<DermatologistExaminationForPatientDTO> appDtos = new HashSet<DermatologistExaminationForPatientDTO>();
 		for (DermatologistAppointment a : appointments) {
 			DermatologistExaminationForPatientDTO appDto = new DermatologistExaminationForPatientDTO();
+			appDto.setId(a.getId());
 			appDto.setStartDateTime(a.getStartDateTime());
 			appDto.setDermatologist(
 					a.getDermatologist().getUser().getName() + " " + a.getDermatologist().getUser().getSurname());
@@ -553,9 +562,10 @@ public class PharmacyService implements IPharmacyService {
 		List<Pharmacy> pharmacies = pharmacyRepository.findAll();
 		for (Pharmacy p : pharmacies) {
 			Set<Medicine> allMedicine = findAllInStockByPharmacyId(p.getId());
-			for(Medicine m : allMedicine) {
-				if(medicineId ==m.getId()) {
-					PharmacyBasicInfoDTO pharm = new PharmacyBasicInfoDTO(p.getName(),p.getDescription(),p.getAddress(), p.getAvgRating());
+			for (Medicine m : allMedicine) {
+				if (medicineId == m.getId()) {
+					PharmacyBasicInfoDTO pharm = new PharmacyBasicInfoDTO(p.getName(), p.getDescription(),
+							p.getAddress(), p.getAvgRating());
 					res.add(pharm);
 					continue;
 				}
@@ -700,12 +710,13 @@ public class PharmacyService implements IPharmacyService {
 		List<Pharmacy> all = getAll();
 		List<PharmaciesCounselingDTO> result = new ArrayList<PharmaciesCounselingDTO>();
 		boolean hasAvailablePharmacists = false;
-		
+
 		for (Pharmacy p : all) {
 			hasAvailablePharmacists = false;
 			Set<Pharmacist> pharmacists = pharmacistService.findAllByPharmacyId(p.getId());
 			for (Pharmacist pharm : pharmacists) {
-				if (pharmacistAppointmentService.isPharmacistAvailable(pharm, date)) {
+				if (pharmacistAppointmentService.isPharmacistAvailable(pharm, date)
+						&& pharmacistAppointmentService.isPharmacistInPharmacy(pharm, date)) {
 					hasAvailablePharmacists = true;
 				}
 			}
@@ -720,4 +731,24 @@ public class PharmacyService implements IPharmacyService {
 		}
 		return result;
 	}
+
+	@Override
+	public Rating savePharmacyRating(DoctorRatingDTO dto, long id) {
+		Pharmacy pharmacy = pharmacyRepository.findById(dto.getId()).get();
+		
+		Rating r = new Rating();
+		r.setRating(dto.getRating());
+		r.setPatient(patientRepository.findOneByUser_Id(id));
+		Rating saved = ratingService.saveRating(r);
+		
+		pharmacy.getRatings().add(saved);
+		pharmacyRepository.save(pharmacy);
+		
+		return saved;
+	}
+	
+	
+
+	
+
 }

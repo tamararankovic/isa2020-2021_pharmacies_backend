@@ -9,10 +9,14 @@ import isa.tim28.pharmacies.dtos.ReservationDTO;
 import isa.tim28.pharmacies.exceptions.ForbiddenOperationException;
 import isa.tim28.pharmacies.exceptions.MedicineDoesNotExistException;
 import isa.tim28.pharmacies.exceptions.UserDoesNotExistException;
+import isa.tim28.pharmacies.dtos.DoctorRatingDTO;
+
+import isa.tim28.pharmacies.exceptions.PharmacyNotFoundException;
 import isa.tim28.pharmacies.model.Reservation;
 import isa.tim28.pharmacies.model.User;
 import isa.tim28.pharmacies.model.Medicine;
 import isa.tim28.pharmacies.model.Pharmacy;
+import isa.tim28.pharmacies.model.Rating;
 
 public interface IReservationService {
 
@@ -28,5 +32,11 @@ public interface IReservationService {
 
 	void deleteMedicine(Pharmacy pharmacy, long medicineId)
 			throws MedicineDoesNotExistException, ForbiddenOperationException;
+
+	List<DoctorRatingDTO> getMedicineForRating(long userId);
+
+	Rating saveMedicineRating(DoctorRatingDTO dto, long id);
+
+	List<DoctorRatingDTO> getPharmaciesFromReservations(long id) throws PharmacyNotFoundException;
 
 }
