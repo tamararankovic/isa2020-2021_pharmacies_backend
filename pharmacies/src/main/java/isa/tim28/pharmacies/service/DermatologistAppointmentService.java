@@ -69,7 +69,7 @@ import isa.tim28.pharmacies.repository.PharmacistAppointmentRepository;
 import isa.tim28.pharmacies.service.interfaces.IDermatologistAppointmentService;
 
 @Service
-@Transactional(readOnly = true)
+@Transactional(readOnly = false)
 public class DermatologistAppointmentService implements IDermatologistAppointmentService {
 
 	private DermatologistAppointmentRepository appointmentRepository;
@@ -725,10 +725,12 @@ public class DermatologistAppointmentService implements IDermatologistAppointmen
 			return;
 		}
 	}
-		
-	public void scheduleApp(long appId, User loggedInUser) {
+	
+	@Transactional(readOnly = false)
+	public void scheduleApp(long appId, long appVersion, User loggedInUser) {
 
 		DermatologistAppointment da = appointmentRepository.findById(appId).get();
+		da.setVersion(appVersion);
 		da.setScheduled(true);
 		da.setPatient(patientRepository.findOneByUser_Id(loggedInUser.getId()));
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm");

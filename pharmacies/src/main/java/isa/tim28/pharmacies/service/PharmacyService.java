@@ -475,6 +475,7 @@ public class PharmacyService implements IPharmacyService {
 					a.getDermatologist().getUser().getName() + " " + a.getDermatologist().getUser().getSurname());
 			appDto.setDuration(a.getDurationInMinutes());
 			appDto.setPrice(a.getPrice());
+			appDto.setVersion(a.getVersion());
 			appDtos.add(appDto);
 		}
 		dto.setExaminations(appDtos);
