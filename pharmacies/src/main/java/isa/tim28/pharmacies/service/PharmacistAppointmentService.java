@@ -539,24 +539,21 @@ public class PharmacistAppointmentService implements IPharmacistAppointmentServi
 		if (pharmacistRepository.findById(dto.getPharmacistId()).isEmpty())
 			throw new UserDoesNotExistException("Pharmacist does not exist!");
 		else
-			pharm = pharmacistRepository.findById(dto.getPharmacistId()).get();
+			pharm = pharmacistRepository.findOneById(dto.getPharmacistId());
+		
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm");
+		LocalDateTime date = LocalDateTime.parse(dto.getDate(), formatter);
+		
+		if(!isPharmacistInPharmacy(pharm, date) || !isPharmacistAvailable(pharm, date)) return null;
 
 		app.setPharmacist(pharm);
 		app.setPatientWasPresent(false);
-
-		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm");
-		LocalDateTime date = LocalDateTime.parse(dto.getDate(), formatter);
 		app.setStartDateTime(date);
 
 		PharmacistAppointment savedApp = appointmentRepository.save(app);
 
-		try {
-			emailService.sendCounselingScheduled(loggedInUser.getFullName(), loggedInUser.getEmail(),
+		emailService.sendCounselingScheduled(loggedInUser.getFullName(), loggedInUser.getEmail(),
 					savedApp.getPharmacist().getUser().getFullName(), dto.getDate());
-		}catch(MessagingException e) {
-			// TODO Auto-generated catch block
-					e.printStackTrace();
-		}
 		
 		return app;
 		
