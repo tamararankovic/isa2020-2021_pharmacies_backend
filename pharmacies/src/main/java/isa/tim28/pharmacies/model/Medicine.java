@@ -194,23 +194,23 @@ public class Medicine {
 		this.advisedDailyDose = advisedDailyDose;
 	}
 	public boolean isNameValid() {
-		if(this.name == "" || this.name.length() < 2 || this.name.length() > 30) return false;
+		if(this.name.equals("") || this.name.length() < 2 || this.name.length() > 30) return false;
 		return true;
 	}
 	public boolean isCodeValid() {
-		if(this.code == "" || this.code.length() < 2 || this.code.length() > 30) return false;
+		if(this.code.equals("")  || this.code.length() < 2 || this.code.length() > 30) return false;
 		return true;
 	}
 	public boolean isManufacturerValid() {
-		if(this.manufacturer == "" || this.manufacturer.length() < 2 || this.manufacturer.length() > 30) return false;
+		if(this.manufacturer.equals("") || this.manufacturer.length() < 2 || this.manufacturer.length() > 30) return false;
 		return true;
 	}
 	public boolean isAdditionalInfoValid() {
-		if(this.code == "" || this.additionalInfo.length() < 2 || this.additionalInfo.length() > 30) return false;
+		if(this.additionalInfo.equals("")  || this.additionalInfo.length() < 2 || this.additionalInfo.length() > 30) return false;
 		return true;
 	}
 	public boolean isSideEffectsValid() {
-		if(this.sideEffects == "" || this.sideEffects.length() < 2 || this.sideEffects.length() > 30) return false;
+		if(this.sideEffects.equals("") || this.sideEffects.length() < 2 || this.sideEffects.length() > 30) return false;
 		return true;
 	}
 	public boolean isAdvisedDailyDose() {
