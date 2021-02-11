@@ -547,9 +547,13 @@ public class PharmacistAppointmentService implements IPharmacistAppointmentServi
 		try {
 			emailService.sendCounselingScheduled(loggedInUser.getFullName(), loggedInUser.getEmail(),
 					savedApp.getPharmacist().getUser().getFullName(), dto.getDate());
+		}catch(MessagingException e) {
+			// TODO Auto-generated catch block
+					e.printStackTrace();
+		}
 		
 		return app;
-
+		
 	}
 
 	@Override

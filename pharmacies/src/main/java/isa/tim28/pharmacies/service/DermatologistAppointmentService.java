@@ -19,7 +19,6 @@ import org.springframework.stereotype.Service;
 
 import isa.tim28.pharmacies.dtos.DermatologistAppointmentDTO;
 import isa.tim28.pharmacies.dtos.DermatologistReportDTO;
-import isa.tim28.pharmacies.dtos.DoctorRatingDTO;
 import isa.tim28.pharmacies.dtos.ExistingDermatologistAppointmentDTO;
 import isa.tim28.pharmacies.dtos.LeaveDTO;
 import isa.tim28.pharmacies.dtos.LeaveViewDTO;
@@ -86,7 +85,7 @@ public class DermatologistAppointmentService implements IDermatologistAppointmen
 			DermatologistReportRepository dermatologistReportRepository, PatientRepository patientRepository, MedicineQuantityRepository medicineQuantityRepository,
 			MedicineMissingNotificationRepository medicineMissingNotificationRepository, DermatologistRepository dermatologistRepository,
 			DermatologistLeaveRequestRepository dermatologistLeaveRequestRepository, PharmacistAppointmentRepository pharmacistAppointmentRepository,
-			LoyaltyPointsRepository loyaltyPointsRepository,  SystemAdminService systemAdminService, , EmailService emailService) {
+			LoyaltyPointsRepository loyaltyPointsRepository,  SystemAdminService systemAdminService, EmailService emailService) {
 	
 		super();
 		this.appointmentRepository = appointmentRepository;
