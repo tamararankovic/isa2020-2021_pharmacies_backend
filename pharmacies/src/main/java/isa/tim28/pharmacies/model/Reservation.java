@@ -32,6 +32,9 @@ public class Reservation {
 	
 	@Column(name = "received", nullable = false)
 	private boolean received;
+	
+	@Column(name = "price", nullable = false)
+	private double price;
 
 	public Reservation() {
 		super();
@@ -48,6 +51,26 @@ public class Reservation {
 		this.received = received;
 	}
 
+	public Reservation(long id, Patient patient, Pharmacy pharmacy, Medicine medicine, LocalDateTime dueDate,
+			boolean received, double price) {
+		super();
+		this.id = id;
+		this.patient = patient;
+		this.pharmacy = pharmacy;
+		this.medicine = medicine;
+		this.dueDate = dueDate;
+		this.received = received;
+		this.price = price;
+	}
+	
+	public double getPrice() {
+		return price;
+	}
+
+	public void setPrice(double price) {
+		this.price = price;
+	}
+	
 	public long getId() {
 		return id;
 	}

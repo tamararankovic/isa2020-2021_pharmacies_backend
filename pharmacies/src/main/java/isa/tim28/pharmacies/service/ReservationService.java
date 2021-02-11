@@ -21,6 +21,8 @@ import isa.tim28.pharmacies.exceptions.MedicineDoesNotExistException;
 import isa.tim28.pharmacies.exceptions.PharmacyNotFoundException;
 import isa.tim28.pharmacies.exceptions.UserDoesNotExistException;
 import isa.tim28.pharmacies.model.CancelledReservation;
+import isa.tim28.pharmacies.model.Loyalty;
+import isa.tim28.pharmacies.model.LoyaltyPoints;
 import isa.tim28.pharmacies.model.Medicine;
 import isa.tim28.pharmacies.model.MedicineQuantity;
 import isa.tim28.pharmacies.model.Pharmacist;
@@ -32,6 +34,7 @@ import isa.tim28.pharmacies.model.Reservation;
 import isa.tim28.pharmacies.model.ReservationStatus;
 import isa.tim28.pharmacies.model.User;
 import isa.tim28.pharmacies.repository.CancelledReservationRepository;
+import isa.tim28.pharmacies.repository.LoyaltyPointsRepository;
 import isa.tim28.pharmacies.repository.MedicineRepository;
 import isa.tim28.pharmacies.repository.ReservationRepository;
 import isa.tim28.pharmacies.service.interfaces.IMedicineService;
@@ -53,13 +56,12 @@ public class ReservationService implements IReservationService {
 	private IOrderService orderService;
 	private IRatingService ratingService;
 	private MedicineRepository medicineRepository;
-
+	private LoyaltyPointsRepository loyaltyPointsRepository;
+	
 	@Autowired
-	public ReservationService(ReservationRepository reservationRepository, IPatientService patientService,
-			IPharmacyService pharmacyService, IMedicineService medicineService,
-			CancelledReservationRepository cancelledReservationRepository, EmailService emailService,
-			IRatingService ratingService, MedicineRepository medicineRepository,IOrderService orderService) {
-
+	public ReservationService(ReservationRepository reservationRepository, IPatientService patientService,IPharmacyService pharmacyService
+			,IMedicineService medicineService,CancelledReservationRepository cancelledReservationRepository, EmailService emailService, IOrderService orderService,
+			 LoyaltyPointsRepository loyaltyPointsRepository,IRatingService ratingService, MedicineRepository medicineRepository) {
 		super();
 		this.reservationRepository = reservationRepository;
 		this.patientService = patientService;
@@ -70,6 +72,7 @@ public class ReservationService implements IReservationService {
 		this.ratingService = ratingService;
 		this.medicineRepository = medicineRepository;
 		this.orderService = orderService;
+		this.loyaltyPointsRepository = loyaltyPointsRepository;
 
 	}
 
@@ -157,15 +160,37 @@ public class ReservationService implements IReservationService {
 	}
 
 	@Override
-	public Reservation makeReservation(ReservationDTO dto, User loggedInUser) {
+	public Reservation makeReservation(ReservationDTO dto, User loggedInUser) throws UserDoesNotExistException, MessagingException {
 		Reservation res = new Reservation();
 		res.setMedicine(medicineService.getByName(dto.getMedicine()));
-		try {
-			res.setPatient(patientService.getPatientById(loggedInUser.getId()));
-		} catch (UserDoesNotExistException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		
+		res.setPatient(patientService.getPatientById(loggedInUser.getId()));
+		
+		//loyalty program
+		if(loyaltyPointsRepository.findAll() == null) {
+			res.setPrice(pharmacyService.getByName(dto.getPharmacy()).getCurrentPrice(medicineService.getByName(dto.getMedicine())));
+		}else 
+		{
+			List<LoyaltyPoints> points = loyaltyPointsRepository.findAll();
+			if(!points.isEmpty()) {
+				LoyaltyPoints lp = points.get(points.size() - 1);
+				
+				double price = pharmacyService.getByName(dto.getPharmacy()).getCurrentPrice(medicineService.getByName(dto.getMedicine()));
+				if(patientService.getPatientById(loggedInUser.getId()).getCategory().equals(Loyalty.REGULAR)) {
+					res.setPrice(price);
+				}else if(patientService.getPatientById(loggedInUser.getId()).getCategory().equals(Loyalty.SILVER)) {
+					double procentage = price*(lp.getDiscountForSilver()/100);
+					res.setPrice(price-procentage);
+				}else if(patientService.getPatientById(loggedInUser.getId()).getCategory().equals(Loyalty.GOLD)) {
+					double procentage = price*(lp.getDiscountForGold()/100);
+					res.setPrice(price-procentage);
+				}
+			}else { 	
+				res.setPrice(pharmacyService.getByName(dto.getPharmacy()).getCurrentPrice(medicineService.getByName(dto.getMedicine())));
+
+			}
 		}
+		
 		res.setPharmacy(pharmacyService.getByName(dto.getPharmacy()));
 		res.setReceived(false);
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm");

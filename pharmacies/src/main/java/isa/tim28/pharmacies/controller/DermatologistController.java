@@ -23,6 +23,7 @@ import org.springframework.web.server.ResponseStatusException;
 import isa.tim28.pharmacies.dtos.DermPharmacyDTO;
 import isa.tim28.pharmacies.dtos.DermatologistAppointmentDTO;
 import isa.tim28.pharmacies.dtos.DermatologistDTO;
+import isa.tim28.pharmacies.dtos.DermatologistForComplaintDTO;
 import isa.tim28.pharmacies.dtos.DermatologistExaminationForPatientDTO;
 import isa.tim28.pharmacies.dtos.DermatologistProfileDTO;
 import isa.tim28.pharmacies.dtos.DermatologistReportDTO;
@@ -82,6 +83,20 @@ public class DermatologistController {
 		this.emailService = emailService;
 		this.pharmacyAdminService = pharmacyAdminService;
 	}
+	
+	@GetMapping(value = "getAllDermatologists", produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<List<DermatologistForComplaintDTO>> getAllPharmacists(HttpSession session) {
+		User loggedInUser = (User) session.getAttribute("loggedInUser");
+		if (loggedInUser == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No logged in user!");
+		}
+		if (loggedInUser.getRole() != Role.PATIENT) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only patient can write a complaint.");
+		}
+		List<DermatologistForComplaintDTO> dermatologists = dermatologistService.getAllDermatologists();
+		return new ResponseEntity<>(dermatologists, HttpStatus.OK);
+	}
+	
 	
 	/*
 	 url: GET localhost:8081/derm/get

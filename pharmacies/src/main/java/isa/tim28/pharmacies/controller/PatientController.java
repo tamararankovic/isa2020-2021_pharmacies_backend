@@ -86,8 +86,8 @@ public class PatientController {
 		try {
 			patient = patientService.getPatientById(loggedInUser.getId());
 		} catch (UserDoesNotExistException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No user found!");
+
 		}
 		ArrayList<String> allergy = patientService.getAllAllergies(patient);
 
@@ -190,7 +190,7 @@ public class PatientController {
 		try (OutputStream os = Files.newOutputStream(filepath)) {
 		        os.write(qrCode.getBytes());
 		    } catch (IOException e2) {
-				e2.printStackTrace();
+		    	throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e2.getMessage());
 			}
 		List<ERecepyDTO> hospitals;
 		try {
@@ -285,8 +285,7 @@ public class PatientController {
 		try {
 			patient = patientService.getPatientById(loggedInUser.getId());
 		} catch (UserDoesNotExistException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No user found!");
 		}
 		ArrayList<String> medicine = patientService.getAllMedicine(patient);
 

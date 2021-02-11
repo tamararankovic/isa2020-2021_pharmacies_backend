@@ -21,7 +21,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 import isa.tim28.pharmacies.dtos.DermatologistAppointmentDTO;
+import isa.tim28.pharmacies.dtos.DermatologistForComplaintDTO;
 import isa.tim28.pharmacies.dtos.DermatologistReportDTO;
+import isa.tim28.pharmacies.dtos.ERecepyDTO;
 import isa.tim28.pharmacies.dtos.DoctorRatingDTO;
 import isa.tim28.pharmacies.dtos.IsAllergicDTO;
 import isa.tim28.pharmacies.dtos.IsAppointmentAvailableDTO;
@@ -88,6 +90,20 @@ public class PharmacistController {
 		this.emailService = emailService;
 		this.pharmacistAppointmentService = pharmacistAppointmentService;
 	}
+	
+	@GetMapping(value = "getAllPharmacists", produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<List<DermatologistForComplaintDTO>> getAllPharmacists(HttpSession session) {
+		User loggedInUser = (User) session.getAttribute("loggedInUser");
+		if (loggedInUser == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No logged in user!");
+		}
+		if (loggedInUser.getRole() != Role.PATIENT) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only patient can write a complaint.");
+		}
+		List<DermatologistForComplaintDTO> pharmacists = pharmacistService.getAllPharmacists();
+		return new ResponseEntity<>(pharmacists, HttpStatus.OK);
+	}
+	
 	
 	/*
 	 url: GET localhost:8081/pharm/get
@@ -608,8 +624,10 @@ public class PharmacistController {
 		try {
 			appointment = pharmacistAppointmentService.patientSaveApp(dto, loggedInUser);
 		} catch (UserDoesNotExistException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No user found!");
+		} catch (MessagingException e) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Mail not sent");
+
 		}
 		return new ResponseEntity<String>("sacuvan",HttpStatus.OK);
 	}

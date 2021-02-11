@@ -167,7 +167,9 @@ public class Patient {
 		if(this.phone == "" || this.phone.length() < 7 || this.phone.length() > 15) return false;
 		return true;
 	}
-	
+	public void addPoints(int points) {
+		this.points += points;
+	}
 	
 	
 	

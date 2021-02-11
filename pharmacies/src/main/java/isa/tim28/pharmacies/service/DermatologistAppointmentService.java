@@ -19,7 +19,6 @@ import org.springframework.stereotype.Service;
 
 import isa.tim28.pharmacies.dtos.DermatologistAppointmentDTO;
 import isa.tim28.pharmacies.dtos.DermatologistReportDTO;
-import isa.tim28.pharmacies.dtos.DoctorRatingDTO;
 import isa.tim28.pharmacies.dtos.ExistingDermatologistAppointmentDTO;
 import isa.tim28.pharmacies.dtos.LeaveDTO;
 import isa.tim28.pharmacies.dtos.LeaveViewDTO;
@@ -42,6 +41,8 @@ import isa.tim28.pharmacies.model.DermatologistLeaveRequest;
 import isa.tim28.pharmacies.model.DermatologistReport;
 import isa.tim28.pharmacies.model.EngagementInPharmacy;
 import isa.tim28.pharmacies.model.LeaveType;
+import isa.tim28.pharmacies.model.Loyalty;
+import isa.tim28.pharmacies.model.LoyaltyPoints;
 import isa.tim28.pharmacies.model.LeaveRequestState;
 import isa.tim28.pharmacies.model.Medicine;
 import isa.tim28.pharmacies.model.MedicineMissingNotification;
@@ -50,6 +51,7 @@ import isa.tim28.pharmacies.model.Patient;
 import isa.tim28.pharmacies.model.PharmacistAppointment;
 import isa.tim28.pharmacies.model.Pharmacy;
 import isa.tim28.pharmacies.model.Therapy;
+import isa.tim28.pharmacies.repository.LoyaltyPointsRepository;
 import isa.tim28.pharmacies.model.User;
 import isa.tim28.pharmacies.repository.DermatologistAppointmentRepository;
 import isa.tim28.pharmacies.repository.DermatologistLeaveRequestRepository;
@@ -74,16 +76,17 @@ public class DermatologistAppointmentService implements IDermatologistAppointmen
 	private DermatologistLeaveRequestRepository dermatologistLeaveRequestRepository;
 	private PharmacistAppointmentRepository pharmacistAppointmentRepository;
 	private DermatologistRepository dermatologistRepository;
+	private LoyaltyPointsRepository loyaltyPointsRepository;
+	private SystemAdminService systemAdminService;
 	private EmailService emailService;
-
+	
 	@Autowired
-	public DermatologistAppointmentService(DermatologistAppointmentRepository appointmentRepository,
-			MedicineRepository medicineRepository, DermatologistReportRepository dermatologistReportRepository,
-			PatientRepository patientRepository, MedicineQuantityRepository medicineQuantityRepository,
-			MedicineMissingNotificationRepository medicineMissingNotificationRepository,
-			DermatologistRepository dermatologistRepository,
-			DermatologistLeaveRequestRepository dermatologistLeaveRequestRepository,
-			PharmacistAppointmentRepository pharmacistAppointmentRepository, EmailService emailService) {
+	public DermatologistAppointmentService(DermatologistAppointmentRepository appointmentRepository, MedicineRepository medicineRepository, 
+			DermatologistReportRepository dermatologistReportRepository, PatientRepository patientRepository, MedicineQuantityRepository medicineQuantityRepository,
+			MedicineMissingNotificationRepository medicineMissingNotificationRepository, DermatologistRepository dermatologistRepository,
+			DermatologistLeaveRequestRepository dermatologistLeaveRequestRepository, PharmacistAppointmentRepository pharmacistAppointmentRepository,
+			LoyaltyPointsRepository loyaltyPointsRepository,  SystemAdminService systemAdminService, EmailService emailService) {
+	
 		super();
 		this.appointmentRepository = appointmentRepository;
 		this.medicineRepository = medicineRepository;
@@ -94,6 +97,8 @@ public class DermatologistAppointmentService implements IDermatologistAppointmen
 		this.dermatologistLeaveRequestRepository = dermatologistLeaveRequestRepository;
 		this.pharmacistAppointmentRepository = pharmacistAppointmentRepository;
 		this.dermatologistRepository = dermatologistRepository;
+		this.loyaltyPointsRepository = loyaltyPointsRepository;
+		this.systemAdminService = systemAdminService;
 		this.emailService = emailService;
 	}
 
@@ -152,6 +157,13 @@ public class DermatologistAppointmentService implements IDermatologistAppointmen
 		report.setTherapies(therapies);
 		dermatologistReportRepository.save(report);
 		app.setDone(true);
+		
+		//loyalty
+		Patient patient = app.getPatient();
+		patient.addPoints(app.getPointsAfterAppointment());
+		systemAdminService.updateCathegoryOfPatient(patient);
+		patientRepository.save(patient);
+		
 		appointmentRepository.save(app);
 
 		/*
@@ -269,10 +281,40 @@ public class DermatologistAppointmentService implements IDermatologistAppointmen
 			newAppointment.setPatientWasPresent(false);
 			newAppointment.setDermatologist(lastAppointment.getDermatologist());
 			newAppointment.setStartDateTime(startDateTime);
-			newAppointment.setPrice(price);
+			
+			
 			newAppointment.setScheduled(true);
 			newAppointment.setDurationInMinutes(30);
 			newAppointment.setPharmacy(lastAppointment.getPharmacy());
+			
+			//loyalty program
+			if(loyaltyPointsRepository.findAll() == null) {
+				newAppointment.setPointsAfterAppointment(0);
+				newAppointment.setPrice(price);
+			}else 
+			{
+				List<LoyaltyPoints> points = loyaltyPointsRepository.findAll();
+				if(!points.isEmpty()) {
+					LoyaltyPoints lp = points.get(points.size() - 1);
+					newAppointment.setPointsAfterAppointment(lp.getPointsAfterAppointment());
+					
+					if(lastAppointment.getPatient().getCategory().equals(Loyalty.REGULAR)) {
+						newAppointment.setPrice(price);
+					}else if(lastAppointment.getPatient().getCategory().equals(Loyalty.SILVER)) {
+						double procentage = price*(lp.getDiscountForSilver()/100);
+						long result = (long) procentage;
+						newAppointment.setPrice(price-result);
+					}else if(lastAppointment.getPatient().getCategory().equals(Loyalty.GOLD)) {
+						double procentage = price*(lp.getDiscountForGold()/100);
+						long result = (long) procentage;
+						newAppointment.setPrice(price-result);
+					}
+				}else { 
+					newAppointment.setPointsAfterAppointment(0);
+					newAppointment.setPrice(price);
+				}
+			}
+			
 			appointmentRepository.save(newAppointment);
 			return newAppointment;
 		} catch (Exception e) {
@@ -666,6 +708,7 @@ public class DermatologistAppointmentService implements IDermatologistAppointmen
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm");
 		String date = da.getStartDateTime().format(formatter);
 		appointmentRepository.save(da);
+		
 		try {
 			emailService.sendAppointmentScheduled(loggedInUser.getFullName(), loggedInUser.getEmail(),
 					da.getDermatologist().getUser().getFullName(), date);
@@ -674,6 +717,7 @@ public class DermatologistAppointmentService implements IDermatologistAppointmen
 			e.printStackTrace();
 		}
 	}
+	
 
 	@Override
 	public List<ShowCounselingDTO> getAllIncomingAppointments(long id, boolean past) {

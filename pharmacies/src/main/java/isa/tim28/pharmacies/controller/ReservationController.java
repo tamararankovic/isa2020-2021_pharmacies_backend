@@ -3,6 +3,7 @@ package isa.tim28.pharmacies.controller;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.mail.MessagingException;
 import javax.servlet.http.HttpSession;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +19,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import isa.tim28.pharmacies.dtos.DoctorRatingDTO;
 import isa.tim28.pharmacies.dtos.ReservationDTO;
+import isa.tim28.pharmacies.exceptions.UserDoesNotExistException;
 import isa.tim28.pharmacies.exceptions.PharmacyNotFoundException;
 import isa.tim28.pharmacies.model.Rating;
 import isa.tim28.pharmacies.model.Reservation;
@@ -48,7 +50,13 @@ public class ReservationController {
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only patient can view his profile data.");
 		}
 		
-		List<ReservationDTO> reservations = reservationService.getReservationByPatient(loggedInUser.getId());
+		List<ReservationDTO> reservations;
+		try {
+			reservations = reservationService.getReservationByPatient(loggedInUser.getId());
+		} catch (UserDoesNotExistException e) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
+
+		}
 
 		return new ResponseEntity<>(reservations, HttpStatus.OK);
 	}
@@ -63,7 +71,12 @@ public class ReservationController {
 		if (loggedInUser.getRole() != Role.PATIENT) {
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only patient can view his profile data.");
 		}
-		List<ReservationDTO> res = reservationService.cancelReservation(dto, loggedInUser.getId());
+		List<ReservationDTO> res;
+		try {
+			res = reservationService.cancelReservation(dto, loggedInUser.getId());
+		} catch (UserDoesNotExistException e) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
+		}
 		
 		return new ResponseEntity<>(res , HttpStatus.OK);
 		
@@ -79,7 +92,16 @@ public class ReservationController {
 		if (loggedInUser.getRole() != Role.PATIENT) {
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only patient can view his profile data.");
 		}
-		Reservation res = reservationService.makeReservation(dto, loggedInUser);
+		try {
+			Reservation res = reservationService.makeReservation(dto, loggedInUser);
+		} catch (UserDoesNotExistException e) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
+
+		} catch (MessagingException e) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Mail not sent");
+			
+
+		}
 		
 		return new ResponseEntity<>(HttpStatus.OK);
 		

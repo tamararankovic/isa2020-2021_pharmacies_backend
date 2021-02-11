@@ -66,6 +66,7 @@ public class PharmacyController {
 		this.reservationService = reservationService;
 		this.statisticsService = statisticsService;
 	}
+	
 
 	@GetMapping(value = "info/{id}")
 	public ResponseEntity<PharmacyInfoForPatientDTO> getPharmacyInfoForPatient(@PathVariable long id,
@@ -162,8 +163,7 @@ public class PharmacyController {
 		try {
 			res = pharmacyService.getPharmacyByMedicineId(dto.getId());
 		} catch (PharmacyNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No pharmacy found!");
 		}
 		
 		return new ResponseEntity<>(res,HttpStatus.OK);

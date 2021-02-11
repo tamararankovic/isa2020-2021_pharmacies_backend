@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 import isa.tim28.pharmacies.dtos.DermatologistRegisterDTO;
+import isa.tim28.pharmacies.dtos.LoyaltyDTO;
 import isa.tim28.pharmacies.dtos.MedicineCodeDTO;
 import isa.tim28.pharmacies.dtos.MedicineDTO;
 import isa.tim28.pharmacies.dtos.PharmacyAddAdminDTO;
@@ -266,6 +267,20 @@ public class SystemAdminController {
 		return new ResponseEntity<>(pharmacyService.getAllPharmacies(), HttpStatus.OK);
 	}
 	
+	@GetMapping(value = "/getPharmaciesUser", produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<List<PharmacyAddAdminDTO>> getAllPharmaciesUser(HttpSession session){
+		
+		User loggedInUser = (User) session.getAttribute("loggedInUser");
+		if(loggedInUser == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No logged in user!");
+		}
+		if(loggedInUser.getRole() != Role.PATIENT) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only patient can see all pharmacies.");
+		}
+		
+		return new ResponseEntity<>(pharmacyService.getAllPharmacies(), HttpStatus.OK);
+	}
+	
 	@PostMapping(value = "registerPharmacyAdmin")
 	public ResponseEntity<String> registerPharmacyAdmin(@RequestBody PharmacyAdminRegisterDTO dto, HttpSession session) throws CreatePharmacyAdminException{
 		
@@ -411,5 +426,19 @@ public class SystemAdminController {
 		
 		return new ResponseEntity<>("", HttpStatus.CREATED);
 		
+	}
+	
+	@PostMapping(value = "addLoyalty")
+	public ResponseEntity<String> addLoyalty(@RequestBody LoyaltyDTO dto, HttpSession session) throws CreateDermatologistException{
+		
+		User loggedInUser = (User) session.getAttribute("loggedInUser");
+		if(loggedInUser == null) {
+			return new ResponseEntity<>("No logged in user!", HttpStatus.FORBIDDEN);
+		}
+		if(loggedInUser.getRole() != Role.SYSTEM_ADMIN) {
+			return new ResponseEntity<>("Only system admin can add loyalty program parameters.", HttpStatus.FORBIDDEN);
+		}
+		systemAdminService.createLoyalty(dto);
+		return new ResponseEntity<>("", HttpStatus.OK);
 	}
 }

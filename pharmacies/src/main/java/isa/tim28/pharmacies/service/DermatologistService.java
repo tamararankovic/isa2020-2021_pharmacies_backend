@@ -11,8 +11,10 @@ import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import isa.tim28.pharmacies.dtos.ComplaintDTO;
 import isa.tim28.pharmacies.dtos.DermPharmacyDTO;
 import isa.tim28.pharmacies.dtos.DermatologistDTO;
+import isa.tim28.pharmacies.dtos.DermatologistForComplaintDTO;
 import isa.tim28.pharmacies.dtos.DermatologistProfileDTO;
 import isa.tim28.pharmacies.dtos.DermatologistToEmployDTO;
 import isa.tim28.pharmacies.dtos.DoctorRatingDTO;
@@ -24,6 +26,7 @@ import isa.tim28.pharmacies.exceptions.BadNameException;
 import isa.tim28.pharmacies.exceptions.BadNewEmailException;
 import isa.tim28.pharmacies.exceptions.BadSurnameException;
 import isa.tim28.pharmacies.exceptions.ForbiddenOperationException;
+import isa.tim28.pharmacies.exceptions.InvalidComplaintException;
 import isa.tim28.pharmacies.exceptions.InvalidDeleteUserAttemptException;
 import isa.tim28.pharmacies.exceptions.PasswordIncorrectException;
 import isa.tim28.pharmacies.exceptions.PharmacyNotFoundException;
@@ -31,6 +34,8 @@ import isa.tim28.pharmacies.exceptions.UserDoesNotExistException;
 import isa.tim28.pharmacies.mapper.DermatologistMapper;
 import isa.tim28.pharmacies.model.DailyEngagement;
 import isa.tim28.pharmacies.model.Dermatologist;
+import isa.tim28.pharmacies.model.DermatologistAppointment;
+import isa.tim28.pharmacies.model.DermatologistComplaint;
 import isa.tim28.pharmacies.model.EngagementInPharmacy;
 import isa.tim28.pharmacies.model.Pharmacy;
 import isa.tim28.pharmacies.model.PharmacyAdmin;
@@ -39,6 +44,8 @@ import isa.tim28.pharmacies.repository.EngagementInPharmacyRepository;
 import isa.tim28.pharmacies.model.Patient;
 import isa.tim28.pharmacies.model.Pharmacist;
 import isa.tim28.pharmacies.model.User;
+import isa.tim28.pharmacies.repository.DermatologistAppointmentRepository;
+import isa.tim28.pharmacies.repository.DermatologistComplaintRepository;
 import isa.tim28.pharmacies.repository.DermatologistRepository;
 import isa.tim28.pharmacies.repository.PatientRepository;
 import isa.tim28.pharmacies.repository.PharmacyRepository;
@@ -56,20 +63,78 @@ public class DermatologistService implements IDermatologistService {
 	private IDermatologistAppointmentService appointmentService;
 	private EngagementInPharmacyRepository engagementRepository;
 	private PatientRepository patientRepository;
+	private DermatologistComplaintRepository dermatologistComplaintRepository;
+	private DermatologistAppointmentRepository appointmentRepository;
 	private IRatingService ratingService;
 	private PharmacyRepository pharmacyRepository;
 	
 	@Autowired
-	public DermatologistService(DermatologistRepository dermatolgistRepository, UserRepository userRepository,PharmacyRepository pharmacyRepository, IRatingService ratingService, DermatologistMapper dermatologistMapper, IDermatologistAppointmentService appointmentService, EngagementInPharmacyRepository engagementRepository, PatientRepository patientRepository) {
-		super();
+	public DermatologistService(DermatologistRepository dermatolgistRepository, UserRepository userRepository, DermatologistMapper dermatologistMapper, 
+			IDermatologistAppointmentService appointmentService, EngagementInPharmacyRepository engagementRepository, 
+			PatientRepository patientRepository,  DermatologistComplaintRepository dermatologistComplaintRepository, 
+			DermatologistAppointmentRepository appointmentRepository, PharmacyRepository pharmacyRepository, IRatingService ratingService) {
+	
+     	super();
 		this.dermatologistRepository = dermatolgistRepository;
 		this.userRepository = userRepository;
 		this.dermatologistMapper = dermatologistMapper;
 		this.appointmentService = appointmentService;
 		this.engagementRepository = engagementRepository;
 		this.patientRepository = patientRepository;
+		this.dermatologistComplaintRepository = dermatologistComplaintRepository;
+		this.appointmentRepository = appointmentRepository;
 		this.ratingService = ratingService;
 		this.pharmacyRepository = pharmacyRepository;
+		
+	}
+	
+	@Override
+	public boolean createComplaint(Patient patient, ComplaintDTO dto) throws InvalidComplaintException, UserDoesNotExistException {
+		if(!dto.isTextValid()) 
+			throw new InvalidComplaintException("Complaint must have between 2 and 3000 characters. Try again.");
+		Optional<Dermatologist> dermatologistOp = dermatologistRepository.findById(dto.getId());
+		if(dermatologistOp.isEmpty())
+			throw new UserDoesNotExistException("You attempted to write complaint to a dermatologist that doesn't exist!");
+		Dermatologist dermatologist = dermatologistOp.get();
+		
+	    boolean  canComplain = false;
+		Set<DermatologistAppointment> dermAppointments = appointmentRepository.findAllByDermatologist_Id(dermatologist.getId());
+		for(DermatologistAppointment ap : dermAppointments) {
+			
+				try {	if(ap.getPatient().getId() == patient.getId() && ap.isPatientWasPresent()==true && ap.isDone()==true) {
+				canComplain = true;
+				break;
+				}
+		   	} catch(NullPointerException e) {
+		   		canComplain = false;
+		   		break;
+		}
+		
+		}
+		if(canComplain == true) {
+			DermatologistComplaint complaint = new DermatologistComplaint();
+			complaint.setDermatologist(dermatologist);
+			complaint.setPatient(patient);
+			complaint.setReply("");
+			complaint.setText(dto.getText());
+			dermatologistComplaintRepository.save(complaint);
+			return true;
+		}else {
+			return false;
+		}
+		
+	}
+	
+	@Override
+	public List<DermatologistForComplaintDTO> getAllDermatologists(){
+		List<DermatologistForComplaintDTO> result = new ArrayList<DermatologistForComplaintDTO>();
+		List<Dermatologist> dermatologists = dermatologistRepository.findAll();
+		for(Dermatologist d : dermatologists) {
+			DermatologistForComplaintDTO dto = new DermatologistForComplaintDTO(d.getId(), d.getUser().getName(), d.getUser().getSurname());
+			result.add(dto);
+		}
+		return result;
+		
 	}
 	
 	@Override
