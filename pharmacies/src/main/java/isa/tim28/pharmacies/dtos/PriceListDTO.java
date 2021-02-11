@@ -10,6 +10,7 @@ public class PriceListDTO {
 	private ItemPriceDTO pharmacistAppointmentPrice;
 	private ItemPriceDTO dermatologistAppointmentPrice;
 	private LocalDate startDate;
+	private long version;
 	
 	public PriceListDTO() {
 		super();
@@ -50,5 +51,13 @@ public class PriceListDTO {
 
 	public void setStartDate(LocalDate startDate) {
 		this.startDate = startDate;
+	}
+
+	public long getVersion() {
+		return version;
+	}
+
+	public void setVersion(long version) {
+		this.version = version;
 	}
 }

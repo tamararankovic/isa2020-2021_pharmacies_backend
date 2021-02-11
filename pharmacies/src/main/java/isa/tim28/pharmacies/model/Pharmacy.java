@@ -16,6 +16,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
+import javax.persistence.Version;
 
 import isa.tim28.pharmacies.exceptions.ForbiddenOperationException;
 import isa.tim28.pharmacies.exceptions.PharmacyDataInvalidException;
@@ -45,6 +46,9 @@ public class Pharmacy {
 	@OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
 	private Set<Rating> ratings = new HashSet<Rating>();
 
+	@Version
+	private Long version;
+	
 	public Pharmacy() {
 		super();
 	}
@@ -261,5 +265,13 @@ public class Pharmacy {
 			}
 		}
 		return 0;
+	}
+
+	public Long getVersion() {
+		return version;
+	}
+
+	public void setVersion(Long version) {
+		this.version = version;
 	}
 }

@@ -9,6 +9,7 @@ public class DermatologistExaminationForPatientDTO {
 	private String dermatologist;
 	private double duration;
 	private double price;
+	private long version;
 	
 	public DermatologistExaminationForPatientDTO() {
 		super();
@@ -63,5 +64,13 @@ public class DermatologistExaminationForPatientDTO {
 
 	public void setPrice(double price) {
 		this.price = price;
+	}
+
+	public long getVersion() {
+		return version;
+	}
+
+	public void setVersion(long version) {
+		this.version = version;
 	}
 }
