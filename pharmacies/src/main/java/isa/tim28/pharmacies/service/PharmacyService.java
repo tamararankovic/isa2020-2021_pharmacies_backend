@@ -124,6 +124,7 @@ public class PharmacyService implements IPharmacyService {
 		this.pharmacistAppointmentService = pharmacistAppointmentService;
 		this.patientRepository = patientRepository;
 		this.ratingService = ratingService;
+		this.ePrescriptionRepository = ePrescriptionRepository;
 		
 	}
 

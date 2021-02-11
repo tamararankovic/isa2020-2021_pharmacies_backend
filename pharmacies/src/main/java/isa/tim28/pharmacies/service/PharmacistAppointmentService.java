@@ -547,6 +547,34 @@ public class PharmacistAppointmentService implements IPharmacistAppointmentServi
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm");
 		LocalDateTime date = LocalDateTime.parse(dto.getDate(), formatter);
 		app.setStartDateTime(date);
+		
+		//loyalty program
+		if(loyaltyPointsRepository.findAll() == null) {
+			app.setPointsAfterAdvising(0);
+			app.setPrice(pharm.getEngegementInPharmacy().getPharmacy().getPharmacistAppointmentCurrentPrice());
+		}else 
+		{
+			List<LoyaltyPoints> points = loyaltyPointsRepository.findAll();
+			if(!points.isEmpty()) {
+				LoyaltyPoints lp = points.get(points.size() - 1);
+				app.setPointsAfterAdvising(lp.getPointsAfterAdvising());
+				
+				double price = pharm.getEngegementInPharmacy().getPharmacy().getPharmacistAppointmentCurrentPrice();
+				if(app.getPatient().getCategory().equals(Loyalty.REGULAR)) {
+					app.setPrice(price);
+				}else if(patientRepository.findOneByUser_Id(loggedInUser.getId()).getCategory().equals(Loyalty.SILVER)) {
+					double procentage = price*(lp.getDiscountForSilver()/100);
+					app.setPrice(price-procentage);
+				}else if(patientRepository.findOneByUser_Id(loggedInUser.getId()).getCategory().equals(Loyalty.GOLD)) {
+					double procentage = price*(lp.getDiscountForGold()/100);
+					app.setPrice(price-procentage);
+				}
+			}else { 
+				app.setPointsAfterAdvising(0);
+				app.setPrice(pharm.getEngegementInPharmacy().getPharmacy().getPharmacistAppointmentCurrentPrice());
+
+			}
+		}
 
 		PharmacistAppointment savedApp = appointmentRepository.save(app);
 
