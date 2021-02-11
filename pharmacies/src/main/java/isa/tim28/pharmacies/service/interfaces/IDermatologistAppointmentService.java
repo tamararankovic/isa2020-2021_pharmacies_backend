@@ -26,6 +26,7 @@ import isa.tim28.pharmacies.exceptions.UserDoesNotExistException;
 import isa.tim28.pharmacies.model.Dermatologist;
 import isa.tim28.pharmacies.model.DermatologistAppointment;
 import isa.tim28.pharmacies.model.Pharmacy;
+import isa.tim28.pharmacies.model.User;
 
 public interface IDermatologistAppointmentService {
 
@@ -83,10 +84,11 @@ public interface IDermatologistAppointmentService {
 
 	List<ShowCounselingDTO> getAllIncomingAppointments(long id, boolean past);
 	
-	
 	CurrentlyHasAppointmentDTO isDermatologistInAppointment(long userId);
 	
 	void endCurrentAppointment(long userId);
 
 	void updateMedicineQuantity(long medicineId, long appointmentId);
+	
+	public void scheduleApp(long appId, long appVersion, User loggedInUser);
 }

@@ -1,5 +1,6 @@
 package isa.tim28.pharmacies.model;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 import javax.persistence.CascadeType;
@@ -13,7 +14,9 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Version;
 
 @Entity
-public class DermatologistAppointment {
+public class DermatologistAppointment implements Serializable {
+
+	private static final long serialVersionUID = 1L;
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)

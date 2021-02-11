@@ -726,6 +726,7 @@ public class DermatologistAppointmentService implements IDermatologistAppointmen
 		}
 	}
 	
+	@Override
 	@Transactional(readOnly = false)
 	public void scheduleApp(long appId, long appVersion, User loggedInUser) {
 
