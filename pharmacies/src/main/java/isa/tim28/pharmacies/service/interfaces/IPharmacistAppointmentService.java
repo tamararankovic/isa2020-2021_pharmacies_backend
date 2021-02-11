@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import isa.tim28.pharmacies.dtos.CurrentlyHasAppointmentDTO;
 import isa.tim28.pharmacies.dtos.DermatologistAppointmentDTO;
 import isa.tim28.pharmacies.dtos.DermatologistReportDTO;
 import isa.tim28.pharmacies.dtos.DoctorRatingDTO;
@@ -76,4 +77,9 @@ public interface IPharmacistAppointmentService {
 	boolean isPharmacistInPharmacy(Pharmacist pharmacist, LocalDateTime startDateTime);
 	
 
+	CurrentlyHasAppointmentDTO isPharmacistInAppointment(long userId);
+	
+	void endCurrentAppointment(long userId);
+	
+	void updateMedicineQuantity(long medicineId, long appointmentId);
 }

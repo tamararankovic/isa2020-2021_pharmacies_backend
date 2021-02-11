@@ -12,11 +12,15 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import javax.persistence.OptimisticLockException;
 import javax.mail.MessagingException;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
+import isa.tim28.pharmacies.dtos.CurrentlyHasAppointmentDTO;
 import isa.tim28.pharmacies.dtos.DermatologistAppointmentDTO;
 import isa.tim28.pharmacies.dtos.DermatologistReportDTO;
 import isa.tim28.pharmacies.dtos.ExistingDermatologistAppointmentDTO;
@@ -65,6 +69,7 @@ import isa.tim28.pharmacies.repository.PharmacistAppointmentRepository;
 import isa.tim28.pharmacies.service.interfaces.IDermatologistAppointmentService;
 
 @Service
+@Transactional(readOnly = true)
 public class DermatologistAppointmentService implements IDermatologistAppointmentService {
 
 	private DermatologistAppointmentRepository appointmentRepository;
@@ -129,50 +134,47 @@ public class DermatologistAppointmentService implements IDermatologistAppointmen
 	}
 
 	@Override
+	@Transactional(readOnly = false)
 	public String fillReport(DermatologistReportDTO dto) {
-		DermatologistReport report = new DermatologistReport();
-		DermatologistAppointment app = appointmentRepository.findById(dto.getAppointmentId()).get();
-		report.setAppointment(app);
-		report.setDiagnosis(dto.getDiagnosis());
-		Set<Therapy> therapies = new HashSet<Therapy>();
-		String reservationCodes = "";
+		try {
+			DermatologistReport report = new DermatologistReport();
+			DermatologistAppointment app = appointmentRepository.findById(dto.getAppointmentId()).get();
+			report.setAppointment(app);
+			report.setDiagnosis(dto.getDiagnosis());
+			Set<Therapy> therapies = new HashSet<Therapy>();
+			String reservationCodes = "";
+			
+			for(TherapyDTO t : dto.getTherapies()) {
+				Therapy therapy = new Therapy();
+				Medicine medicine = medicineRepository.findById(t.getMedicineId()).get();
+				therapy.setDurationInDays(t.getDurationInDays());
+				therapy.setMedicine(medicine);
+				therapies.add(therapy);
+				reservationCodes = reservationCodes + medicine.getCode() + "; ";
+				updateMedicineQuantity(medicine.getId(), app.getId());
+			}
+			report.setTherapies(therapies);
+			dermatologistReportRepository.save(report);
+			app.setDone(true);
+			appointmentRepository.save(app);
 
-		for (TherapyDTO t : dto.getTherapies()) {
-			Therapy therapy = new Therapy();
-			Medicine medicine = medicineRepository.findById(t.getMedicineId()).get();
-			therapy.setDurationInDays(t.getDurationInDays());
-			therapy.setMedicine(medicine);
-			therapies.add(therapy);
-			reservationCodes = reservationCodes + medicine.getCode() + "; ";
-			updateMedicineQuantity(medicine.getId(), app.getId());
-			/*
-			 * Reservation reservation = new Reservation();
-			 * reservation.setMedicine(medicine); reservation.setPatient(app.getPatient());
-			 * reservation.setPharmacy(app.getPharmacy()); reservation.setReceived(false);
-			 * reservation.setAppointment(app.getId());
-			 * reservation.setDueDate(LocalDate.now().plusDays(1));
-			 * reservationRepository.save(reservation);
-			 */
+			//loyalty
+			Patient patient = app.getPatient();
+			patient.addPoints(app.getPointsAfterAppointment());
+			systemAdminService.updateCathegoryOfPatient(patient);
+			patientRepository.save(patient);
+
+			Dermatologist dermatologist = app.getDermatologist();
+			dermatologist.setCurrentlyHasAppointment(false);
+			dermatologistRepository.save(dermatologist);
+			
+			return reservationCodes;
+			
+		} catch(OptimisticLockException e1) {
+			return "";
+		} catch(Exception e) {
+			return "";
 		}
-		report.setTherapies(therapies);
-		dermatologistReportRepository.save(report);
-		app.setDone(true);
-		
-		//loyalty
-		Patient patient = app.getPatient();
-		patient.addPoints(app.getPointsAfterAppointment());
-		systemAdminService.updateCathegoryOfPatient(patient);
-		patientRepository.save(patient);
-		
-		appointmentRepository.save(app);
-
-		/*
-		 * Set<Reservation> reservations =
-		 * reservationRepository.findAllByAppointment(app.getId()); String
-		 * reservationCodes = ""; for(Reservation res : reservations) { reservationCodes
-		 * = reservationCodes + res.getId() + "; "; }
-		 */
-		return reservationCodes;
 	}
 
 	@Override
@@ -198,6 +200,7 @@ public class DermatologistAppointmentService implements IDermatologistAppointmen
 	}
 
 	@Override
+	@Transactional(readOnly = false)
 	public MedicineQuantityCheckDTO checkIfMedicineIsAvailable(long medicineId, long appointmentId) {
 		Pharmacy pharmacy = appointmentRepository.findById(appointmentId).get().getPharmacy();
 		Set<MedicineQuantity> medicines = pharmacy.getMedicines();
@@ -216,10 +219,11 @@ public class DermatologistAppointmentService implements IDermatologistAppointmen
 		}
 		return new MedicineQuantityCheckDTO(0);
 	}
-
-	private void updateMedicineQuantity(long medicineId, long appointmentId) {
-		Set<MedicineQuantity> medicines = appointmentRepository.findById(appointmentId).get().getPharmacy()
-				.getMedicines();
+	
+	@Override
+	@Transactional(readOnly = false)
+	public void updateMedicineQuantity(long medicineId, long appointmentId) {
+		Set<MedicineQuantity> medicines = appointmentRepository.findById(appointmentId).get().getPharmacy().getMedicines();
 		for (MedicineQuantity mq : medicines) {
 			if (mq.getMedicine().getId() == medicineId) {
 				mq.setQuantity(mq.getQuantity() - 1);
@@ -260,6 +264,7 @@ public class DermatologistAppointmentService implements IDermatologistAppointmen
 	}
 
 	@Override
+	@Transactional(readOnly = false)
 	public void deleteUnscheduledAppointments(Dermatologist dermatologist) {
 		Set<DermatologistAppointment> appointments = appointmentRepository.findAll().stream()
 				.filter(a -> a.getDermatologist().getId() == dermatologist.getId()
@@ -270,9 +275,10 @@ public class DermatologistAppointmentService implements IDermatologistAppointmen
 	}
 
 	@Override
-	public DermatologistAppointment saveDermatologistAppointment(long lastAppointmentId, long price,
-			LocalDateTime startDateTime) {
-		try {
+	@Transactional(readOnly = false)
+	public DermatologistAppointment saveDermatologistAppointment(long lastAppointmentId, long price, LocalDateTime startDateTime) {
+		boolean canSchedule = checkIfFreeAppointmentExists(lastAppointmentId, startDateTime);
+		if(canSchedule) { 
 			DermatologistAppointment lastAppointment = appointmentRepository.findById(lastAppointmentId).get();
 			if (lastAppointment == null)
 				return null;
@@ -317,50 +323,36 @@ public class DermatologistAppointmentService implements IDermatologistAppointmen
 			
 			appointmentRepository.save(newAppointment);
 			return newAppointment;
-		} catch (Exception e) {
-			return null;
 		}
+		else return null;
 	}
 
 	@Override
-	public DermatologistAppointment saveExistingDermatologistAppointment(long lastAppointmentId,
-			long newAppointmentId) {
-		try {
-			DermatologistAppointment lastAppointment = appointmentRepository.findById(lastAppointmentId).get();
-			DermatologistAppointment newAppointment = appointmentRepository.findById(newAppointmentId).get();
-			if (lastAppointment == null || newAppointment == null)
-				return null;
-			newAppointment.setScheduled(true);
-			newAppointment.setPatient(lastAppointment.getPatient());
-			appointmentRepository.save(newAppointment);
-			return newAppointment;
-		} catch (Exception e) {
-			return null;
-		}
+	@Transactional(readOnly = false)
+	public DermatologistAppointment saveExistingDermatologistAppointment(long lastAppointmentId, long newAppointmentId) {
+		DermatologistAppointment lastAppointment = appointmentRepository.findById(lastAppointmentId).get();
+		DermatologistAppointment newAppointment = appointmentRepository.findById(newAppointmentId).get();
+		if(lastAppointment == null || newAppointment == null) return null;
+		newAppointment.setScheduled(true);
+		newAppointment.setPatient(lastAppointment.getPatient());
+		appointmentRepository.save(newAppointment);
+		return newAppointment;
 	}
 
 	@Override
 	public Set<ExistingDermatologistAppointmentDTO> getExistingDermatologistAppointments(long lastAppointmentId) {
 		try {
 			DermatologistAppointment lastAppointment = appointmentRepository.findById(lastAppointmentId).get();
-			if (lastAppointment == null)
-				return null;
-			System.out.println("Pronasao je appointment...");
+			if(lastAppointment == null) return null;
 			Set<ExistingDermatologistAppointmentDTO> dtos = new HashSet<ExistingDermatologistAppointmentDTO>();
-			Set<DermatologistAppointment> dermAppointments = appointmentRepository
-					.findAllByDermatologist_Id(lastAppointment.getDermatologist().getId());
-			for (DermatologistAppointment appointment : dermAppointments) {
-				System.out.println("Prvi appointment je appointment id = " + appointment.getId());
-				if (!appointment.isScheduled()) {
-					String dateTime = appointment.getStartDateTime()
-							.format(DateTimeFormatter.ofPattern("HH:mm, dd.MM.yyyy.")).toString();
-					ExistingDermatologistAppointmentDTO dto = new ExistingDermatologistAppointmentDTO(
-							appointment.getId(), dateTime, appointment.getDefaultDurationInMinutes(),
-							appointment.getPrice());
+			Set<DermatologistAppointment> dermAppointments = appointmentRepository.findAllByDermatologist_Id(lastAppointment.getDermatologist().getId());
+			for(DermatologistAppointment appointment : dermAppointments) {
+				if(!appointment.isScheduled()) {
+					String dateTime = appointment.getStartDateTime().format(DateTimeFormatter.ofPattern("HH:mm, dd.MM.yyyy.")).toString();
+					ExistingDermatologistAppointmentDTO dto = new ExistingDermatologistAppointmentDTO(appointment.getId(), dateTime, appointment.getDefaultDurationInMinutes(), appointment.getPrice());
 					dtos.add(dto);
 				}
 			}
-			System.out.println("NEMA VISE...");
 			return dtos;
 		} catch (Exception e) {
 			return null;
@@ -566,6 +558,7 @@ public class DermatologistAppointmentService implements IDermatologistAppointmen
 	}
 
 	@Override
+	@Transactional(readOnly = false)
 	public void patientWasNotPresent(long appointmentId) {
 		try {
 			DermatologistAppointment app = appointmentRepository.findById(appointmentId).get();
@@ -583,6 +576,7 @@ public class DermatologistAppointmentService implements IDermatologistAppointmen
 	}
 
 	@Override
+	@Transactional(readOnly = false)
 	public void saveLeaveRequest(LeaveDTO dto, long userId) {
 		try {
 			Dermatologist dermatologist = dermatologistRepository.findOneByUser_Id(userId);
@@ -678,17 +672,14 @@ public class DermatologistAppointmentService implements IDermatologistAppointmen
 			return true;
 		return false;
 	}
-
-	public void createPredefinedAppointment(Dermatologist dermatologist, LocalDateTime startDateTime,
-			int durationInMinutes, long price, Pharmacy pharmacy) throws ForbiddenOperationException {
-		if (!isDermatologistInPharmacy(dermatologist, startDateTime, startDateTime.plusMinutes(durationInMinutes),
-				pharmacy))
-			throw new ForbiddenOperationException(
-					"Dermatologist is not present at the pharmacy at the selected date and time. He is either on leave or doesn't have working hours set at the selected time");
-		if (!isDermatologistAvailable(dermatologist, startDateTime)
-				|| !isDermatologistAvailable(dermatologist, startDateTime.plusMinutes(durationInMinutes)))
-			throw new ForbiddenOperationException(
-					"Dermatologist has an examination in the pharmacy that is overlapping with the one you want to create!");
+	
+	@Transactional(readOnly = false)
+	public void createPredefinedAppointment(Dermatologist dermatologist, LocalDateTime startDateTime, int durationInMinutes,
+			long price, Pharmacy pharmacy) throws ForbiddenOperationException {
+		if(!isDermatologistInPharmacy(dermatologist, startDateTime, startDateTime.plusMinutes(durationInMinutes), pharmacy))
+			throw new ForbiddenOperationException("Dermatologist is not present at the pharmacy at the selected date and time. He is either on leave or doesn't have working hours set at the selected time");
+		if(!isDermatologistAvailable(dermatologist, startDateTime) || !isDermatologistAvailable(dermatologist, startDateTime.plusMinutes(durationInMinutes)))
+			throw new ForbiddenOperationException("Dermatologist has an examination in the pharmacy that is overlapping with the one you want to create!");
 		DermatologistAppointment predefined = new DermatologistAppointment();
 		predefined.setDermatologist(dermatologist);
 		predefined.setDone(false);
@@ -700,6 +691,41 @@ public class DermatologistAppointmentService implements IDermatologistAppointmen
 		appointmentRepository.save(predefined);
 	}
 
+	@Override
+	@Transactional(readOnly = false, propagation = Propagation.REQUIRES_NEW)
+	public CurrentlyHasAppointmentDTO isDermatologistInAppointment(long userId) {
+		try {
+			Dermatologist dermatologist = dermatologistRepository.findOneByUser_Id(userId);
+			if(!dermatologist.isCurrentlyHasAppointment()) {
+				dermatologist.setCurrentlyHasAppointment(true);
+				dermatologistRepository.save(dermatologist);
+				return new CurrentlyHasAppointmentDTO(false);
+			}
+			else return new CurrentlyHasAppointmentDTO(true);
+		} catch(OptimisticLockException e1) {
+			return new CurrentlyHasAppointmentDTO(true);
+		} catch(Exception e) {
+			return new CurrentlyHasAppointmentDTO(true);
+		}
+	}
+
+	@Override
+	@Transactional(readOnly = false)
+	public void endCurrentAppointment(long userId) {
+		try {
+			Dermatologist dermatologist = dermatologistRepository.findOneByUser_Id(userId);
+			if(dermatologist.isCurrentlyHasAppointment()) {
+				dermatologist.setCurrentlyHasAppointment(false);
+				dermatologistRepository.save(dermatologist);
+			}
+			else return;
+		} catch(OptimisticLockException e1) {
+			return;
+		} catch(Exception e) {
+			return;
+		}
+	}
+		
 	public void scheduleApp(long appId, User loggedInUser) {
 
 		DermatologistAppointment da = appointmentRepository.findById(appId).get();

@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.mail.MessagingException;
+import javax.persistence.PessimisticLockException;
 import javax.servlet.http.HttpSession;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +21,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
+
+import isa.tim28.pharmacies.dtos.CurrentlyHasAppointmentDTO;
 import isa.tim28.pharmacies.dtos.DermatologistAppointmentDTO;
 import isa.tim28.pharmacies.dtos.DermatologistForComplaintDTO;
 import isa.tim28.pharmacies.dtos.DermatologistReportDTO;
@@ -41,7 +44,6 @@ import isa.tim28.pharmacies.dtos.PharmAppByMonthDTO;
 import isa.tim28.pharmacies.dtos.PharmAppByWeekDTO;
 import isa.tim28.pharmacies.dtos.PharmAppByYearDTO;
 import isa.tim28.pharmacies.dtos.PharmAppDTO;
-import isa.tim28.pharmacies.dtos.PharmaciesCounselingDTO;
 import isa.tim28.pharmacies.dtos.PharmacistAppointmentDTO;
 import isa.tim28.pharmacies.dtos.PharmacistProfileDTO;
 import isa.tim28.pharmacies.dtos.PharmacistSaveAppointmentDTO;
@@ -477,31 +479,34 @@ public class PharmacistController {
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only pharmacist can schedule appointments.");
 		}
 		
-		PharmacistAppointment appointment = pharmacistAppointmentService.savePharmacistAppointment(dto.getLastAppointmentId(), dto.getStartDateTime());
-		if(appointment != null) {
-			String patientName = appointment.getPatient().getUser().getName();
-			String patientEmail = appointment.getPatient().getUser().getEmail();
-			LocalDateTime startDateTime = appointment.getStartDateTime();
-			try {
-				emailService.sendAppointmnetConfirmationAsync(patientName, patientEmail, startDateTime);
-				return new ResponseEntity<>("", HttpStatus.OK);
-			} catch (MessagingException e) {
-				throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email not sent.");
+		try {
+			PharmacistAppointment appointment = pharmacistAppointmentService.savePharmacistAppointment(dto.getLastAppointmentId(), dto.getStartDateTime());
+			if(appointment != null) {
+				String patientName = appointment.getPatient().getUser().getName();
+				String patientEmail = appointment.getPatient().getUser().getEmail();
+				LocalDateTime startDateTime = appointment.getStartDateTime();
+				try {
+					emailService.sendAppointmnetConfirmationAsync(patientName, patientEmail, startDateTime);
+					return new ResponseEntity<>("", HttpStatus.OK);
+				} catch (MessagingException e) {
+					throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email not sent.");
+				}
 			}
+			else throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No appointment.");
+		} catch(PessimisticLockException pe) {
+			throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "You cannot schedule an appointment because someone else is scheduling with selected patient.");
+		} catch(Exception e) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No appointment.");
 		}
-		else throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No appointment.");
 	}
-	
-	
 	
 	/*
 	 url: POST localhost:8081/pharm/appointment
-	 HTTP request for saving new appointment
+	 HTTP request for checking if you can schedule an appointment
 	 returns ResponseEntity object
 	*/
 	@PostMapping(value = "/appointment", produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<IsAppointmentAvailableDTO> isAppointmentAvailable(@RequestBody PharmacistSaveAppointmentDTO dto, HttpSession session){
-		
 		
 		User loggedInUser = (User) session.getAttribute("loggedInUser");
 		if(loggedInUser == null) {
@@ -510,9 +515,14 @@ public class PharmacistController {
 		if(loggedInUser.getRole() != Role.PHARMACIST) {
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only pharmacist can schedule appointments.");
 		}
-		
-		IsAppointmentAvailableDTO available = new IsAppointmentAvailableDTO(pharmacistAppointmentService.checkIfFreeAppointmentExists(dto.getLastAppointmentId(), dto.getStartDateTime()));
-		return new ResponseEntity<>(available, HttpStatus.OK);
+		try {
+			IsAppointmentAvailableDTO available = new IsAppointmentAvailableDTO(pharmacistAppointmentService.checkIfFreeAppointmentExists(dto.getLastAppointmentId(), dto.getStartDateTime()));
+			return new ResponseEntity<>(available, HttpStatus.OK);
+		} catch(PessimisticLockException pe) {
+			throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "You cannot schedule an appointment because someone else is scheduling with selected patient.");
+		} catch(Exception e) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No appointment.");
+		}
 	}
 	
 	/*
@@ -765,12 +775,48 @@ public class PharmacistController {
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No logged in user!");
 		}
 		if(loggedInUser.getRole() != Role.PHARMACIST) {
-			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only pharmacist can startAppointment.");
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only pharmacist can start appointment.");
 		}
 		PharmAppDTO dto = pharmacistAppointmentService.hasAppointmentWithPatient(loggedInUser.getId(), patientId);
 		return new ResponseEntity<>(dto, HttpStatus.OK);
 	}
 	
+	/*
+	 url: GET localhost:8081/pharm/isPharmacistInAppointment
+	 HTTP request checking if pharmacist can start new appointment
+	 returns ResponseEntity object
+	*/
+	@GetMapping(value = "/isPharmacistInAppointment", produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<CurrentlyHasAppointmentDTO> isPharmacistInAppointment(HttpSession session){
+		User loggedInUser = (User) session.getAttribute("loggedInUser");
+		if(loggedInUser == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No logged in user!");
+		}
+		if(loggedInUser.getRole() != Role.PHARMACIST) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only pharmacist can start appointment.");
+		}
+		CurrentlyHasAppointmentDTO dto = pharmacistAppointmentService.isPharmacistInAppointment(loggedInUser.getId());
+		return new ResponseEntity<>(dto, HttpStatus.OK);
+	}
+	
+	/*
+	 url: GET localhost:8081/pharm/endCurrent
+	 HTTP request for ending current appointment
+	 returns ResponseEntity object
+	*/
+	@GetMapping(value = "/endCurrent", produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<String> endCurrent(HttpSession session){
+		User loggedInUser = (User) session.getAttribute("loggedInUser");
+		if(loggedInUser == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No logged in user!");
+		}
+		if(loggedInUser.getRole() != Role.PHARMACIST) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only pharmacist can end appointment.");
+		}
+		pharmacistAppointmentService.endCurrentAppointment(loggedInUser.getId());
+		return new ResponseEntity<>("", HttpStatus.OK);
+	}
+		
 	
 	@GetMapping(value = "pharm-rating")
 	public ResponseEntity<List<DoctorRatingDTO>> getAllDoctorsForRating(HttpSession session){

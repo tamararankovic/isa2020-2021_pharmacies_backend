@@ -4,6 +4,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import javax.persistence.CascadeType;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
@@ -11,6 +12,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
+import javax.persistence.Version;
 
 @Entity
 public class Pharmacist {
@@ -18,6 +20,9 @@ public class Pharmacist {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private long id;
+	
+	@Version
+	private Long version;
 	
 	@OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
 	private User user;
@@ -27,6 +32,9 @@ public class Pharmacist {
 	
 	@OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
 	private Set<Rating> ratings = new HashSet<Rating>();
+	
+	@Column(name = "currentlyHasAppointment", nullable = false)
+	private boolean currentlyHasAppointment = false;
 
 	public Pharmacist() {
 		super();
@@ -38,6 +46,7 @@ public class Pharmacist {
 		this.user = user;
 		this.engegementInPharmacy = engegementInPharmacy;
 		this.ratings = ratings;
+		this.currentlyHasAppointment = false;
 	}
 
 	public long getId() {
@@ -70,6 +79,22 @@ public class Pharmacist {
 
 	public void setRatings(Set<Rating> ratings) {
 		this.ratings = ratings;
+	}
+	
+	public boolean isCurrentlyHasAppointment() {
+		return currentlyHasAppointment;
+	}
+
+	public void setCurrentlyHasAppointment(boolean currentlyHasAppointment) {
+		this.currentlyHasAppointment = currentlyHasAppointment;
+	}
+
+	public Long getVersion() {
+		return version;
+	}
+
+	public void setVersion(Long version) {
+		this.version = version;
 	}
 	
 }

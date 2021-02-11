@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Set;
 
 import javax.mail.MessagingException;
+import javax.persistence.PessimisticLockException;
 import javax.servlet.http.HttpSession;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+import isa.tim28.pharmacies.dtos.CurrentlyHasAppointmentDTO;
 import isa.tim28.pharmacies.dtos.DermPharmacyDTO;
 import isa.tim28.pharmacies.dtos.DermatologistAppointmentDTO;
 import isa.tim28.pharmacies.dtos.DermatologistDTO;
@@ -454,19 +456,25 @@ public class DermatologistController {
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only dermatologist can schedule appointments.");
 		}
 		
-		DermatologistAppointment appointment = dermatologistAppointmentService.saveDermatologistAppointment(dto.getLastAppointmentId(), dto.getPrice(), dto.getStartDateTime());
-		if(appointment != null) {
-			String patientName = appointment.getPatient().getUser().getName();
-			String patientEmail = appointment.getPatient().getUser().getEmail();
-			LocalDateTime startDateTime = appointment.getStartDateTime();
-			try {
-				emailService.sendAppointmnetConfirmationAsync(patientName, patientEmail, startDateTime);
-				return new ResponseEntity<>("", HttpStatus.OK);
-			} catch (MessagingException e) {
-				throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email not sent.");
+		try {
+			DermatologistAppointment appointment = dermatologistAppointmentService.saveDermatologistAppointment(dto.getLastAppointmentId(), dto.getPrice(), dto.getStartDateTime());
+			if(appointment != null) {
+				String patientName = appointment.getPatient().getUser().getName();
+				String patientEmail = appointment.getPatient().getUser().getEmail();
+				LocalDateTime startDateTime = appointment.getStartDateTime();
+				try {
+					emailService.sendAppointmnetConfirmationAsync(patientName, patientEmail, startDateTime);
+					return new ResponseEntity<>("", HttpStatus.OK);
+				} catch (MessagingException e) {
+					throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email not sent.");
+				}
 			}
+			else throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No appointment.");
+		} catch(PessimisticLockException pe) {
+			throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "You cannot schedule an appointment because someone else is scheduling with selected patient.");
+		} catch(Exception e) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No appointment.");
 		}
-		else throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No appointment.");
 	}
 	
 	/*
@@ -485,8 +493,14 @@ public class DermatologistController {
 		if(loggedInUser.getRole() != Role.DERMATOLOGIST) {
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only dermatologist can schedule appointments.");
 		}
-		IsAppointmentAvailableDTO available = new IsAppointmentAvailableDTO(dermatologistAppointmentService.checkIfFreeAppointmentExists(dto.getLastAppointmentId(), dto.getStartDateTime()));
-		return new ResponseEntity<>(available, HttpStatus.OK);
+		try {
+			IsAppointmentAvailableDTO available = new IsAppointmentAvailableDTO(dermatologistAppointmentService.checkIfFreeAppointmentExists(dto.getLastAppointmentId(), dto.getStartDateTime()));
+			return new ResponseEntity<>(available, HttpStatus.OK);
+		} catch(PessimisticLockException pe) {
+			throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "You cannot schedule an appointment because someone else is scheduling with selected patient.");
+		} catch(Exception e) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No appointment.");
+		}
 	}
 	
 	/*
@@ -736,6 +750,43 @@ public class DermatologistController {
 		throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You don't have required permissions!");
 	}
 	
+	/*
+	 url: GET localhost:8081/derm/isDermatologistInAppointment
+	 HTTP request checking if dermatologist can start new appointment
+	 returns ResponseEntity object
+	*/
+	@GetMapping(value = "/isDermatologistInAppointment", produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<CurrentlyHasAppointmentDTO> startAppointmentForPatient(HttpSession session){
+		User loggedInUser = (User) session.getAttribute("loggedInUser");
+		if(loggedInUser == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No logged in user!");
+		}
+		if(loggedInUser.getRole() != Role.DERMATOLOGIST) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only dermatologist can start appointment.");
+		}
+		CurrentlyHasAppointmentDTO dto = dermatologistAppointmentService.isDermatologistInAppointment(loggedInUser.getId());
+		return new ResponseEntity<>(dto, HttpStatus.OK);
+	}
+	
+	/*
+	 url: GET localhost:8081/derm/endCurrent
+	 HTTP request for ending current appointment
+	 returns ResponseEntity object
+	*/
+	@GetMapping(value = "/endCurrent", produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<String> endCurrent(HttpSession session){
+		User loggedInUser = (User) session.getAttribute("loggedInUser");
+		if(loggedInUser == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No logged in user!");
+		}
+		if(loggedInUser.getRole() != Role.DERMATOLOGIST) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only dermatologist can end appointment.");
+		}
+		dermatologistAppointmentService.endCurrentAppointment(loggedInUser.getId());
+		return new ResponseEntity<>("", HttpStatus.OK);
+	}
+		
+
 	@PostMapping(value = "schedule", produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<String> scheduleApp(@RequestBody DermatologistExaminationForPatientDTO dto,HttpSession session){
 		
@@ -777,6 +828,5 @@ public class DermatologistController {
 		Rating res = dermatologistService.saveDermatologistRating(dto,loggedInUser.getId());
 		return new ResponseEntity<>("sacuvano",HttpStatus.OK);
 	}
-	
 	
 }

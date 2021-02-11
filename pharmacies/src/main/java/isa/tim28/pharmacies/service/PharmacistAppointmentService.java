@@ -7,6 +7,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.mail.MessagingException;
+import javax.persistence.OptimisticLockException;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
@@ -17,7 +18,10 @@ import java.time.format.DateTimeFormatter;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
+import isa.tim28.pharmacies.dtos.CurrentlyHasAppointmentDTO;
 import isa.tim28.pharmacies.dtos.DermatologistAppointmentDTO;
 import isa.tim28.pharmacies.dtos.DermatologistReportDTO;
 import isa.tim28.pharmacies.dtos.DoctorRatingDTO;
@@ -69,6 +73,7 @@ import isa.tim28.pharmacies.repository.ReservationRepository;
 import isa.tim28.pharmacies.service.interfaces.IPharmacistAppointmentService;
 
 @Service
+@Transactional(readOnly = true)
 public class PharmacistAppointmentService implements IPharmacistAppointmentService {
 
 	private PharmacistAppointmentRepository appointmentRepository;
@@ -137,50 +142,47 @@ public class PharmacistAppointmentService implements IPharmacistAppointmentServi
 	}
 
 	@Override
+	@Transactional(readOnly = false)
 	public String fillReport(DermatologistReportDTO dto) {
-		PharmacistReport report = new PharmacistReport();
-		PharmacistAppointment app = appointmentRepository.findById(dto.getAppointmentId()).get();
-		report.setAppointment(app);
-		report.setDiagnosis(dto.getDiagnosis());
-		Set<Therapy> therapies = new HashSet<Therapy>();
-		String reservationCodes = "";
+		try {
+			PharmacistReport report = new PharmacistReport();
+			PharmacistAppointment app = appointmentRepository.findById(dto.getAppointmentId()).get();
+			report.setAppointment(app);
+			report.setDiagnosis(dto.getDiagnosis());
+			Set<Therapy> therapies = new HashSet<Therapy>();
+			String reservationCodes = "";
 
-		for (TherapyDTO t : dto.getTherapies()) {
-			Therapy therapy = new Therapy();
-			Medicine medicine = medicineRepository.findById(t.getMedicineId()).get();
-			therapy.setDurationInDays(t.getDurationInDays());
-			therapy.setMedicine(medicine);
-			therapies.add(therapy);
-			reservationCodes = reservationCodes + medicine.getCode() + "; ";
-			updateMedicineQuantity(medicine.getId(), app.getId());
-			/*
-			 * Reservation reservation = new Reservation();
-			 * reservation.setMedicine(medicine); reservation.setPatient(app.getPatient());
-			 * reservation.setPharmacy(app.getPharmacy()); reservation.setReceived(false);
-			 * reservation.setAppointment(app.getId());
-			 * reservation.setDueDate(LocalDate.now().plusDays(1));
-			 * reservationRepository.save(reservation);
-			 */
+			for (TherapyDTO t : dto.getTherapies()) {
+				Therapy therapy = new Therapy();
+				Medicine medicine = medicineRepository.findById(t.getMedicineId()).get();
+				therapy.setDurationInDays(t.getDurationInDays());
+				therapy.setMedicine(medicine);
+				therapies.add(therapy);
+				reservationCodes = reservationCodes + medicine.getCode() + "; ";
+				updateMedicineQuantity(medicine.getId(), app.getId());
+			}
+			report.setTherapies(therapies);
+			pharmacistReportRepository.save(report);
+			app.setDone(true);
+			appointmentRepository.save(app);
+
+			//loyalty
+			Patient patient = app.getPatient();
+			patient.addPoints(app.getPointsAfterAdvising());
+			systemAdminService.updateCathegoryOfPatient(patient);
+			patientRepository.save(patient);
+			
+			Pharmacist pharmacist = app.getPharmacist();
+			pharmacist.setCurrentlyHasAppointment(false);
+			pharmacistRepository.save(pharmacist);
+
+			return reservationCodes;
+			
+		} catch(OptimisticLockException e1) {
+			return "";
+		} catch(Exception e) {
+			return "";
 		}
-		report.setTherapies(therapies);
-		pharmacistReportRepository.save(report);
-		app.setDone(true);
-		
-		//loyalty
-		Patient patient = app.getPatient();
-		patient.addPoints(app.getPointsAfterAdvising());
-		systemAdminService.updateCathegoryOfPatient(patient);
-		patientRepository.save(patient);
-		
-		appointmentRepository.save(app);
-
-		/*
-		 * Set<Reservation> reservations =
-		 * reservationRepository.findAllByAppointment(app.getId()); String
-		 * reservationCodes = ""; for(Reservation res : reservations) { reservationCodes
-		 * = reservationCodes + res.getId() + "; "; }
-		 */
-		return reservationCodes;
 	}
 
 	@Override
@@ -206,6 +208,7 @@ public class PharmacistAppointmentService implements IPharmacistAppointmentServi
 	}
 
 	@Override
+	@Transactional(readOnly = false)
 	public MedicineQuantityCheckDTO checkIfMedicineIsAvailable(long medicineId, long appointmentId) {
 		Pharmacy pharmacy = appointmentRepository.findById(appointmentId).get().getPharmacist()
 				.getEngegementInPharmacy().getPharmacy();
@@ -238,7 +241,9 @@ public class PharmacistAppointmentService implements IPharmacistAppointmentServi
 		return compatible;
 	}
 
-	private void updateMedicineQuantity(long medicineId, long appointmentId) {
+	@Override
+	@Transactional(readOnly = false)
+	public void updateMedicineQuantity(long medicineId, long appointmentId) {
 		Set<MedicineQuantity> medicines = appointmentRepository.findById(appointmentId).get().getPharmacist()
 				.getEngegementInPharmacy().getPharmacy().getMedicines();
 		for (MedicineQuantity mq : medicines) {
@@ -267,6 +272,7 @@ public class PharmacistAppointmentService implements IPharmacistAppointmentServi
 	}
 
 	@Override
+	@Transactional(readOnly = false)
 	public Reservation reservationTaken(long reservationId) {
 		try {
 			Reservation reservation = reservationRepository.findById(reservationId).get();
@@ -297,8 +303,10 @@ public class PharmacistAppointmentService implements IPharmacistAppointmentServi
 	}
 
 	@Override
+	@Transactional(readOnly = false)
 	public PharmacistAppointment savePharmacistAppointment(long lastAppointmentId, LocalDateTime startDateTime) {
-		try {
+		boolean canSchedule = checkIfFreeAppointmentExists(lastAppointmentId, startDateTime);
+		if(canSchedule) {
 			PharmacistAppointment lastAppointment = appointmentRepository.findById(lastAppointmentId).get();
 			if (lastAppointment == null)
 				return null;
@@ -338,29 +346,25 @@ public class PharmacistAppointmentService implements IPharmacistAppointmentServi
 			
 			appointmentRepository.save(newAppointment);
 			return newAppointment;
-		} catch (Exception e) {
-			return null;
 		}
+		else return null;
 	}
 
 	@Override
+	@Transactional(readOnly = false)
 	public boolean checkIfFreeAppointmentExists(long lastAppointmentId, LocalDateTime startDateTime) {
-		try {
-			PharmacistAppointment lastAppointment = appointmentRepository.findById(lastAppointmentId).get();
-			if (lastAppointment == null)
-				return false;
-			if (!isPharmacistInPharmacy(lastAppointment.getPharmacist(), startDateTime))
-				return false;
-			if (!isPharmacistAvailable(lastAppointment.getPharmacist(), startDateTime))
-				return false;
-			if (!isPatientAvailable(lastAppointment.getPatient(), startDateTime))
-				return false;
-			if (!startDateTime.isAfter(LocalDateTime.now().plusMinutes(1)))
-				return false;
-			return true;
-		} catch (Exception e) {
+		PharmacistAppointment lastAppointment = appointmentRepository.findById(lastAppointmentId).get();
+		if (lastAppointment == null)
 			return false;
-		}
+		if (!isPharmacistInPharmacy(lastAppointment.getPharmacist(), startDateTime))
+			return false;
+		if (!isPharmacistAvailable(lastAppointment.getPharmacist(), startDateTime))
+			return false;
+		if (!isPatientAvailable(patientRepository.findPatientById(lastAppointment.getPatient().getId()), startDateTime))
+			return false;
+		if (!startDateTime.isAfter(LocalDateTime.now().plusMinutes(1)))
+			return false;
+		return true;
 	}
 
 	@Override
@@ -508,6 +512,7 @@ public class PharmacistAppointmentService implements IPharmacistAppointmentServi
 	}
 
 	@Override
+	@Transactional(readOnly = false)
 	public void patientWasNotPresent(long appointmentId) {
 		try {
 			PharmacistAppointment app = appointmentRepository.findById(appointmentId).get();
@@ -523,6 +528,7 @@ public class PharmacistAppointmentService implements IPharmacistAppointmentServi
 		}
 	}
 
+	@Transactional(readOnly = false)
 	public PharmacistAppointment patientSaveApp(PharmacistAppointmentDTO dto, User loggedInUser)
 			throws UserDoesNotExistException, MessagingException {
 		PharmacistAppointment app = new PharmacistAppointment();
@@ -605,12 +611,13 @@ public class PharmacistAppointmentService implements IPharmacistAppointmentServi
 
 	}
 	
-
+	@Transactional(readOnly = false)
 	public void cancelApp(long id) {
 		appointmentRepository.deleteById(id);
 	}
 
 	@Override
+	@Transactional(readOnly = false)
 	public void saveLeaveRequest(LeaveDTO dto, long userId) {
 		try {
 			Pharmacist pharmacist = pharmacistRepository.findOneByUser_Id(userId);
@@ -702,5 +709,41 @@ public class PharmacistAppointmentService implements IPharmacistAppointmentServi
 				&& !startTime.isAfter(LocalDateTime.now().plusMinutes(10)))
 			return true;
 		return false;
+	}
+
+	@Override
+	@Transactional(readOnly = false, propagation = Propagation.REQUIRES_NEW)
+	public CurrentlyHasAppointmentDTO isPharmacistInAppointment(long userId) {
+		try {
+			Pharmacist pharmacist = pharmacistRepository.findOneByUser_Id(userId);
+			if(!pharmacist.isCurrentlyHasAppointment()) {
+				pharmacist.setCurrentlyHasAppointment(true);
+				pharmacistRepository.save(pharmacist);
+				return new CurrentlyHasAppointmentDTO(false);
+			}
+			else return new CurrentlyHasAppointmentDTO(true);
+		} catch(OptimisticLockException e1) {
+			return new CurrentlyHasAppointmentDTO(true);
+		} catch(Exception e) {
+			return new CurrentlyHasAppointmentDTO(true);
+		}
+	}
+
+	@Override
+	@Transactional(readOnly = false)
+	public void endCurrentAppointment(long userId) {
+		try {
+			Pharmacist pharmacist = pharmacistRepository.findOneByUser_Id(userId);
+			if(pharmacist.isCurrentlyHasAppointment()) {
+				pharmacist.setCurrentlyHasAppointment(false);
+				pharmacistRepository.save(pharmacist);
+			}
+			else return;
+		} catch(OptimisticLockException e1) {
+			return;
+		} catch(Exception e) {
+			return;
+		}
+		
 	}
 }
