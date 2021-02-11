@@ -69,9 +69,11 @@ insert into dermatologist_appointment(id, default_duration_in_minutes, duration_
 insert into dermatologist_appointment(id, default_duration_in_minutes, duration_in_minutes, patient_was_present, price, scheduled, start_date_time, dermatologist_id, patient_id, pharmacy_id, done) values (4, 30, 30, '0', 200, '1', '2021-02-26 08:30:00.000000', 1, 3, 2, '0');
 insert into dermatologist_appointment(id, default_duration_in_minutes, duration_in_minutes, patient_was_present, price, scheduled, start_date_time, dermatologist_id, patient_id, pharmacy_id, done) values (5, 30, 30, '1', 200, '1', '2021-02-08 09:30:00.000000', 1, 3, 1, '1');
 insert into dermatologist_appointment(id, default_duration_in_minutes, duration_in_minutes, patient_was_present, price, scheduled, start_date_time, dermatologist_id, patient_id, pharmacy_id, done) values (6, 30, 30, '0', 200, '1', '2019-02-08 08:30:00.000000', 1, 1, 1, '0');
+
 insert into dermatologist_appointment(id, default_duration_in_minutes, duration_in_minutes, patient_was_present, price, scheduled, start_date_time, dermatologist_id, patient_id, pharmacy_id, done) values (7, 30, 30, '0', 200, '1', '2021-02-26 08:30:00.000000', 1, 1, 1, '0');
 insert into dermatologist_appointment(id, default_duration_in_minutes, duration_in_minutes, patient_was_present, price, scheduled, start_date_time, dermatologist_id, patient_id, pharmacy_id, done) values (8, 30, 30, '0', 200, '1', '2021-04-23 08:30:00.000000', 1, 1, 1, '0');
 insert into dermatologist_appointment(id, default_duration_in_minutes, duration_in_minutes, patient_was_present, price, scheduled, start_date_time, dermatologist_id, patient_id, pharmacy_id, done) values (9, 30, 30, '0', 200, '1', '2021-02-26 08:30:00.000000', 1, 3, 2, '0');
+
 insert into dermatologist_appointment(id, default_duration_in_minutes, duration_in_minutes, patient_was_present, price, scheduled, start_date_time, dermatologist_id, patient_id, pharmacy_id, done) values (10, 30, 30, '0', 200, '1', '2021-02-08 09:30:00.000000', 1, 3, 1, '0');
 alter sequence dermatologist_appointment_id_seq restart with 11;
 
@@ -83,7 +85,7 @@ insert into pharmacist_appointment(id, default_duration_in_minutes, patient_was_
 insert into pharmacist_appointment(id, default_duration_in_minutes, patient_was_present, start_date_time, patient_id, pharmacist_id, done) values (6, 30, '1', '2021-02-04 11:00:00.000000', 2, 1, '1');
 insert into pharmacist_appointment(id, default_duration_in_minutes, patient_was_present, start_date_time, patient_id, pharmacist_id, done) values (7, 30, '0', '2020-02-08 08:00:00.000000', 1, 1, '0');
 insert into pharmacist_appointment(id, default_duration_in_minutes, patient_was_present, start_date_time, patient_id, pharmacist_id, done) values (8, 30, '0', '2020-02-10 09:00:00.000000', 3, 1, '0');
-insert into pharmacist_appointment(id, default_duration_in_minutes, patient_was_present, start_date_time, patient_id, pharmacist_id, done) values (9, 30, '0', '2020-05-08 10:30:00.000000', 1, 1, '0');
+insert into pharmacist_appointment(id, default_duration_in_minutes, patient_was_present, start_date_time, patient_id, pharmacist_id, done) values (9, 30, '0', '2021-05-08 10:30:00.000000', 1, 1, '0');
 insert into pharmacist_appointment(id, default_duration_in_minutes, patient_was_present, start_date_time, patient_id, pharmacist_id, done) values (10, 30, '0', '2020-10-09 11:30:00.000000', 1, 1, '0');
 alter sequence pharmacist_appointment_id_seq restart with 11;
 

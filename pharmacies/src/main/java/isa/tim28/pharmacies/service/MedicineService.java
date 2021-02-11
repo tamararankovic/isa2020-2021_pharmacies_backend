@@ -18,6 +18,7 @@ import isa.tim28.pharmacies.model.MedicineQuantity;
 import isa.tim28.pharmacies.model.Pharmacy;
 import isa.tim28.pharmacies.repository.MedicineRepository;
 import isa.tim28.pharmacies.service.interfaces.IMedicineService;
+import isa.tim28.pharmacies.service.interfaces.IReservationService;
 
 
 @Service
@@ -209,5 +210,7 @@ public class MedicineService implements IMedicineService {
 				ret.add(new MedicineForPharmacyAdminDTO(m.getId(), m.getCode(), m.getName(), m.getType().toString(), m.getManufacturer(), false));
 		return ret;
 	}
+	
+	
 
 }
