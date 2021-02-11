@@ -12,6 +12,7 @@ import javax.mail.MessagingException;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import isa.tim28.pharmacies.dtos.AllComplaintsDTO;
 import isa.tim28.pharmacies.dtos.AnswerOnComplaintDTO;
@@ -28,7 +29,6 @@ import isa.tim28.pharmacies.dtos.PharmacyBasicInfoDTO;
 import isa.tim28.pharmacies.dtos.PharmacyForMedSearchDTO;
 import isa.tim28.pharmacies.dtos.PharmacyInfoForPatientDTO;
 import isa.tim28.pharmacies.dtos.PriceListDTO;
-import isa.tim28.pharmacies.dtos.ShowCounselingDTO;
 import isa.tim28.pharmacies.exceptions.ForbiddenOperationException;
 import isa.tim28.pharmacies.exceptions.InvalidComplaintException;
 import isa.tim28.pharmacies.exceptions.MedicineDoesNotExistException;
@@ -71,9 +71,9 @@ import isa.tim28.pharmacies.service.interfaces.IPharmacistAppointmentService;
 import isa.tim28.pharmacies.service.interfaces.IPharmacistService;
 import isa.tim28.pharmacies.service.interfaces.IPharmacyService;
 import isa.tim28.pharmacies.service.interfaces.IRatingService;
-import isa.tim28.pharmacies.service.interfaces.IReservationService;
 
 @Service
+@Transactional(readOnly = false)
 public class PharmacyService implements IPharmacyService {
 
 	private PharmacyRepository pharmacyRepository;
@@ -635,6 +635,7 @@ public class PharmacyService implements IPharmacyService {
 			throws MedicineDoesNotExistException, ForbiddenOperationException, PriceInvalidException {
 		if (dto.getStartDate().isBefore(LocalDate.now()))
 			throw new ForbiddenOperationException("You can't set price list with start date in the past");
+		pharmacy.setVersion(dto.getVersion());
 		if (pharmacy.hasPriceListDefinedOnDate(dto.getStartDate())) {
 			updatePriceList(dto, pharmacy);
 		} else {
