@@ -47,6 +47,9 @@ public class DermatologistAppointment {
 	@Column(name = "done", nullable = false)
 	private boolean done = false;
 	
+	@Column(name = "pointsAfterAppointment", nullable = false)
+	private int pointsAfterAppointment = 0;
+	
 	public DermatologistAppointment() {
 		super();
 	}
@@ -80,6 +83,33 @@ public class DermatologistAppointment {
 		this.scheduled = scheduled;
 		this.price = price;
 		this.patientWasPresent = patientWasPresent;
+	}
+		
+
+	public DermatologistAppointment(long id, Patient patient, Dermatologist dermatologist, Pharmacy pharmacy,
+			LocalDateTime startDateTime, int durationInMinutes, boolean scheduled, long price,
+			boolean patientWasPresent, boolean done, int pointsAfterAppointment) {
+		super();
+		this.id = id;
+		this.patient = patient;
+		this.dermatologist = dermatologist;
+		this.pharmacy = pharmacy;
+		this.startDateTime = startDateTime;
+		this.durationInMinutes = durationInMinutes;
+		this.scheduled = scheduled;
+		this.price = price;
+		this.patientWasPresent = patientWasPresent;
+		this.done = done;
+		this.pointsAfterAppointment = pointsAfterAppointment;
+	}
+
+	
+	public int getPointsAfterAppointment() {
+		return pointsAfterAppointment;
+	}
+
+	public void setPointsAfterAppointment(int pointsAfterAppointment) {
+		this.pointsAfterAppointment = pointsAfterAppointment;
 	}
 
 	public long getId() {

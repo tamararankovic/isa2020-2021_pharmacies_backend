@@ -85,6 +85,9 @@ public class PatientService implements IPatientService {
 			ePrescriptionMedicineService.save(med);
 			eMeds.add(med);
 		}
+		prescription.setPatient(patient);
+		Pharmacy pharmacy = pharmacyService.getPharmacyById(dto.getPharmacyId());
+		prescription.setPharmacy(pharmacy);
 		prescription.setPrescriptionMedicine(eMeds);
 		ePrescriptionService.save(prescription);		
 		
@@ -197,6 +200,7 @@ public class PatientService implements IPatientService {
 			
 				if(medi.getMedicine().getId() == m.getId() && medi.getQuantity()>0){ 
 					++counter;
+					break;
 				}
 			}
 		}

@@ -35,6 +35,12 @@ public class PharmacistAppointment {
 	
 	@Column(name = "done", nullable = false)
 	private boolean done = false;
+	
+	@Column(name = "pointsAfterAdvising", nullable = false)
+	private int pointsAfterAdvising = 0;
+	
+	@Column(name = "price", nullable = false)
+	private double price;
 
 	public PharmacistAppointment() {
 		super();
@@ -59,6 +65,53 @@ public class PharmacistAppointment {
 		this.pharmacist = pharmacist;
 		this.startDateTime = startDateTime;
 		this.patientWasPresent = patientWasPresent;
+	}
+
+	public PharmacistAppointment(long id, Patient patient, Pharmacist pharmacist, LocalDateTime startDateTime,
+			boolean patientWasPresent, boolean done, int pointsAfterAdvising) {
+		super();
+		this.id = id;
+		this.patient = patient;
+		this.pharmacist = pharmacist;
+		this.startDateTime = startDateTime;
+		this.patientWasPresent = patientWasPresent;
+		this.done = done;
+		this.pointsAfterAdvising = pointsAfterAdvising;
+	}
+	
+	
+	public PharmacistAppointment(long id, Patient patient, Pharmacist pharmacist, LocalDateTime startDateTime,
+			boolean patientWasPresent, boolean done, int pointsAfterAdvising, double price) {
+		super();
+		this.id = id;
+		this.patient = patient;
+		this.pharmacist = pharmacist;
+		this.startDateTime = startDateTime;
+		this.patientWasPresent = patientWasPresent;
+		this.done = done;
+		this.pointsAfterAdvising = pointsAfterAdvising;
+		this.price = price;
+	}
+
+	
+	public double getPrice() {
+		return price;
+	}
+
+	public void setPrice(double price) {
+		this.price = price;
+	}
+
+	public int getPointsAfterAdvising() {
+		return pointsAfterAdvising;
+	}
+
+	public void setPointsAfterAdvising(int pointsAfterAdvising) {
+		this.pointsAfterAdvising = pointsAfterAdvising;
+	}
+
+	public int getDefaultDurationMinutes() {
+		return defaultDurationMinutes;
 	}
 
 	public long getId() {

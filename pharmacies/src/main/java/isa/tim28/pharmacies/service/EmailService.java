@@ -26,6 +26,29 @@ public class EmailService {
 	private Environment env;
 
 	@Async
+	public void sendResponseOnComplaint(String patientFullName, String answer, String address, String complainedOn) throws MessagingException {
+		System.out.println("Async metoda se izvrsava u drugom Threadu u odnosu na prihvaceni zahtev. Thread id: " + Thread.currentThread().getId());
+		System.out.println("Slanje emaila...");
+		
+		String content = "Pozdrav " + patientFullName + ",<br>"
+	            + "Odgovor na vasu zalbu o " + complainedOn + " je sledeci:<br>"
+	            + "<h3>" + answer + "</h3>"
+	            + "Hvala Vam,<br>"
+	            + "ISA, TIM 28.";
+		
+		MimeMessage message = javaMailSender.createMimeMessage();
+	    MimeMessageHelper helper = new MimeMessageHelper(message);
+	    helper.setFrom(env.getProperty("spring.mail.username"));
+	    helper.setTo(address);
+	    helper.setSubject("Odgovor na zalbu");
+	    helper.setText(content, true);
+	    
+		javaMailSender.send(message);
+
+		System.out.println("Email poslat!");	
+	}
+	
+	@Async
 	public void sendERecepyConfirmation(String patientFullName, String medicineCodes, String address) throws MessagingException {
 		System.out.println("Async metoda se izvrsava u drugom Threadu u odnosu na prihvaceni zahtev. Thread id: " + Thread.currentThread().getId());
 		System.out.println("Slanje emaila...");
@@ -40,7 +63,7 @@ public class EmailService {
 	    MimeMessageHelper helper = new MimeMessageHelper(message);
 	    helper.setFrom(env.getProperty("spring.mail.username"));
 	    helper.setTo(address);
-	    helper.setSubject("Recept");
+	    helper.setSubject("eRecept");
 	    helper.setText(content, true);
 	    
 		javaMailSender.send(message);
@@ -152,6 +175,28 @@ public class EmailService {
 		helper.setFrom(env.getProperty("spring.mail.username"));
 		helper.setTo(address);
 		helper.setSubject("Uspešno zakazano savetovanje");
+		helper.setText(content, true);
+
+		javaMailSender.send(message);
+
+		System.out.println("Email poslat!");
+	}
+	
+	@Async
+	public void sendAppointmentScheduled(String name, String address, String dermatologist, String date)
+			throws MessagingException {
+		System.out.println("Async metoda se izvrsava u drugom Threadu u odnosu na prihvaceni zahtev. Thread id: "
+				+ Thread.currentThread().getId());
+		System.out.println("Slanje emaila...");
+		String content = "Pozdrav " + name + ",<br>" + "Uspešno ste zakazali pregled kod dermatologa: " + dermatologist + "." + "<br>"+
+				"Savetovanje će se održati " + date + "<br>"
+				+"Hvala Vam,<br>" + "ISA, TIM 28.";
+
+		MimeMessage message = javaMailSender.createMimeMessage();
+		MimeMessageHelper helper = new MimeMessageHelper(message);
+		helper.setFrom(env.getProperty("spring.mail.username"));
+		helper.setTo(address);
+		helper.setSubject("Uspešno zakazan pregled");
 		helper.setText(content, true);
 
 		javaMailSender.send(message);

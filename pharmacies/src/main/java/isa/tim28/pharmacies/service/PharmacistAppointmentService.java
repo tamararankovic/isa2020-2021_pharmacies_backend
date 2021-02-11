@@ -24,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 import isa.tim28.pharmacies.dtos.CurrentlyHasAppointmentDTO;
 import isa.tim28.pharmacies.dtos.DermatologistAppointmentDTO;
 import isa.tim28.pharmacies.dtos.DermatologistReportDTO;
+import isa.tim28.pharmacies.dtos.DoctorRatingDTO;
 import isa.tim28.pharmacies.dtos.LeaveDTO;
 import isa.tim28.pharmacies.dtos.LeaveViewDTO;
 import isa.tim28.pharmacies.dtos.MedicineDTOM;
@@ -41,6 +42,8 @@ import isa.tim28.pharmacies.exceptions.UserDoesNotExistException;
 import isa.tim28.pharmacies.model.DailyEngagement;
 import isa.tim28.pharmacies.model.DermatologistAppointment;
 import isa.tim28.pharmacies.model.LeaveType;
+import isa.tim28.pharmacies.model.Loyalty;
+import isa.tim28.pharmacies.model.LoyaltyPoints;
 import isa.tim28.pharmacies.model.Medicine;
 import isa.tim28.pharmacies.model.MedicineConsumption;
 import isa.tim28.pharmacies.model.MedicineMissingNotification;
@@ -51,10 +54,12 @@ import isa.tim28.pharmacies.model.PharmacistAppointment;
 import isa.tim28.pharmacies.model.PharmacistLeaveRequest;
 import isa.tim28.pharmacies.model.PharmacistReport;
 import isa.tim28.pharmacies.model.Pharmacy;
+import isa.tim28.pharmacies.model.Rating;
 import isa.tim28.pharmacies.model.Reservation;
 import isa.tim28.pharmacies.model.Therapy;
 import isa.tim28.pharmacies.model.User;
 import isa.tim28.pharmacies.repository.DermatologistAppointmentRepository;
+import isa.tim28.pharmacies.repository.LoyaltyPointsRepository;
 import isa.tim28.pharmacies.repository.MedicineConsumptionRepository;
 import isa.tim28.pharmacies.repository.MedicineMissingNotificationRepository;
 import isa.tim28.pharmacies.repository.MedicineQuantityRepository;
@@ -83,6 +88,8 @@ public class PharmacistAppointmentService implements IPharmacistAppointmentServi
 	private PharmacistRepository pharmacistRepository;
 	private MedicineConsumptionRepository medicineConsumptionRepository;
 	private EmailService emailService;
+	private LoyaltyPointsRepository loyaltyPointsRepository;
+	private SystemAdminService systemAdminService;
 
 	@Autowired
 	public PharmacistAppointmentService(PharmacistAppointmentRepository appointmentRepository,
@@ -92,7 +99,11 @@ public class PharmacistAppointmentService implements IPharmacistAppointmentServi
 			MedicineMissingNotificationRepository medicineMissingNotificationRepository,
 			PharmacistLeaveRequestRepository pharmacistLeaveRequestRepository,
 			DermatologistAppointmentRepository dermatologistAppointmentRepository,
-			PharmacistRepository pharmacistRepository, EmailService emailService,MedicineConsumptionRepository medicineConsumptionRepository) {
+			PharmacistRepository pharmacistRepository, EmailService emailService,
+			MedicineConsumptionRepository medicineConsumptionRepository, LoyaltyPointsRepository loyaltyPointsRepository,
+			SystemAdminService systemAdminService) {
+		
+		
 		super();
 		this.appointmentRepository = appointmentRepository;
 		this.medicineRepository = medicineRepository;
@@ -106,6 +117,8 @@ public class PharmacistAppointmentService implements IPharmacistAppointmentServi
 		this.pharmacistRepository = pharmacistRepository;
 		this.emailService = emailService;
 		this.medicineConsumptionRepository = medicineConsumptionRepository;
+		this.systemAdminService = systemAdminService;
+		this.loyaltyPointsRepository = loyaltyPointsRepository;
 	}
 
 	@Override
@@ -152,6 +165,12 @@ public class PharmacistAppointmentService implements IPharmacistAppointmentServi
 			pharmacistReportRepository.save(report);
 			app.setDone(true);
 			appointmentRepository.save(app);
+
+			//loyalty
+			Patient patient = app.getPatient();
+			patient.addPoints(app.getPointsAfterAdvising());
+			systemAdminService.updateCathegoryOfPatient(patient);
+			patientRepository.save(patient);
 			
 			Pharmacist pharmacist = app.getPharmacist();
 			pharmacist.setCurrentlyHasAppointment(false);
@@ -261,8 +280,15 @@ public class PharmacistAppointmentService implements IPharmacistAppointmentServi
 				return null;
 			else {
 				reservation.setReceived(true);
+				//loyalty program
+				Patient patient = reservation.getPatient();
+				patient.addPoints(reservation.getMedicine().getPoints());
+				systemAdminService.updateCathegoryOfPatient(patient);
+				patientRepository.save(patient);
+				
 				reservationRepository.save(reservation);
-				medicineConsumptionRepository.save(new MedicineConsumption(reservation.getMedicine(), reservation.getPharmacy(), 1));
+				medicineConsumptionRepository
+						.save(new MedicineConsumption(reservation.getMedicine(), reservation.getPharmacy(), 1));
 				return reservation;
 			}
 		} catch (Exception e) {
@@ -289,6 +315,35 @@ public class PharmacistAppointmentService implements IPharmacistAppointmentServi
 			newAppointment.setPatientWasPresent(false);
 			newAppointment.setPharmacist(lastAppointment.getPharmacist());
 			newAppointment.setStartDateTime(startDateTime);
+			
+			//loyalty program
+			if(loyaltyPointsRepository.findAll() == null) {
+				newAppointment.setPointsAfterAdvising(0);
+				newAppointment.setPrice(lastAppointment.getPharmacist().getEngegementInPharmacy().getPharmacy().getPharmacistAppointmentCurrentPrice());
+			}else 
+			{
+				List<LoyaltyPoints> points = loyaltyPointsRepository.findAll();
+				if(!points.isEmpty()) {
+					LoyaltyPoints lp = points.get(points.size() - 1);
+					newAppointment.setPointsAfterAdvising(lp.getPointsAfterAdvising());
+					
+					double price = lastAppointment.getPharmacist().getEngegementInPharmacy().getPharmacy().getPharmacistAppointmentCurrentPrice();
+					if(lastAppointment.getPatient().getCategory().equals(Loyalty.REGULAR)) {
+						newAppointment.setPrice(price);
+					}else if(lastAppointment.getPatient().getCategory().equals(Loyalty.SILVER)) {
+						double procentage = price*(lp.getDiscountForSilver()/100);
+						newAppointment.setPrice(price-procentage);
+					}else if(lastAppointment.getPatient().getCategory().equals(Loyalty.GOLD)) {
+						double procentage = price*(lp.getDiscountForGold()/100);
+						newAppointment.setPrice(price-procentage);
+					}
+				}else { 
+					newAppointment.setPointsAfterAdvising(0);
+					newAppointment.setPrice(lastAppointment.getPharmacist().getEngegementInPharmacy().getPharmacy().getPharmacistAppointmentCurrentPrice());
+
+				}
+			}
+			
 			appointmentRepository.save(newAppointment);
 			return newAppointment;
 		}
@@ -312,7 +367,8 @@ public class PharmacistAppointmentService implements IPharmacistAppointmentServi
 		return true;
 	}
 
-	private boolean isPharmacistInPharmacy(Pharmacist pharmacist, LocalDateTime startDateTime) {
+	@Override
+	public boolean isPharmacistInPharmacy(Pharmacist pharmacist, LocalDateTime startDateTime) {
 		DayOfWeek dayOfWeek = startDateTime.getDayOfWeek();
 		boolean isWorkingThatDay = false;
 		if (pharmacist.getEngegementInPharmacy().getDailyEngagements().isEmpty())
@@ -474,7 +530,7 @@ public class PharmacistAppointmentService implements IPharmacistAppointmentServi
 
 	@Transactional(readOnly = false)
 	public PharmacistAppointment patientSaveApp(PharmacistAppointmentDTO dto, User loggedInUser)
-			throws UserDoesNotExistException {
+			throws UserDoesNotExistException, MessagingException {
 		PharmacistAppointment app = new PharmacistAppointment();
 		app.setPatient(patientRepository.findOneByUser_Id(loggedInUser.getId()));
 		app.setDone(false);
@@ -495,64 +551,71 @@ public class PharmacistAppointmentService implements IPharmacistAppointmentServi
 		PharmacistAppointment savedApp = appointmentRepository.save(app);
 
 		try {
-			emailService.sendCounselingScheduled(loggedInUser.getFullName(), "pajapataktevoli@gmail.com",
+			emailService.sendCounselingScheduled(loggedInUser.getFullName(), loggedInUser.getEmail(),
 					savedApp.getPharmacist().getUser().getFullName(), dto.getDate());
-		} catch (MessagingException e) {
+		}catch(MessagingException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+					e.printStackTrace();
 		}
-		return app;
-
-	}
-	
-	@Override
-	public List<ShowCounselingDTO> getAllIncomingCounsellings(long id, boolean past){
 		
+		return app;
+		
+	}
+
+	@Override
+	public List<ShowCounselingDTO> getAllIncomingCounsellings(long id, boolean past) {
+
 		List<ShowCounselingDTO> resIncoming = new ArrayList<ShowCounselingDTO>();
 		List<ShowCounselingDTO> resPast = new ArrayList<ShowCounselingDTO>();
 		long patientId = patientRepository.findOneByUser_Id(id).getId();
 		boolean cancellable = false;
-		
+
 		LocalDateTime today = LocalDateTime.now();
-		
+
 		Set<PharmacistAppointment> all = appointmentRepository.findAllByPatient_Id(patientId);
-		for(PharmacistAppointment pa : all) {
-			
+		for (PharmacistAppointment pa : all) {
+
 			LocalDateTime checkDate = pa.getStartDateTime();
-			
-			if(!(pa.isDone() || today.isAfter(checkDate))) {
+			double price = pa.getPharmacist().getEngegementInPharmacy().getPharmacy()
+					.getPharmacistAppointmentCurrentPrice();
+
+			if (!pa.isDone() && today.isBefore(checkDate)) {
 				cancellable = false;
 				DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm");
 				String date = pa.getStartDateTime().format(formatter);
-				
-				if(today.isBefore(checkDate.minus(Period.ofDays(1)))) {
-					cancellable =  true;
+
+				if (today.isBefore(checkDate.minus(Period.ofDays(1)))) {
+					cancellable = true;
 				}
-				
-				ShowCounselingDTO dto =  new ShowCounselingDTO(pa.getId(),date, pa.getPharmacist().getUser().getFullName(),cancellable,"PHARMACIST");
+
+				ShowCounselingDTO dto = new ShowCounselingDTO(pa.getId(), pa.getPharmacist().getEngegementInPharmacy().getPharmacy().getId(), date,
+						pa.getPharmacist().getId(),pa.getPharmacist().getUser().getFullName(), cancellable, pa.getDefaultDurationInMinutes(),
+						price, "PHARMACIST");
 				resIncoming.add(dto);
-			}else {
-				
+			} else if(pa.isPatientWasPresent() && pa.isDone()) {
+
 				DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm");
 				String date = pa.getStartDateTime().format(formatter);
-				ShowCounselingDTO dto =  new ShowCounselingDTO(pa.getId(),date, pa.getPharmacist().getUser().getFullName(),false,"PHARMACIST");
+				ShowCounselingDTO dto = new ShowCounselingDTO(pa.getId(),pa.getPharmacist().getEngegementInPharmacy().getPharmacy().getId(), date,
+						pa.getPharmacist().getId(),  pa.getPharmacist().getUser().getFullName(), false, pa.getDefaultDurationInMinutes(), price, 
+						"PHARMACIST");
 				resPast.add(dto);
 			}
 		}
-		
-		if(past) {
+
+		if (past) {
 			return resPast;
-		}else {
+		} else {
 			return resIncoming;
 		}
-		
+
 	}
 	
 	@Transactional(readOnly = false)
 	public void cancelApp(long id) {
 		appointmentRepository.deleteById(id);
 	}
-	
+
 	@Override
 	@Transactional(readOnly = false)
 	public void saveLeaveRequest(LeaveDTO dto, long userId) {
@@ -562,13 +625,15 @@ public class PharmacistAppointmentService implements IPharmacistAppointmentServi
 			request.setStartDate(dto.getStartDate());
 			request.setEndDate(dto.getEndDate());
 			request.setPharmacist(pharmacist);
-			if(dto.getType().equals("SICK_LEAVE")) request.setType(LeaveType.SICK_LEAVE);
-			else request.setType(LeaveType.ANNUAL_LEAVE);
+			if (dto.getType().equals("SICK_LEAVE"))
+				request.setType(LeaveType.SICK_LEAVE);
+			else
+				request.setType(LeaveType.ANNUAL_LEAVE);
 			pharmacistLeaveRequestRepository.save(request);
-		} catch(Exception e) {
+		} catch (Exception e) {
 			return;
 		}
-		
+
 	}
 
 	@Override
@@ -576,8 +641,10 @@ public class PharmacistAppointmentService implements IPharmacistAppointmentServi
 		try {
 			Pharmacist pharmacist = pharmacistRepository.findOneByUser_Id(userId);
 			List<LeaveViewDTO> dtos = new ArrayList<LeaveViewDTO>();
-			Set<PharmacistLeaveRequest> requests = pharmacistLeaveRequestRepository.findAllByPharmacist_Id(pharmacist.getId());
-			for(PharmacistLeaveRequest request : requests) {;
+			Set<PharmacistLeaveRequest> requests = pharmacistLeaveRequestRepository
+					.findAllByPharmacist_Id(pharmacist.getId());
+			for (PharmacistLeaveRequest request : requests) {
+				;
 				LeaveViewDTO dto = new LeaveViewDTO();
 				dto.setConfirmed(request.getState().toString());
 				dto.setStartDate(request.getStartDate().format(DateTimeFormatter.ofPattern("dd.MM.yyyy.")));
@@ -586,7 +653,7 @@ public class PharmacistAppointmentService implements IPharmacistAppointmentServi
 				dtos.add(dto);
 			}
 			return dtos;
-		} catch(Exception e) {
+		} catch (Exception e) {
 			return new ArrayList<LeaveViewDTO>();
 		}
 	}
@@ -597,19 +664,20 @@ public class PharmacistAppointmentService implements IPharmacistAppointmentServi
 			Pharmacist pharmacist = pharmacistRepository.findOneByUser_Id(userId);
 			List<MyPatientDTO> dtos = new ArrayList<MyPatientDTO>();
 			Set<PharmacistAppointment> appointments = appointmentRepository.findAllByPharmacist_Id(pharmacist.getId());
-			for(PharmacistAppointment app : appointments) {
-				if(app.isPatientWasPresent() && app.isDone()) {
+			for (PharmacistAppointment app : appointments) {
+				if (app.isPatientWasPresent() && app.isDone()) {
 					MyPatientDTO dto = new MyPatientDTO();
 					dto.setPatientId(app.getPatient().getId());
 					dto.setName(app.getPatient().getUser().getName());
 					dto.setSurname(app.getPatient().getUser().getSurname());
-					dto.setAppointmentDate(app.getStartDateTime().toLocalDate().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
+					dto.setAppointmentDate(
+							app.getStartDateTime().toLocalDate().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
 					dto.setTime(app.getStartDateTime().format(DateTimeFormatter.ofPattern("HH:mm")));
 					dtos.add(dto);
 				}
 			}
 			return dtos;
-		} catch(Exception e) {
+		} catch (Exception e) {
 			return new ArrayList<MyPatientDTO>();
 		}
 	}
@@ -620,8 +688,9 @@ public class PharmacistAppointmentService implements IPharmacistAppointmentServi
 			Pharmacist pharmacist = pharmacistRepository.findOneByUser_Id(userId);
 			Set<PharmacistAppointment> appointments = appointmentRepository.findAllByPharmacist_Id(pharmacist.getId());
 			PharmAppDTO dto = new PharmAppDTO(0, "", 0, "");
-			for(PharmacistAppointment app : appointments) {
-				if(!app.isDone() && app.getPatient().getId() == patientId && isAppointmentNow(app.getStartDateTime())) {
+			for (PharmacistAppointment app : appointments) {
+				if (!app.isDone() && app.getPatient().getId() == patientId
+						&& isAppointmentNow(app.getStartDateTime())) {
 					dto.setAppointmentId(app.getId());
 					dto.setDurationInMinutes(app.getDefaultDurationInMinutes());
 					dto.setPatientName(app.getPatient().getUser().getFullName());
@@ -629,14 +698,16 @@ public class PharmacistAppointmentService implements IPharmacistAppointmentServi
 				}
 			}
 			return dto;
-		} catch(Exception e) {
+		} catch (Exception e) {
 			return new PharmAppDTO(0, "", 0, "");
 		}
 	}
-	
+
 	private boolean isAppointmentNow(LocalDateTime startTime) {
-		//moze 10 minuta ranije i moze da kasni do 29 minuta
-		if(!startTime.isBefore(LocalDateTime.now().minusMinutes(29)) && !startTime.isAfter(LocalDateTime.now().plusMinutes(10))) return true;
+		// moze 10 minuta ranije i moze da kasni do 29 minuta
+		if (!startTime.isBefore(LocalDateTime.now().minusMinutes(29))
+				&& !startTime.isAfter(LocalDateTime.now().plusMinutes(10)))
+			return true;
 		return false;
 	}
 

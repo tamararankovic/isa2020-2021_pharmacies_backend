@@ -25,6 +25,7 @@ import isa.tim28.pharmacies.dtos.MedicineInfoDTO;
 import isa.tim28.pharmacies.dtos.PharmaciesCounselingDTO;
 import isa.tim28.pharmacies.dtos.PharmacistAppointmentDTO;
 import isa.tim28.pharmacies.dtos.DealPromotionDTO;
+import isa.tim28.pharmacies.dtos.DoctorRatingDTO;
 import isa.tim28.pharmacies.dtos.MedicineInfoDTO;
 import isa.tim28.pharmacies.dtos.PharmacyBasicInfoDTO;
 import isa.tim28.pharmacies.dtos.PharmacyInfoForPatientDTO;
@@ -37,6 +38,7 @@ import isa.tim28.pharmacies.exceptions.PharmacyNotFoundException;
 import isa.tim28.pharmacies.exceptions.PriceInvalidException;
 import isa.tim28.pharmacies.exceptions.UserDoesNotExistException;
 import isa.tim28.pharmacies.model.PharmacyAdmin;
+import isa.tim28.pharmacies.model.Rating;
 import isa.tim28.pharmacies.model.Role;
 import isa.tim28.pharmacies.model.User;
 import isa.tim28.pharmacies.service.interfaces.IPharmacyAdminService;
@@ -64,6 +66,7 @@ public class PharmacyController {
 		this.reservationService = reservationService;
 		this.statisticsService = statisticsService;
 	}
+	
 
 	@GetMapping(value = "info/{id}")
 	public ResponseEntity<PharmacyInfoForPatientDTO> getPharmacyInfoForPatient(@PathVariable long id,
@@ -160,8 +163,7 @@ public class PharmacyController {
 		try {
 			res = pharmacyService.getPharmacyByMedicineId(dto.getId());
 		} catch (PharmacyNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No pharmacy found!");
 		}
 		
 		return new ResponseEntity<>(res,HttpStatus.OK);
@@ -541,5 +543,19 @@ public class PharmacyController {
 		} catch (UserDoesNotExistException e) {
 			throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
 		}
+	}
+	
+	@PostMapping(value = "save-pharmacy-rating")
+	public ResponseEntity<String> saveMedicineForRating(@RequestBody DoctorRatingDTO dto,HttpSession session){
+		User loggedInUser = (User) session.getAttribute("loggedInUser");
+		if(loggedInUser == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No logged in user!");
+		}
+		if(loggedInUser.getRole() != Role.PATIENT) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only patinet can schedule appointments.");
+		}
+		
+		Rating res = pharmacyService.savePharmacyRating(dto,loggedInUser.getId());
+		return new ResponseEntity<>("sacuvano",HttpStatus.OK);
 	}
 }
