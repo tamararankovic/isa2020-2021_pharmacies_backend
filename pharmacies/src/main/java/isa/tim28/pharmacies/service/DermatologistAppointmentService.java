@@ -733,6 +733,39 @@ public class DermatologistAppointmentService implements IDermatologistAppointmen
 		da.setPatient(patientRepository.findOneByUser_Id(loggedInUser.getId()));
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm");
 		String date = da.getStartDateTime().format(formatter);
+		
+		//loyalty program
+				if(loyaltyPointsRepository.findAll() == null) {
+					da.setPointsAfterAppointment(0);
+					double priceDef = da.getPharmacy().getDermatologistAppointmentCurrentPrice();
+					long priceLong = (long) priceDef;
+					da.setPrice(priceLong);
+				}else 
+				{
+					List<LoyaltyPoints> points = loyaltyPointsRepository.findAll();
+					if(!points.isEmpty()) {
+						LoyaltyPoints lp = points.get(points.size() - 1);
+						da.setPointsAfterAppointment(lp.getPointsAfterAdvising());
+						
+						long price = (long) da.getPharmacy().getDermatologistAppointmentCurrentPrice();
+						if(da.getPatient().getCategory().equals(Loyalty.REGULAR)) {
+							da.setPrice(price);
+						}else if(patientRepository.findOneByUser_Id(loggedInUser.getId()).getCategory().equals(Loyalty.SILVER)) {
+							double procentageDouble = price*(lp.getDiscountForSilver()/100);
+							long procentage = (long) procentageDouble;
+							da.setPrice(price-procentage);
+						}else if(patientRepository.findOneByUser_Id(loggedInUser.getId()).getCategory().equals(Loyalty.GOLD)) {
+							double procentageDouble = price*(lp.getDiscountForGold()/100);
+							long procentage = (long) procentageDouble;
+							da.setPrice(price-procentage);
+						}
+					}else { 
+						da.setPointsAfterAppointment(0);
+						long priceDef = (long) da.getPharmacy().getDermatologistAppointmentCurrentPrice();						
+						da.setPrice(priceDef);
+					}
+				}
+		
 		appointmentRepository.save(da);
 		
 		try {
