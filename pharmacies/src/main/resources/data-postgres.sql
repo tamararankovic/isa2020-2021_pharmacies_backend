@@ -171,7 +171,8 @@ insert into orders_offers(order_id, offers_id) values (1, 1);
 insert into orders_medicine_quantities(order_id, medicine_quantities_id) values (1, 5);
 
 insert into subscription(id, patient_id, pharmacy_id, cancelled) values (1, 2, 1, FALSE);
-alter sequence subscription_id_seq restart with 2;
+insert into subscription(id, pharmacy_id, patient_id, cancelled) values (2, 1, 1, FALSE);
+alter sequence subscription_id_seq restart with 3;
 
 insert into pharmacist_leave_request(id, pharmacist_id, start_date, end_date, type, state) values (1, 1, '2021-02-24 20:21:00.000000', '2021-02-28 20:21:00.000000', 0, 2);
 alter sequence pharmacist_leave_request_id_seq restart with 2;
