@@ -708,6 +708,7 @@ public class DermatologistAppointmentService implements IDermatologistAppointmen
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm");
 		String date = da.getStartDateTime().format(formatter);
 		appointmentRepository.save(da);
+		
 		try {
 			emailService.sendAppointmentScheduled(loggedInUser.getFullName(), loggedInUser.getEmail(),
 					da.getDermatologist().getUser().getFullName(), date);
@@ -716,6 +717,7 @@ public class DermatologistAppointmentService implements IDermatologistAppointmen
 			e.printStackTrace();
 		}
 	}
+	
 
 	@Override
 	public List<ShowCounselingDTO> getAllIncomingAppointments(long id, boolean past) {
