@@ -381,7 +381,7 @@ public class DermatologistController {
 		try {
 			boolean isAllergic = dermatologistAppointmentService.checkAllergies(dto.getPatientId(), dto.getMedicineId());
 			return new ResponseEntity<>(new IsAllergicDTO(isAllergic), HttpStatus.OK);
-		} catch (UserDoesNotExistException e) {
+		} catch (Exception e) {
 			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Patient with given id does not exist.");
 		}
 	}
