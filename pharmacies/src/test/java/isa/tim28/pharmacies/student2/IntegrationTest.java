@@ -62,7 +62,7 @@ public class IntegrationTest {
 		.andExpect(content().contentType(contentType))
 		.andExpect(jsonPath("$.name").value("Tamara"))
 		.andExpect(jsonPath("$.surname").value("Rankovic"))
-		.andExpect(jsonPath("$.email").value("email6@gmail.com"));
+		.andExpect(jsonPath("$.email").value("isa.mejl.za.usere+5@gmail.com"));
 	}
 	
 	@Test
