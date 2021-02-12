@@ -558,4 +558,21 @@ public class PharmacyController {
 		Rating res = pharmacyService.savePharmacyRating(dto,loggedInUser.getId());
 		return new ResponseEntity<>("sacuvano",HttpStatus.OK);
 	}
+	
+	@GetMapping(value = "pharmacy-rating")
+	public ResponseEntity<List<DoctorRatingDTO>> getAllPharmacyForRating(HttpSession session){
+		User loggedInUser = (User) session.getAttribute("loggedInUser");
+		if(loggedInUser == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No logged in user!");
+		}
+		if(loggedInUser.getRole() != Role.PATIENT) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only patinet can schedule appointments.");
+		}
+		
+		List<DoctorRatingDTO> res = new ArrayList<DoctorRatingDTO>();
+		
+		res = pharmacyService.getPharmaciesForRating(loggedInUser.getId());
+		
+		return new ResponseEntity<>(res,HttpStatus.OK);
+	}
 }

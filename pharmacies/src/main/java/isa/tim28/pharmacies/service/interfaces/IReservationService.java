@@ -39,4 +39,6 @@ public interface IReservationService {
 
 	List<DoctorRatingDTO> getPharmaciesFromReservations(long id) throws PharmacyNotFoundException;
 
+	int getPenalties(long id);
+
 }

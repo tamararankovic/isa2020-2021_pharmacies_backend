@@ -18,6 +18,7 @@ import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.google.zxing.BinaryBitmap;
 import com.google.zxing.LuminanceSource;
@@ -41,11 +42,13 @@ import isa.tim28.pharmacies.model.Pharmacy;
 import isa.tim28.pharmacies.model.Rating;
 import isa.tim28.pharmacies.model.User;
 import isa.tim28.pharmacies.repository.MedicineQuantityRepository;
+import isa.tim28.pharmacies.repository.MedicineRepository;
 import isa.tim28.pharmacies.repository.PatientRepository;
 import isa.tim28.pharmacies.repository.UserRepository;
 import isa.tim28.pharmacies.service.interfaces.IPatientService;
 
 @Service
+@Transactional(readOnly = true)
 public class PatientService implements IPatientService {
 
 	private PatientRepository patientRepository;
@@ -55,12 +58,13 @@ public class PatientService implements IPatientService {
 	private EPrescriptionService ePrescriptionService;
 	private EPrescriptionMedicineService ePrescriptionMedicineService;
 	private MedicineQuantityRepository medicineQuantityRepository;
+	private MedicineRepository medicineRepository;
 	
 	@Autowired
 	public PatientService(PatientRepository patientRepository, UserRepository userRepository,
 			MedicineService medicineService, PharmacyService pharmacyService, 
 			EPrescriptionService ePrescriptionService, EPrescriptionMedicineService ePrescriptionMedicineService,
-			 MedicineQuantityRepository medicineQuantityRepository) {
+			 MedicineQuantityRepository medicineQuantityRepository, MedicineRepository medicineRepository) {
 		super();
 		this.patientRepository = patientRepository;
 		this.userRepository = userRepository;
@@ -69,9 +73,11 @@ public class PatientService implements IPatientService {
 		this.ePrescriptionService = ePrescriptionService;
 		this.ePrescriptionMedicineService = ePrescriptionMedicineService;
 		this.medicineQuantityRepository = medicineQuantityRepository;
+		this.medicineRepository = medicineRepository;
 		
 	}
 	@Override
+	@Transactional(readOnly = false)
 	public void choosePharmacy(Patient patient, ERecepyDTO dto) throws PharmacyNotFoundException {
 		EPrescription prescription = new EPrescription();
 		prescription.setCode(String.join(";", dto.getMedicineCodes()));
@@ -80,7 +86,7 @@ public class PatientService implements IPatientService {
 		prescription.setDatePrescribed(lt);
 		Set<EPrescriptionMedicine> eMeds = new HashSet<EPrescriptionMedicine>();
 		for(String code : dto.getMedicineCodes()) {
-			Medicine medicine = medicineService.getMedicineByCode(code);
+			Medicine medicine = medicineRepository.findMedicineByCode(code);
 			updateMedicineQuantity(medicine, dto.getPharmacyId());
 			EPrescriptionMedicine med = new EPrescriptionMedicine(medicine.getName(), medicine.getCode(), 1);
 			ePrescriptionMedicineService.save(med);
@@ -93,6 +99,7 @@ public class PatientService implements IPatientService {
 		ePrescriptionService.save(prescription);		
 		
 	}
+	@Transactional(readOnly = false)
 	public void updateMedicineQuantity(Medicine medicine, long pharmacyId) throws PharmacyNotFoundException {
 		Pharmacy pharmacy = pharmacyService.getPharmacyById(pharmacyId);
 		Set<MedicineQuantity> medicines = pharmacy.getMedicines();
@@ -246,6 +253,7 @@ public class PatientService implements IPatientService {
 	
 
 	@Override
+	@Transactional(readOnly = false)
 	public Patient editPatient(PatientProfileDTO newPatient, long id)
 			throws UserDoesNotExistException, BadNameException, BadSurnameException {
 		User user;
@@ -277,6 +285,7 @@ public class PatientService implements IPatientService {
 	}
 
 	@Override
+	@Transactional(readOnly = false)
 	public void changePassword(long id, String newPassword) throws UserDoesNotExistException {
 		User user = getUserPart(id);
 		user.setPassword(newPassword);
@@ -320,6 +329,7 @@ public class PatientService implements IPatientService {
 	}
 
 	@Override
+	@Transactional(readOnly = false)
 	public Patient save(Patient patient) {
 		Patient newPatient = patientRepository.save(patient);
 		return newPatient;

@@ -7,6 +7,7 @@ import java.util.Set;
 
 import isa.tim28.pharmacies.dtos.CurrentlyHasAppointmentDTO;
 import isa.tim28.pharmacies.dtos.DermatologistAppointmentDTO;
+import isa.tim28.pharmacies.dtos.DermatologistExaminationForPatientDTO;
 import isa.tim28.pharmacies.dtos.DermatologistReportDTO;
 import isa.tim28.pharmacies.dtos.DoctorRatingDTO;
 import isa.tim28.pharmacies.dtos.ExistingDermatologistAppointmentDTO;
@@ -89,6 +90,6 @@ public interface IDermatologistAppointmentService {
 	void endCurrentAppointment(long userId);
 
 	void updateMedicineQuantity(long medicineId, long appointmentId);
-	
-	public void scheduleApp(long appId, long appVersion, User loggedInUser);
+
+	DermatologistExaminationForPatientDTO scheduleApp(long appId, long appVersion, User loggedInUser);
 }

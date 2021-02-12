@@ -77,6 +77,7 @@ public interface IPharmacyService {
 
 	Rating savePharmacyRating(DoctorRatingDTO dto, long id);
 
+	List<DoctorRatingDTO> getPharmaciesForRating(long id);
 	void updatePriceLists(PriceListDTO dto, Pharmacy pharmacy)
 			throws MedicineDoesNotExistException, ForbiddenOperationException, PriceInvalidException;
 

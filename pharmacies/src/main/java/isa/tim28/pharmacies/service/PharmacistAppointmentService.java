@@ -601,8 +601,7 @@ public class PharmacistAppointmentService implements IPharmacistAppointmentServi
 		for (PharmacistAppointment pa : all) {
 
 			LocalDateTime checkDate = pa.getStartDateTime();
-			double price = pa.getPharmacist().getEngegementInPharmacy().getPharmacy()
-					.getPharmacistAppointmentCurrentPrice();
+			double price = pa.getPrice();
 
 			if (!pa.isDone() && today.isBefore(checkDate)) {
 				cancellable = false;
