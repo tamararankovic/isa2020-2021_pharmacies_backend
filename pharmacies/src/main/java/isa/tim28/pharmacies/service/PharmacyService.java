@@ -129,12 +129,11 @@ public class PharmacyService implements IPharmacyService {
 	}
 
 	@Override
+	@Transactional(readOnly = false)
 	public boolean answerOnComplaint(AnswerOnComplaintDTO answer) throws MessagingException {
 		System.out.println(answer.getType());
 		if(answer.getType().equals("PHARMACY")) {
-			Optional<PharmacyComplaint> pcc = pharmacyComplaintRepository.findById(answer.getComplaintId());
-		 if(!pcc.isEmpty()) {
-			PharmacyComplaint pc = pcc.get();
+			PharmacyComplaint pc = pharmacyComplaintRepository.findPharmacyComplaintById(answer.getComplaintId());
 			if(pc.getReply().equals("")) {
 			    pc.setReply(answer.getAnswer());
 				pharmacyComplaintRepository.save(pc);
@@ -147,15 +146,11 @@ public class PharmacyService implements IPharmacyService {
 			}else {
 				return false;
 			}
-		}else {
-			return false;
-		}
+	
 	}	
 		else if(answer.getType().equals("DERMATOLOGIST")) {
-			Optional<DermatologistComplaint> dcc = dermatologistComplaintRepository.findById(answer.getComplaintId());
-			if(!dcc.isEmpty()) {
-				DermatologistComplaint dc = dcc.get();
-				if(dc.getReply().equals("")) {
+			DermatologistComplaint dc = dermatologistComplaintRepository.findDermatologistComplaintById(answer.getComplaintId());
+			if(dc.getReply().equals("")) {
 				dc.setReply(answer.getAnswer());
 				dermatologistComplaintRepository.save(dc);
 				Optional<Patient> patientOp = patientRepository.findById(dc.getPatient().getId());
@@ -167,15 +162,11 @@ public class PharmacyService implements IPharmacyService {
 			}else {
 				return false;
 			}
-		}else {
-			return false;
-		}
+		
 	}	
 		else {
-			Optional<PharmacistComplaint> pcc = pharmacistComplaintRepository.findById(answer.getComplaintId());
-			if(!pcc.isEmpty()) {
-				PharmacistComplaint pc = pcc.get();
-				if(pc.getReply().equals("")) {
+			PharmacistComplaint pc = pharmacistComplaintRepository.findPharmacistComplaintById(answer.getComplaintId());
+			if(pc.getReply().equals("")) {
 				pc.setReply(answer.getAnswer());
 				pharmacistComplaintRepository.save(pc);
 				Optional<Patient> patientOp = patientRepository.findById(pc.getPatient().getId());
@@ -187,9 +178,6 @@ public class PharmacyService implements IPharmacyService {
 			}else {
 				return false;
 			}
-		}else {
-			return false;
-		}
 	}
 	
 }
@@ -217,6 +205,7 @@ public class PharmacyService implements IPharmacyService {
 	}
 	
 	@Override
+	@Transactional(readOnly = false)
 	public boolean createComplaint(Patient patient, ComplaintDTO dto) throws InvalidComplaintException, UserDoesNotExistException {
 		if(!dto.isTextValid()) 
 			throw new InvalidComplaintException("Complaint must have between 2 and 3000 characters. Try again.");
@@ -407,6 +396,7 @@ public class PharmacyService implements IPharmacyService {
 	}
 
 	@Override
+	@Transactional(readOnly = false)
 	public Pharmacy savePharmacy(Pharmacy pharmacy) {
 		Pharmacy newPharmacy = pharmacyRepository.save(pharmacy);
 		return newPharmacy;
@@ -518,6 +508,7 @@ public class PharmacyService implements IPharmacyService {
 	}
 
 	@Override
+	@Transactional(readOnly = false)
 	public void update(PharmacyAdmin admin, PharmacyBasicInfoDTO dto)
 			throws PharmacyNotFoundException, PharmacyDataInvalidException {
 		Optional<Pharmacy> pharmacyOpt = pharmacyRepository.findById(admin.getPharmacy().getId());
@@ -531,6 +522,7 @@ public class PharmacyService implements IPharmacyService {
 	}
 
 	@Override
+	@Transactional(readOnly = false)
 	public Pharmacy save(Pharmacy pharmacy) {
 		Pharmacy newPharmacy = pharmacyRepository.save(pharmacy);
 		return newPharmacy;
@@ -582,6 +574,7 @@ public class PharmacyService implements IPharmacyService {
 	}
 
 	@Override
+	@Transactional(readOnly = false)
 	public void addNewmedicine(Pharmacy pharmacy, Medicine medicine) {
 		if (!pharmacy.offers(medicine)) {
 			pharmacy.getMedicines().add(new MedicineQuantity(medicine, 0));
@@ -590,6 +583,7 @@ public class PharmacyService implements IPharmacyService {
 	}
 
 	@Override
+	@Transactional(readOnly = false)
 	public void addMedicines(Pharmacy pharmacy, Set<MedicineQuantity> medicines) throws ForbiddenOperationException {
 		for (MedicineQuantity mq : medicines)
 			pharmacy.addMedicine(mq);
@@ -597,6 +591,7 @@ public class PharmacyService implements IPharmacyService {
 	}
 
 	@Override
+	@Transactional(readOnly = false)
 	public void addNewMedicines(Pharmacy pharmacy, Set<Long> medicineIds) throws MedicineDoesNotExistException {
 		for (long medId : medicineIds) {
 			Medicine m = medicineService.findById(medId);
@@ -632,6 +627,7 @@ public class PharmacyService implements IPharmacyService {
 	}
 
 	@Override
+	@Transactional(readOnly = false)
 	public void updatePriceLists(PriceListDTO dto, Pharmacy pharmacy)
 			throws MedicineDoesNotExistException, ForbiddenOperationException, PriceInvalidException {
 		if (dto.getStartDate().isBefore(LocalDate.now()))
@@ -643,7 +639,7 @@ public class PharmacyService implements IPharmacyService {
 			createPriceList(dto, pharmacy);
 		}
 	}
-
+	@Transactional(readOnly = false)
 	private void updatePriceList(PriceListDTO dto, Pharmacy pharmacy)
 			throws MedicineDoesNotExistException, PriceInvalidException {
 		if (!dto.getDermatologistAppointmentPrice().isUndefined()) {
@@ -670,6 +666,7 @@ public class PharmacyService implements IPharmacyService {
 		pharmacyRepository.save(pharmacy);
 	}
 
+	@Transactional(readOnly = false)
 	private void createPriceList(PriceListDTO dto, Pharmacy pharmacy)
 			throws MedicineDoesNotExistException, PriceInvalidException {
 		PriceList pl = new PriceList();
@@ -736,6 +733,7 @@ public class PharmacyService implements IPharmacyService {
 	}
 
 	@Override
+	@Transactional(readOnly = false)
 	public Rating savePharmacyRating(DoctorRatingDTO dto, long id) {
 		Pharmacy pharmacy = pharmacyRepository.findById(dto.getId()).get();
 		
