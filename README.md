@@ -18,3 +18,4 @@ Pokretanje projekta (Eclipse):
 
 Napomene:
   - pre pokretanja potrebno je kreirati bazu pod nazivom pharmacies 
+  - projekat je napisan u Javi 11
