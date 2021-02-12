@@ -4,8 +4,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import java.io.IOException;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -22,15 +20,12 @@ import isa.tim28.pharmacies.dtos.PatientReportAllergyDTO;
 import isa.tim28.pharmacies.dtos.PatientSearchDTO;
 import isa.tim28.pharmacies.model.Role;
 import isa.tim28.pharmacies.model.User;
+import isa.tim28.pharmacies.util.TestUtil;
 
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
@@ -73,7 +68,7 @@ public class IntegrationTests {
 		dto.setEmail(newEmail);
 		dto.setName("Pera");
 		dto.setSurname("Peric");
-		String newDermatologist = json(dto);
+		String newDermatologist = TestUtil.json(dto);
 		
 		MockHttpServletRequestBuilder update = MockMvcRequestBuilders.post(DERM_URL + "/update").session(setSession());
 		
@@ -94,11 +89,11 @@ public class IntegrationTests {
 		dto.setId(1);
 		dto.setName("ta");
 		dto.setSurname("");
-		String dtoJSON = json(dto);
+		String dtoJSON = TestUtil.json(dto);
 		
 		PatientSearchDTO dto2 = dto;
 		dto2.setName("mil");
-		String dto2JSON = json(dto2);
+		String dto2JSON = TestUtil.json(dto2);
 		
 		MockHttpServletRequestBuilder patients = MockMvcRequestBuilders.post(DERM_URL + "/patients").session(setSession());
 		
@@ -118,11 +113,11 @@ public class IntegrationTests {
 		PatientReportAllergyDTO dto = new PatientReportAllergyDTO();
 		dto.setMedicineId(2);
 		dto.setPatientId(1);
-		String dtoJSON = json(dto);
+		String dtoJSON = TestUtil.json(dto);
 		
 		PatientReportAllergyDTO dto2 = dto;
 		dto2.setMedicineId(1);
-		String dto2JSON = json(dto2);
+		String dto2JSON = TestUtil.json(dto2);
 		
 		MockHttpServletRequestBuilder checkAllergies = MockMvcRequestBuilders.post(DERM_URL + "/allergies").session(setSession());
 		
@@ -164,11 +159,11 @@ public class IntegrationTests {
 		dto.setOldPassword(DERM_PASSWORD);
 		dto.setNewPassword("12341234");
 		dto.setNewPasswordRepeat("12341234");
-		String dtoJSON = json(dto);
+		String dtoJSON = TestUtil.json(dto);
 		
 		PasswordChangeDTO dto2 = dto;
 		dto2.setNewPasswordRepeat("adwdhbRTHRTHRTH");
-		String dto2JSON = json(dto2);
+		String dto2JSON = TestUtil.json(dto2);
 		
 		MockHttpServletRequestBuilder changePassword = MockMvcRequestBuilders.post(DERM_URL + "/changePassword").session(setSession());
 		
@@ -178,14 +173,6 @@ public class IntegrationTests {
 		
 		mockMvc.perform(changePassword.content(dtoJSON).contentType(contentType)).andExpect(status().isBadRequest());
 		
-	}
-	
-	
-	//Metoda vraća JSON reprezentaciju prosleđenog objekta.
-	public static String json(Object object) throws IOException {
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
-        return mapper.writeValueAsString(object);
 	}
 	
 	//Metoda vraca sesiju sa ulogovanim korisnikom
