@@ -10,6 +10,7 @@ import javax.mail.MessagingException;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import isa.tim28.pharmacies.dtos.MedicineForPharmacyAdminDTO;
 import isa.tim28.pharmacies.dtos.MedicineForSupplierDTO;
@@ -36,6 +37,7 @@ import isa.tim28.pharmacies.service.interfaces.IOrderService;
 import isa.tim28.pharmacies.service.interfaces.IPharmacyService;
 
 @Service
+@Transactional(readOnly = true)
 public class OrderService implements IOrderService {
 	
 	private OrderRepository orderRepository;
@@ -62,6 +64,7 @@ public class OrderService implements IOrderService {
 	}
 	
 	@Override
+	@Transactional(readOnly = false)
 	public void create(NewOrderDTO order, PharmacyAdmin admin) throws NewOrderInvalidException {
 		Set<MedicineQuantity> medicines = new HashSet<MedicineQuantity>();
 		if (order.getMedicines() == null || order.getMedicines().size() == 0)
@@ -158,6 +161,7 @@ public class OrderService implements IOrderService {
 	}
 
 	@Override
+	@Transactional(readOnly = false)
 	public void chooseWinningOffer(long orderid, long offerId, PharmacyAdmin admin) throws OrderNotFoundException, ForbiddenOperationException, MessagingException {
 		Optional<Order> orderOpt = orderRepository.findById(orderid);
 		if(orderOpt.isEmpty())
@@ -176,11 +180,12 @@ public class OrderService implements IOrderService {
 	}
 
 	@Override
+	@Transactional(readOnly = false)
 	public void update(UpdateOrderDTO dto, PharmacyAdmin admin) throws OrderNotFoundException, ForbiddenOperationException, NewOrderInvalidException {
-		Optional<Order> orderOpt = orderRepository.findById(dto.getId());
-		if(orderOpt.isEmpty())
-			throw new OrderNotFoundException("You are trying to change order that does not exist!");
-		Order order = orderOpt.get();
+		Order order = orderRepository.findOrderById(dto.getId());
+		//if(orderOpt.isEmpty())
+		//	throw new OrderNotFoundException("You are trying to change order that does not exist!");
+		//Order order = orderOpt.get();
 		if(order.hasOffers())
 			throw new ForbiddenOperationException("Order already has offers!");
 		if(!order.isWaitingOffers())
@@ -221,6 +226,7 @@ public class OrderService implements IOrderService {
 	}
 	
 	@Override
+	@Transactional(readOnly = false)
 	public Order save(Order order) {
 		Order newOrder = orderRepository.save(order);
 		return newOrder;

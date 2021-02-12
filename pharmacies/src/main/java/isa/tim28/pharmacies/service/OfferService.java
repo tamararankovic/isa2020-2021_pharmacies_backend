@@ -9,6 +9,7 @@ import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import isa.tim28.pharmacies.dtos.OfferSupplierDTO;
 import isa.tim28.pharmacies.dtos.OfferSupplierProfileDTO;
@@ -19,23 +20,28 @@ import isa.tim28.pharmacies.model.Offer;
 import isa.tim28.pharmacies.model.Order;
 import isa.tim28.pharmacies.model.Supplier;
 import isa.tim28.pharmacies.repository.OfferRepository;
+import isa.tim28.pharmacies.repository.OrderRepository;
 import isa.tim28.pharmacies.service.interfaces.IOfferService;
 import isa.tim28.pharmacies.service.interfaces.IOrderService;
 
 @Service
+@Transactional(readOnly = true)
 public class OfferService implements IOfferService{
 	
 	private OfferRepository offerRepository;
 	private IOrderService orderService;
+	private OrderRepository orderRepository;
 
 	@Autowired
-	public OfferService(OfferRepository offerRepository, IOrderService orderService) {
+	public OfferService(OfferRepository offerRepository, IOrderService orderService, OrderRepository orderRepository) {
 		super();
 		this.offerRepository = offerRepository;
 		this.orderService = orderService;
+		this.orderRepository = orderRepository;
 	}
 	
 	@Override
+	@Transactional(readOnly = false)
 	public boolean createOffer(OfferSupplierDTO offer, Supplier supplier) {
 		Offer newOffer = new Offer();
 		newOffer.setSupplier(supplier);
@@ -43,7 +49,7 @@ public class OfferService implements IOfferService{
 		newOffer.setDeadline(offer.getDeadline());
 		newOffer.setAccepted(false);
 		
-		Order order = orderService.getOrderById(offer.getIdOrder());
+		Order order = orderRepository.findOrderById(offer.getIdOrder());
 		if(order.isWaitingOffers()) 
 		{	order.getOffers().add(newOffer);
 			orderService.save(order);
@@ -99,6 +105,7 @@ public class OfferService implements IOfferService{
 		
 	}	
 	@Override
+	@Transactional(readOnly = false)
 	public void updateOffer(Supplier supplier, OfferUpdateDTO offer) throws OfferDoesNotExistException, ForbiddenOperationException {
 		Optional<Offer> offerForUpdate = offerRepository.findById(offer.getIdOffer());
 		if(offerForUpdate.isEmpty())
