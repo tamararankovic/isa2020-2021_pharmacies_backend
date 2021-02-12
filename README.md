@@ -19,3 +19,4 @@ Pokretanje projekta (Eclipse):
 Napomene:
   - pre pokretanja potrebno je kreirati bazu pod nazivom pharmacies 
   - projekat je napisan u Javi 11
+  - email adresa na koju stižu mejlovi korisnicima: isa.mejl.za.usere@gmail.com (lozinka: perapera)
