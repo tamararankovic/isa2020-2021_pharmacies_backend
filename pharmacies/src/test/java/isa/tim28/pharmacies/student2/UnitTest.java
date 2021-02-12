@@ -175,7 +175,7 @@ public class UnitTest {
 	}
 	
 	@Test
-	public void searchDermatologistsTest() throws PharmacyDataInvalidException {
+	public void searchMedicinesTest() throws PharmacyDataInvalidException {
 		Medicine m1 = new Medicine();
 		m1.setId(1);
 		m1.setName("Lek1");
