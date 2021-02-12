@@ -63,8 +63,6 @@ public interface IPharmacyService {
 		
 	PriceListDTO getCurrentPriceList(Pharmacy pharmacy);
 	
-	void updatePriceLists(PriceListDTO dto, Pharmacy pharmacy) throws MedicineDoesNotExistException, ForbiddenOperationException, PriceInvalidException;
-
 	Pharmacy savePharmacy(Pharmacy pharmacy);
 
 	List<MedicineSearchDTO> searchMedicineByName(String name);
@@ -80,5 +78,7 @@ public interface IPharmacyService {
 	Rating savePharmacyRating(DoctorRatingDTO dto, long id);
 
 	List<DoctorRatingDTO> getPharmaciesForRating(long id);
+	void updatePriceLists(PriceListDTO dto, Pharmacy pharmacy)
+			throws MedicineDoesNotExistException, ForbiddenOperationException, PriceInvalidException;
 
 }
