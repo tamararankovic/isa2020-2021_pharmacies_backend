@@ -67,4 +67,6 @@ public interface IPharmacistService {
 	Rating savePharmacistRating(DoctorRatingDTO dto, long id);
 
 	List<DoctorRatingDTO> getPharmaciesFromReservations(long id) throws PharmacyNotFoundException;
+
+	Pharmacist getPharmacistByPharmacistId(long id);
 }
