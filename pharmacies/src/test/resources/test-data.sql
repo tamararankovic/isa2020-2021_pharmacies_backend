@@ -60,6 +60,8 @@ insert into medicine(id, additional_info, advised_daily_dose, code, form, manufa
 insert into medicine(id, additional_info, advised_daily_dose, code, form, manufacturer, name, points, side_effects, type, with_prescription) values (9, 'info', 1, 'LEK9', 2, 'Manufacturer9', 'Lek9', 2, 'pospanost', 2, '1');
 insert into medicine(id, additional_info, advised_daily_dose, code, form, manufacturer, name, points, side_effects, type, with_prescription) values (10, 'info', 1, 'LEK10', 2, 'Manufacturer10', 'Lek10', 2, 'kostobolja', 2, '1');
 
+insert into patient_allergies(patient_id, allergies_id) values(1, 1);
+
 insert into dermatologist_appointment(id, default_duration_in_minutes, duration_in_minutes, patient_was_present, price, scheduled, start_date_time, dermatologist_id, patient_id, pharmacy_id, done, points_after_appointment, version) values (1, 30, 30, '1', 200, '1', '2021-02-08 08:30:00.000000', 1, 1, 1, '1',5, 1);
 insert into dermatologist_appointment(id, default_duration_in_minutes, duration_in_minutes, patient_was_present, price, scheduled, start_date_time, dermatologist_id, patient_id, pharmacy_id, done, points_after_appointment, version) values (2, 30, 30, '0', 200, '0', '2021-02-23 08:30:00.000000', 1, null, 1, '0',5, 1);
 insert into dermatologist_appointment(id, default_duration_in_minutes, duration_in_minutes, patient_was_present, price, scheduled, start_date_time, dermatologist_id, patient_id, pharmacy_id, done, points_after_appointment, version) values (3, 30, 30, '0', 200, '0', '2021-02-24 08:30:00.000000', 1, null, 1, '0',5, 1);
@@ -70,7 +72,6 @@ insert into dermatologist_appointment(id, default_duration_in_minutes, duration_
 insert into dermatologist_appointment(id, default_duration_in_minutes, duration_in_minutes, patient_was_present, price, scheduled, start_date_time, dermatologist_id, patient_id, pharmacy_id, done, points_after_appointment, version) values (7, 30, 30, '0', 200, '1', '2021-02-26 08:30:00.000000', 1, 1, 1, '0',5, 1);
 insert into dermatologist_appointment(id, default_duration_in_minutes, duration_in_minutes, patient_was_present, price, scheduled, start_date_time, dermatologist_id, patient_id, pharmacy_id, done, points_after_appointment, version) values (8, 30, 30, '0', 200, '1', '2021-04-23 08:30:00.000000', 1, 1, 1, '0',5, 1);
 insert into dermatologist_appointment(id, default_duration_in_minutes, duration_in_minutes, patient_was_present, price, scheduled, start_date_time, dermatologist_id, patient_id, pharmacy_id, done, points_after_appointment, version) values (9, 30, 30, '0', 200, '1', '2021-02-26 08:30:00.000000', 1, 3, 2, '0',5, 1);
-
 insert into dermatologist_appointment(id, default_duration_in_minutes, duration_in_minutes, patient_was_present, price, scheduled, start_date_time, dermatologist_id, patient_id, pharmacy_id, done, points_after_appointment, version) values (10, 30, 30, '0', 200, '1', '2021-02-08 09:30:00.000000', 1, 3, 1, '0',5, 1);
 insert into dermatologist_appointment(id, default_duration_in_minutes, duration_in_minutes, patient_was_present, price, scheduled, start_date_time, dermatologist_id, patient_id, pharmacy_id, done, points_after_appointment, version) values (11, 30, 30, '0', 200, '1', '2021-02-10 17:40:00.000000', 1, 1, 1, '0',5, 1);
 
@@ -135,9 +136,6 @@ insert into pharmacy_medicines(pharmacy_id, medicines_id) values (2, 11);
 insert into pharmacy_medicines(pharmacy_id, medicines_id) values (2, 12);
 insert into pharmacy_medicines(pharmacy_id, medicines_id) values (2, 13);
 insert into pharmacy_medicines(pharmacy_id, medicines_id) values (2, 14);
-
-insert into patient_allergies(patient_id, allergies_id) values(1, 1);
-insert into patient_allergies(patient_id, allergies_id) values(2, 1);
 
 insert into reservation(id, due_date, received, medicine_id, patient_id, pharmacy_id, price) values(1, '2021-02-25 08:00:00.000000', '0', 1, 1, 1, 100);
 insert into reservation(id, due_date, received, medicine_id, patient_id, pharmacy_id, price) values(2, '2021-02-04 08:00:00.000000', '0', 2, 1, 1, 200);
