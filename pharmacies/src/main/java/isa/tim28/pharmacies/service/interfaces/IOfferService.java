@@ -7,6 +7,7 @@ import isa.tim28.pharmacies.dtos.OfferSupplierProfileDTO;
 import isa.tim28.pharmacies.dtos.OfferUpdateDTO;
 import isa.tim28.pharmacies.exceptions.ForbiddenOperationException;
 import isa.tim28.pharmacies.exceptions.OfferDoesNotExistException;
+import isa.tim28.pharmacies.model.Offer;
 import isa.tim28.pharmacies.model.Supplier;
 
 public interface IOfferService {
@@ -18,5 +19,7 @@ public interface IOfferService {
 	Set<OfferSupplierProfileDTO> allOffersForSupplier(Supplier supplier);
 
 	void updateOffer(Supplier supplier, OfferUpdateDTO offer) throws OfferDoesNotExistException, ForbiddenOperationException;
+
+	Offer getOfferById(long offerId);
 
 }
