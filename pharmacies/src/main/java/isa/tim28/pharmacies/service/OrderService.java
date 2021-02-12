@@ -114,6 +114,7 @@ public class OrderService implements IOrderService {
 		}
 		return orders;
 	}
+	
 	@Override
 	public Set<OrderForPharmacyAdminDTO> get(PharmacyAdmin admin) {
 		Set<Order> allOrders = getByPharmacy(admin.getPharmacy());
@@ -212,6 +213,7 @@ public class OrderService implements IOrderService {
 	}
 
 	@Override
+	@Transactional(readOnly = false)
 	public void delete(long orderid, PharmacyAdmin admin) throws OrderNotFoundException, ForbiddenOperationException {
 		Optional<Order> orderOpt = orderRepository.findById(orderid);
 		if(orderOpt.isEmpty())
