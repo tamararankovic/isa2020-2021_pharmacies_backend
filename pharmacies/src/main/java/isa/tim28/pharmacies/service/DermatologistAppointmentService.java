@@ -726,8 +726,10 @@ public class DermatologistAppointmentService implements IDermatologistAppointmen
 			return;
 		}
 	}
+	
+	@Override
 	@Transactional(readOnly = false)
-	public DermatologistExaminationForPatientDTO scheduleApp(long appId, User loggedInUser) {
+	public DermatologistExaminationForPatientDTO scheduleApp(long appId,long appVersion, User loggedInUser) {
 
 		DermatologistAppointment da = appointmentRepository.findById(appId).get();
 		da.setVersion(appVersion);
@@ -833,4 +835,6 @@ public class DermatologistAppointmentService implements IDermatologistAppointmen
 		da.setScheduled(false);
 		appointmentRepository.save(da);
 	}
+
+
 }

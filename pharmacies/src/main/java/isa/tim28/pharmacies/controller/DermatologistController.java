@@ -797,7 +797,7 @@ public class DermatologistController {
 		if(loggedInUser.getRole() != Role.PATIENT) {
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only patient can schedule an appointment.");
 		}
-		DermatologistExaminationForPatientDTO res = dermatologistAppointmentService.scheduleApp(dto.getId(),loggedInUser);
+		DermatologistExaminationForPatientDTO res = dermatologistAppointmentService.scheduleApp(dto.getId(),dto.getVersion(),loggedInUser);
 		return new ResponseEntity<DermatologistExaminationForPatientDTO>(res,HttpStatus.OK);
 	}
 	
