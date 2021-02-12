@@ -1,6 +1,7 @@
 package isa.tim28.pharmacies.service;
 
 import java.time.LocalDateTime;
+import java.time.Month;
 import java.time.Period;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -21,10 +22,13 @@ import isa.tim28.pharmacies.exceptions.MedicineDoesNotExistException;
 import isa.tim28.pharmacies.exceptions.PharmacyNotFoundException;
 import isa.tim28.pharmacies.exceptions.UserDoesNotExistException;
 import isa.tim28.pharmacies.model.CancelledReservation;
+import isa.tim28.pharmacies.model.EPrescription;
+import isa.tim28.pharmacies.model.EPrescriptionMedicine;
 import isa.tim28.pharmacies.model.Loyalty;
 import isa.tim28.pharmacies.model.LoyaltyPoints;
 import isa.tim28.pharmacies.model.Medicine;
 import isa.tim28.pharmacies.model.MedicineQuantity;
+import isa.tim28.pharmacies.model.Patient;
 import isa.tim28.pharmacies.model.Pharmacist;
 import isa.tim28.pharmacies.model.Pharmacy;
 
@@ -34,7 +38,9 @@ import isa.tim28.pharmacies.model.Reservation;
 import isa.tim28.pharmacies.model.ReservationStatus;
 import isa.tim28.pharmacies.model.User;
 import isa.tim28.pharmacies.repository.CancelledReservationRepository;
+import isa.tim28.pharmacies.repository.EPrescriptionRepository;
 import isa.tim28.pharmacies.repository.LoyaltyPointsRepository;
+import isa.tim28.pharmacies.repository.MedicineQuantityRepository;
 import isa.tim28.pharmacies.repository.MedicineRepository;
 import isa.tim28.pharmacies.repository.ReservationRepository;
 import isa.tim28.pharmacies.service.interfaces.IMedicineService;
@@ -57,11 +63,16 @@ public class ReservationService implements IReservationService {
 	private IRatingService ratingService;
 	private MedicineRepository medicineRepository;
 	private LoyaltyPointsRepository loyaltyPointsRepository;
-	
+	private MedicineQuantityRepository medicineQuantityRepository;
+	private EPrescriptionRepository ePrescriptionRepository;
+
 	@Autowired
-	public ReservationService(ReservationRepository reservationRepository, IPatientService patientService,IPharmacyService pharmacyService
-			,IMedicineService medicineService,CancelledReservationRepository cancelledReservationRepository, EmailService emailService, IOrderService orderService,
-			 LoyaltyPointsRepository loyaltyPointsRepository,IRatingService ratingService, MedicineRepository medicineRepository) {
+	public ReservationService(ReservationRepository reservationRepository, IPatientService patientService,
+			IPharmacyService pharmacyService, IMedicineService medicineService,
+			CancelledReservationRepository cancelledReservationRepository, EmailService emailService,
+			IOrderService orderService, LoyaltyPointsRepository loyaltyPointsRepository, IRatingService ratingService,
+			MedicineRepository medicineRepository, MedicineQuantityRepository medicineQuantityRepository,
+			EPrescriptionRepository ePrescriptionRepository) {
 		super();
 		this.reservationRepository = reservationRepository;
 		this.patientService = patientService;
@@ -73,6 +84,8 @@ public class ReservationService implements IReservationService {
 		this.medicineRepository = medicineRepository;
 		this.orderService = orderService;
 		this.loyaltyPointsRepository = loyaltyPointsRepository;
+		this.medicineQuantityRepository = medicineQuantityRepository;
+		this.ePrescriptionRepository = ePrescriptionRepository;
 
 	}
 
@@ -160,38 +173,50 @@ public class ReservationService implements IReservationService {
 	}
 
 	@Override
-	public Reservation makeReservation(ReservationDTO dto, User loggedInUser) throws UserDoesNotExistException, MessagingException {
+	public Reservation makeReservation(ReservationDTO dto, User loggedInUser)
+			throws UserDoesNotExistException, MessagingException {
 		Reservation res = new Reservation();
 		res.setMedicine(medicineService.getByName(dto.getMedicine()));
-		
+
 		res.setPatient(patientService.getPatientById(loggedInUser.getId()));
-		
-		//loyalty program
-		if(loyaltyPointsRepository.findAll() == null) {
-			res.setPrice(pharmacyService.getByName(dto.getPharmacy()).getCurrentPrice(medicineService.getByName(dto.getMedicine())));
-		}else 
-		{
+
+		// loyalty program
+		if (loyaltyPointsRepository.findAll() == null) {
+			res.setPrice(pharmacyService.getByName(dto.getPharmacy())
+					.getCurrentPrice(medicineService.getByName(dto.getMedicine())));
+		} else {
 			List<LoyaltyPoints> points = loyaltyPointsRepository.findAll();
-			if(!points.isEmpty()) {
+			if (!points.isEmpty()) {
 				LoyaltyPoints lp = points.get(points.size() - 1);
-				
-				double price = pharmacyService.getByName(dto.getPharmacy()).getCurrentPrice(medicineService.getByName(dto.getMedicine()));
-				if(patientService.getPatientById(loggedInUser.getId()).getCategory().equals(Loyalty.REGULAR)) {
+
+				double price = pharmacyService.getByName(dto.getPharmacy())
+						.getCurrentPrice(medicineService.getByName(dto.getMedicine()));
+				if (patientService.getPatientById(loggedInUser.getId()).getCategory().equals(Loyalty.REGULAR)) {
 					res.setPrice(price);
-				}else if(patientService.getPatientById(loggedInUser.getId()).getCategory().equals(Loyalty.SILVER)) {
-					double procentage = price*(lp.getDiscountForSilver()/100);
-					res.setPrice(price-procentage);
-				}else if(patientService.getPatientById(loggedInUser.getId()).getCategory().equals(Loyalty.GOLD)) {
-					double procentage = price*(lp.getDiscountForGold()/100);
-					res.setPrice(price-procentage);
+				} else if (patientService.getPatientById(loggedInUser.getId()).getCategory().equals(Loyalty.SILVER)) {
+					double procentage = price * (lp.getDiscountForSilver() / 100);
+					res.setPrice(price - procentage);
+				} else if (patientService.getPatientById(loggedInUser.getId()).getCategory().equals(Loyalty.GOLD)) {
+					double procentage = price * (lp.getDiscountForGold() / 100);
+					res.setPrice(price - procentage);
 				}
-			}else { 	
-				res.setPrice(pharmacyService.getByName(dto.getPharmacy()).getCurrentPrice(medicineService.getByName(dto.getMedicine())));
+			} else {
+				res.setPrice(pharmacyService.getByName(dto.getPharmacy())
+						.getCurrentPrice(medicineService.getByName(dto.getMedicine())));
 
 			}
 		}
-		
-		res.setPharmacy(pharmacyService.getByName(dto.getPharmacy()));
+		Medicine m = medicineService.getByName(dto.getMedicine());
+		Pharmacy pharmacy = pharmacyService.getByName(dto.getPharmacy());
+		for (MedicineQuantity mq : pharmacy.getMedicines()) {
+			if (m.getId() == mq.getMedicine().getId()) {
+				mq.setQuantity(mq.getQuantity() - 1);
+				medicineQuantityRepository.save(mq);
+				break;
+			}
+		}
+
+		res.setPharmacy(pharmacy);
 		res.setReceived(false);
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm");
 		LocalDateTime dateTime = LocalDateTime.parse(dto.getDate(), formatter);
@@ -240,8 +265,9 @@ public class ReservationService implements IReservationService {
 		MedicineQuantity med = medOpt.get();
 		if (pharmacyHasActiveReservationsForMedicine(pharmacy, med.getMedicine()))
 			throw new ForbiddenOperationException("You can't delete a medicine that has active reservations!");
-		if(orderService.pharmacyHasActiveOrdersForMedicine(pharmacy, medicine))
-			throw new ForbiddenOperationException("You can't delete a medicine that has order that is waiting offers or a winner!");
+		if (orderService.pharmacyHasActiveOrdersForMedicine(pharmacy, medicine))
+			throw new ForbiddenOperationException(
+					"You can't delete a medicine that has order that is waiting offers or a winner!");
 		pharmacy.getMedicines().remove(med);
 		pharmacyService.savePharmacy(pharmacy);
 	}
@@ -293,6 +319,32 @@ public class ReservationService implements IReservationService {
 					result.add(dto);
 				}
 
+				List<EPrescription> ePrescriptions = ePrescriptionRepository.findAllByPatient_Id(id);
+				if (ePrescriptions.isEmpty() == false) {
+					for (EPrescription ep : ePrescriptions) {
+						for(EPrescriptionMedicine epm : ep.getPrescriptionMedicine()) {
+							DoctorRatingDTO dto1 = new DoctorRatingDTO(epm.getId(), 0,
+									epm.getName(), 0);
+							
+							if (!result.isEmpty()) {
+								boolean contains = false;
+								for (DoctorRatingDTO d : result) {
+									if (d.getId() == dto1.getId()) {
+										contains = true;
+									}
+								}
+								if (!contains) {
+									result.add(dto1);
+								}
+							} else {
+								result.add(dto1);
+							}
+						}
+						
+					}
+
+				}
+
 			}
 		}
 		return result;
@@ -342,7 +394,6 @@ public class ReservationService implements IReservationService {
 		if (!getMedicineForRating(id).isEmpty()) {
 
 			List<DoctorRatingDTO> medicine = getMedicineForRating(id);
-			
 
 			for (DoctorRatingDTO dto : medicine) {
 				Pharmacy pharmacy = pharmacyService.getPharmacyById(dto.getPharmacyId());
@@ -365,6 +416,29 @@ public class ReservationService implements IReservationService {
 			}
 		}
 		return res;
+	}
+
+	@Override
+	public int getPenalties(long id) {
+		List<Reservation> all = reservationRepository.findAll();
+		LocalDateTime today = LocalDateTime.now();
+
+		Patient patient = new Patient();
+		try {
+			patient = patientService.getPatientById(id);
+		} catch (UserDoesNotExistException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		patient.setPenalties(0);
+		Month month = today.getMonth();
+		for (Reservation r : all) {
+			if (today.isAfter(r.getDueDate()) && !r.isReceived() && month == r.getDueDate().getMonth()) {
+				patient.setPenalties(patient.getPenalties() + 1);
+			}
+		}
+		patientService.save(patient);
+		return patient.getPenalties();
 	}
 
 }

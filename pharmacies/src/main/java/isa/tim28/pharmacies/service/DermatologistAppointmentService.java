@@ -22,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import isa.tim28.pharmacies.dtos.CurrentlyHasAppointmentDTO;
 import isa.tim28.pharmacies.dtos.DermatologistAppointmentDTO;
+import isa.tim28.pharmacies.dtos.DermatologistExaminationForPatientDTO;
 import isa.tim28.pharmacies.dtos.DermatologistReportDTO;
 import isa.tim28.pharmacies.dtos.ExistingDermatologistAppointmentDTO;
 import isa.tim28.pharmacies.dtos.LeaveDTO;
@@ -725,15 +726,16 @@ public class DermatologistAppointmentService implements IDermatologistAppointmen
 			return;
 		}
 	}
-		
-	public void scheduleApp(long appId, User loggedInUser) {
+	@Transactional(readOnly = false)
+	public DermatologistExaminationForPatientDTO scheduleApp(long appId, User loggedInUser) {
 
 		DermatologistAppointment da = appointmentRepository.findById(appId).get();
 		da.setScheduled(true);
 		da.setPatient(patientRepository.findOneByUser_Id(loggedInUser.getId()));
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm");
 		String date = da.getStartDateTime().format(formatter);
-		appointmentRepository.save(da);
+		DermatologistAppointment saved = appointmentRepository.save(da);
+		DermatologistExaminationForPatientDTO dto = new DermatologistExaminationForPatientDTO(saved.getId(),saved.getStartDateTime(),saved.getDermatologist().getUser().getFullName(), saved.getDurationInMinutes(), saved.getPrice());
 		
 		try {
 			emailService.sendAppointmentScheduled(loggedInUser.getFullName(), loggedInUser.getEmail(),
@@ -742,6 +744,7 @@ public class DermatologistAppointmentService implements IDermatologistAppointmen
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		return dto;
 	}
 	
 
@@ -791,7 +794,7 @@ public class DermatologistAppointmentService implements IDermatologistAppointmen
 
 	}
 	
-
+	@Transactional(readOnly = false)
 	public void cancelDermApp(long id) {
 		DermatologistAppointment da = appointmentRepository.findById(id).get();
 		da.setScheduled(false);

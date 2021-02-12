@@ -94,16 +94,19 @@ public class PharmacyService implements IPharmacyService {
 	private PharmacistRepository pharmacistRepository;
 	private IPharmacistAppointmentService pharmacistAppointmentService;
 	private IRatingService ratingService;
-	
+
 	@Autowired
 	public PharmacyService(PharmacyRepository pharmacyRepository, IPharmacistService pharmacistService,
 			IDermatologistService dermatologistService, IDermatologistAppointmentService appointmentService,
-		    IMedicineService medicineService,  PharmacyComplaintRepository pharmacyComplaintRepository, 
-		    ReservationRepository reservationRepository, EPrescriptionRepository ePrescriptionRepository,
-		    DermatologistAppointmentRepository dermatologistAppointmentRepository, PharmacistAppointmentRepository pharmacistAppointmentRepository,
-		    PharmacistComplaintRepository pharmacistComplaintRepository, DermatologistComplaintRepository dermatologistComplaintRepository, 
-		    EmailService emailService,  PatientRepository patientRepository, DermatologistRepository dermatologistRepository,
-		    PharmacistRepository pharmacistRepository,  IPharmacistAppointmentService pharmacistAppointmentService, IRatingService ratingService) {
+			IMedicineService medicineService, PharmacyComplaintRepository pharmacyComplaintRepository,
+			ReservationRepository reservationRepository, EPrescriptionRepository ePrescriptionRepository,
+			DermatologistAppointmentRepository dermatologistAppointmentRepository,
+			PharmacistAppointmentRepository pharmacistAppointmentRepository,
+			PharmacistComplaintRepository pharmacistComplaintRepository,
+			DermatologistComplaintRepository dermatologistComplaintRepository, EmailService emailService,
+			PatientRepository patientRepository, DermatologistRepository dermatologistRepository,
+			PharmacistRepository pharmacistRepository, IPharmacistAppointmentService pharmacistAppointmentService,
+			IRatingService ratingService) {
 
 		super();
 		this.pharmacyRepository = pharmacyRepository;
@@ -124,167 +127,186 @@ public class PharmacyService implements IPharmacyService {
 		this.pharmacistAppointmentService = pharmacistAppointmentService;
 		this.patientRepository = patientRepository;
 		this.ratingService = ratingService;
-		
+
 	}
 
 	@Override
 	public boolean answerOnComplaint(AnswerOnComplaintDTO answer) throws MessagingException {
 		System.out.println(answer.getType());
-		if(answer.getType().equals("PHARMACY")) {
+		if (answer.getType().equals("PHARMACY")) {
 			Optional<PharmacyComplaint> pcc = pharmacyComplaintRepository.findById(answer.getComplaintId());
-		 if(!pcc.isEmpty()) {
-			PharmacyComplaint pc = pcc.get();
-			if(pc.getReply().equals("")) {
-			    pc.setReply(answer.getAnswer());
-				pharmacyComplaintRepository.save(pc);
-				Optional<Patient> patientOp = patientRepository.findById(pc.getPatient().getId());
-				Patient patient = patientOp.get();
-				Optional<Pharmacy> pharmacyOp = pharmacyRepository.findById(pc.getPharmacy().getId());
-				Pharmacy pharmacy = pharmacyOp.get();
-				emailService.sendResponseOnComplaint(String.join(" ", patient.getUser().getName(), patient.getUser().getSurname()), answer.getAnswer(), patient.getUser().getEmail(), pharmacy.getName());
-				return true;
-			}else {
+			if (!pcc.isEmpty()) {
+				PharmacyComplaint pc = pcc.get();
+				if (pc.getReply().equals("")) {
+					pc.setReply(answer.getAnswer());
+					pharmacyComplaintRepository.save(pc);
+					Optional<Patient> patientOp = patientRepository.findById(pc.getPatient().getId());
+					Patient patient = patientOp.get();
+					Optional<Pharmacy> pharmacyOp = pharmacyRepository.findById(pc.getPharmacy().getId());
+					Pharmacy pharmacy = pharmacyOp.get();
+					emailService.sendResponseOnComplaint(
+							String.join(" ", patient.getUser().getName(), patient.getUser().getSurname()),
+							answer.getAnswer(), patient.getUser().getEmail(), pharmacy.getName());
+					return true;
+				} else {
+					return false;
+				}
+			} else {
 				return false;
 			}
-		}else {
-			return false;
-		}
-	}	
-		else if(answer.getType().equals("DERMATOLOGIST")) {
+		} else if (answer.getType().equals("DERMATOLOGIST")) {
 			Optional<DermatologistComplaint> dcc = dermatologistComplaintRepository.findById(answer.getComplaintId());
-			if(!dcc.isEmpty()) {
+			if (!dcc.isEmpty()) {
 				DermatologistComplaint dc = dcc.get();
-				if(dc.getReply().equals("")) {
-				dc.setReply(answer.getAnswer());
-				dermatologistComplaintRepository.save(dc);
-				Optional<Patient> patientOp = patientRepository.findById(dc.getPatient().getId());
-				Patient patient = patientOp.get();
-				Optional<Dermatologist> dermatologistOp = dermatologistRepository.findById(dc.getDermatologist().getId());
-				Dermatologist dermatologist = dermatologistOp.get();
-				emailService.sendResponseOnComplaint(String.join(" ", patient.getUser().getName(), patient.getUser().getSurname()), answer.getAnswer(), patient.getUser().getEmail(), String.join(" ", dermatologist.getUser().getName(),dermatologist.getUser().getSurname()));
-				return true;
-			}else {
+				if (dc.getReply().equals("")) {
+					dc.setReply(answer.getAnswer());
+					dermatologistComplaintRepository.save(dc);
+					Optional<Patient> patientOp = patientRepository.findById(dc.getPatient().getId());
+					Patient patient = patientOp.get();
+					Optional<Dermatologist> dermatologistOp = dermatologistRepository
+							.findById(dc.getDermatologist().getId());
+					Dermatologist dermatologist = dermatologistOp.get();
+					emailService.sendResponseOnComplaint(
+							String.join(" ", patient.getUser().getName(), patient.getUser().getSurname()),
+							answer.getAnswer(), patient.getUser().getEmail(),
+							String.join(" ", dermatologist.getUser().getName(), dermatologist.getUser().getSurname()));
+					return true;
+				} else {
+					return false;
+				}
+			} else {
 				return false;
 			}
-		}else {
-			return false;
-		}
-	}	
-		else {
+		} else {
 			Optional<PharmacistComplaint> pcc = pharmacistComplaintRepository.findById(answer.getComplaintId());
-			if(!pcc.isEmpty()) {
+			if (!pcc.isEmpty()) {
 				PharmacistComplaint pc = pcc.get();
-				if(pc.getReply().equals("")) {
-				pc.setReply(answer.getAnswer());
-				pharmacistComplaintRepository.save(pc);
-				Optional<Patient> patientOp = patientRepository.findById(pc.getPatient().getId());
-				Patient patient= patientOp.get();
-				Optional<Pharmacist> pharmacistOp = pharmacistRepository.findById(pc.getPharmacist().getId());
-				Pharmacist pharmacist= pharmacistOp.get();
-				emailService.sendResponseOnComplaint(String.join(" ", patient.getUser().getName(), patient.getUser().getSurname()), answer.getAnswer(), patient.getUser().getEmail(), String.join(" ", pharmacist.getUser().getName(),pharmacist.getUser().getSurname()));
-				return true;
-			}else {
+				if (pc.getReply().equals("")) {
+					pc.setReply(answer.getAnswer());
+					pharmacistComplaintRepository.save(pc);
+					Optional<Patient> patientOp = patientRepository.findById(pc.getPatient().getId());
+					Patient patient = patientOp.get();
+					Optional<Pharmacist> pharmacistOp = pharmacistRepository.findById(pc.getPharmacist().getId());
+					Pharmacist pharmacist = pharmacistOp.get();
+					emailService.sendResponseOnComplaint(
+							String.join(" ", patient.getUser().getName(), patient.getUser().getSurname()),
+							answer.getAnswer(), patient.getUser().getEmail(),
+							String.join(" ", pharmacist.getUser().getName(), pharmacist.getUser().getSurname()));
+					return true;
+				} else {
+					return false;
+				}
+			} else {
 				return false;
 			}
-		}else {
-			return false;
 		}
+
 	}
-	
-}
+
 	@Override
-	public List<AllComplaintsDTO> getAllComplaints(){
+	public List<AllComplaintsDTO> getAllComplaints() {
 		List<PharmacyComplaint> pharmacies = pharmacyComplaintRepository.findAll();
-		List<PharmacistComplaint> pharmacists= pharmacistComplaintRepository.findAll();
+		List<PharmacistComplaint> pharmacists = pharmacistComplaintRepository.findAll();
 		List<DermatologistComplaint> dermatologists = dermatologistComplaintRepository.findAll();
-		
+
 		List<AllComplaintsDTO> result = new ArrayList<AllComplaintsDTO>();
-		for(PharmacyComplaint pc : pharmacies) {
-			AllComplaintsDTO dto = new AllComplaintsDTO(pc.getId(), pc.getText(), pc.getPharmacy().getName(), String.join(" ",pc.getPatient().getUser().getName(), pc.getPatient().getUser().getSurname()), "PHARMACY");
+		for (PharmacyComplaint pc : pharmacies) {
+			AllComplaintsDTO dto = new AllComplaintsDTO(pc.getId(), pc.getText(), pc.getPharmacy().getName(),
+					String.join(" ", pc.getPatient().getUser().getName(), pc.getPatient().getUser().getSurname()),
+					"PHARMACY");
 			result.add(dto);
 		}
-		for(PharmacistComplaint pc : pharmacists) {
-			AllComplaintsDTO dto = new AllComplaintsDTO(pc.getId(), pc.getText(), String.join(" ", pc.getPharmacist().getUser().getName(), pc.getPharmacist().getUser().getSurname()), String.join(" ",pc.getPatient().getUser().getName(), pc.getPatient().getUser().getSurname()), "PHARMACIST");
+		for (PharmacistComplaint pc : pharmacists) {
+			AllComplaintsDTO dto = new AllComplaintsDTO(pc.getId(), pc.getText(),
+					String.join(" ", pc.getPharmacist().getUser().getName(), pc.getPharmacist().getUser().getSurname()),
+					String.join(" ", pc.getPatient().getUser().getName(), pc.getPatient().getUser().getSurname()),
+					"PHARMACIST");
 			result.add(dto);
 		}
-		for(DermatologistComplaint pc : dermatologists) {
-			AllComplaintsDTO dto = new AllComplaintsDTO(pc.getId(), pc.getText(), String.join(" ", pc.getDermatologist().getUser().getName(), pc.getDermatologist().getUser().getSurname()), String.join(" ",pc.getPatient().getUser().getName(), pc.getPatient().getUser().getSurname()), "DERMATOLOGIST");
+		for (DermatologistComplaint pc : dermatologists) {
+			AllComplaintsDTO dto = new AllComplaintsDTO(pc.getId(), pc.getText(),
+					String.join(" ", pc.getDermatologist().getUser().getName(),
+							pc.getDermatologist().getUser().getSurname()),
+					String.join(" ", pc.getPatient().getUser().getName(), pc.getPatient().getUser().getSurname()),
+					"DERMATOLOGIST");
 			result.add(dto);
 		}
-		
+
 		return result;
 	}
-	
+
 	@Override
-	public boolean createComplaint(Patient patient, ComplaintDTO dto) throws InvalidComplaintException, UserDoesNotExistException {
-		if(!dto.isTextValid()) 
+	public boolean createComplaint(Patient patient, ComplaintDTO dto)
+			throws InvalidComplaintException, UserDoesNotExistException {
+		if (!dto.isTextValid())
 			throw new InvalidComplaintException("Complaint must have between 2 and 3000 characters. Try again.");
 		Optional<Pharmacy> pahrmacyOp = pharmacyRepository.findById(dto.getId());
-		if(pahrmacyOp.isEmpty())
+		if (pahrmacyOp.isEmpty())
 			throw new UserDoesNotExistException("You attempted to write complaint to a pharmacy that doesn't exist!");
 		Pharmacy pharmacy = pahrmacyOp.get();
-		
+
 		boolean reservedMed = false;
 		try {
-		List<Reservation> reservations = reservationRepository.findAllByPatient_Id(patient.getId());
-		if(!reservations.isEmpty()) {
-			for(Reservation r : reservations) {
-				if(r.getPharmacy().getId() == dto.getId() && r.isReceived() == true) {
-					reservedMed = true;
-					break;
+			List<Reservation> reservations = reservationRepository.findAllByPatient_Id(patient.getId());
+			if (!reservations.isEmpty()) {
+				for (Reservation r : reservations) {
+					if (r.getPharmacy().getId() == dto.getId() && r.isReceived() == true) {
+						reservedMed = true;
+						break;
 					}
 				}
 			}
-		}
-		catch(NullPointerException e) {
+		} catch (NullPointerException e) {
 			reservedMed = false;
 		}
-		
+
 		boolean ePrescription = false;
 		try {
 			List<EPrescription> ePrescriptions = ePrescriptionRepository.findAllByPatient_Id(patient.getId());
-			if(ePrescriptions.isEmpty() == false ) {
-			for(EPrescription ep : ePrescriptions) {
-				if(ep.getPharmacy().getId() == dto.getId()) {
-					ePrescription = true;
-					break;
-			  }
-		  }
-	  }
-    }catch(NullPointerException e){
-			ePrescription=false;
+			if (ePrescriptions.isEmpty() == false) {
+				for (EPrescription ep : ePrescriptions) {
+					if (ep.getPharmacy().getId() == dto.getId()) {
+						ePrescription = true;
+						break;
+					}
+				}
+			}
+		} catch (NullPointerException e) {
+			ePrescription = false;
 		}
-	
+
 		boolean dermAppointment = false;
-	try {
-		Set<DermatologistAppointment> dermAppointments = dermatologistAppointmentRepository.findAllByPatient_Id(patient.getId());
-		if(!dermAppointments.isEmpty()) {
-			for(DermatologistAppointment da : dermAppointments) {
-				if(da.getPharmacy().getId() == dto.getId()) {
-					dermAppointment = true;
-					break;
+		try {
+			Set<DermatologistAppointment> dermAppointments = dermatologistAppointmentRepository
+					.findAllByPatient_Id(patient.getId());
+			if (!dermAppointments.isEmpty()) {
+				for (DermatologistAppointment da : dermAppointments) {
+					if (da.getPharmacy().getId() == dto.getId()) {
+						dermAppointment = true;
+						break;
+					}
 				}
 			}
+		} catch (NullPointerException e) {
+			dermAppointment = false;
 		}
-	}catch(NullPointerException e){
-		dermAppointment=false;
-	}
 		boolean pharmAppointment = false;
-	try {	
-		Set<PharmacistAppointment> pharmAppointments = pharmacistAppointmentRepository.findAllByPatient_Id(patient.getId());
-		if(!pharmAppointments.isEmpty()) {
-			for(PharmacistAppointment pa : pharmAppointments) {
-				if(pa.getPharmacist().getEngegementInPharmacy().getPharmacy().getId() == dto.getId()) {
-					pharmAppointment = true;
-					break;
+		try {
+			Set<PharmacistAppointment> pharmAppointments = pharmacistAppointmentRepository
+					.findAllByPatient_Id(patient.getId());
+			if (!pharmAppointments.isEmpty()) {
+				for (PharmacistAppointment pa : pharmAppointments) {
+					if (pa.getPharmacist().getEngegementInPharmacy().getPharmacy().getId() == dto.getId()) {
+						pharmAppointment = true;
+						break;
+					}
 				}
 			}
+		} catch (NullPointerException e) {
+			pharmAppointment = false;
 		}
-	}   catch(NullPointerException e){
-		pharmAppointment=false;
-	}
-			
-		if(ePrescription == true || reservedMed == true || dermAppointment == true || pharmAppointment == true) {
+
+		if (ePrescription == true || reservedMed == true || dermAppointment == true || pharmAppointment == true) {
 			PharmacyComplaint complaint = new PharmacyComplaint();
 			complaint.setPharmacy(pharmacy);
 			complaint.setPatient(patient);
@@ -292,13 +314,14 @@ public class PharmacyService implements IPharmacyService {
 			complaint.setText(dto.getText());
 			pharmacyComplaintRepository.save(complaint);
 			return true;
-		}else {
+		} else {
 			return false;
 		}
-		
+
 	}
+
 	@Override
-	public List<MedicineSearchDTO> searchMedicineByName(String name){
+	public List<MedicineSearchDTO> searchMedicineByName(String name) {
 		List<MedicineSearchDTO> result = new ArrayList<MedicineSearchDTO>();
 		if (name.equals("")) {
 			for (Medicine m : medicineService.getAllMedicine()) {
@@ -735,20 +758,134 @@ public class PharmacyService implements IPharmacyService {
 	@Override
 	public Rating savePharmacyRating(DoctorRatingDTO dto, long id) {
 		Pharmacy pharmacy = pharmacyRepository.findById(dto.getId()).get();
-		
+
 		Rating r = new Rating();
 		r.setRating(dto.getRating());
 		r.setPatient(patientRepository.findOneByUser_Id(id));
 		Rating saved = ratingService.saveRating(r);
-		
+
 		pharmacy.getRatings().add(saved);
 		pharmacyRepository.save(pharmacy);
-		
+
 		return saved;
 	}
-	
-	
 
-	
+	@Override
+	public List<DoctorRatingDTO> getPharmaciesForRating(long id) {
+
+		long patientId = patientRepository.findOneByUser_Id(id).getId();
+		List<DoctorRatingDTO> pharmacies = new ArrayList<DoctorRatingDTO>();
+
+		pharmacies = getRatedPharmacies(patientId);
+
+		boolean reservedMed = false;
+		try {
+			List<Reservation> reservations = reservationRepository.findAllByPatient_Id(patientId);
+			if (!reservations.isEmpty()) {
+				for (Reservation r : reservations) {
+					if (r.isReceived() == true) {
+						DoctorRatingDTO dto = new DoctorRatingDTO(r.getPharmacy().getId(), r.getPharmacy().getId(),
+								r.getPharmacy().getName(), 0);
+						addToListIfObjectUnique(pharmacies, dto);
+					}
+				}
+			}
+		} catch (NullPointerException e) {
+			reservedMed = false;
+		}
+
+		boolean ePrescription = false;
+		try {
+			List<EPrescription> ePrescriptions = ePrescriptionRepository.findAllByPatient_Id(patientId);
+			if (ePrescriptions.isEmpty() == false) {
+				for (EPrescription ep : ePrescriptions) {
+
+					DoctorRatingDTO dto = new DoctorRatingDTO(ep.getPharmacy().getId(), ep.getPharmacy().getId(),
+							ep.getPharmacy().getName(), 0);
+					addToListIfObjectUnique(pharmacies, dto);
+				}
+
+			}
+
+		} catch (
+
+		NullPointerException e) {
+			ePrescription = false;
+		}
+
+		boolean dermAppointment = false;
+		try {
+			Set<DermatologistAppointment> dermAppointments = dermatologistAppointmentRepository
+					.findAllByPatient_Id(patientId);
+			if (!dermAppointments.isEmpty()) {
+				for (DermatologistAppointment da : dermAppointments) {
+					DoctorRatingDTO dto = new DoctorRatingDTO(da.getPharmacy().getId(), da.getPharmacy().getId(),
+							da.getPharmacy().getName(), 0);
+					addToListIfObjectUnique(pharmacies, dto);
+				}
+			}
+		} catch (NullPointerException e) {
+			dermAppointment = false;
+		}
+		boolean pharmAppointment = false;
+		try {
+			Set<PharmacistAppointment> pharmAppointments = pharmacistAppointmentRepository
+					.findAllByPatient_Id(patientId);
+			if (!pharmAppointments.isEmpty()) {
+				for (PharmacistAppointment pa : pharmAppointments) {
+					DoctorRatingDTO dto = new DoctorRatingDTO(
+							pa.getPharmacist().getEngegementInPharmacy().getPharmacy().getId(),
+							pa.getPharmacist().getEngegementInPharmacy().getPharmacy().getId(),
+							pa.getPharmacist().getEngegementInPharmacy().getPharmacy().getName(), 0);
+					addToListIfObjectUnique(pharmacies, dto);
+
+				}
+			}
+		} catch (NullPointerException e) {
+			pharmAppointment = false;
+		}
+
+		return pharmacies;
+
+	}
+
+	public List<DoctorRatingDTO> addToListIfObjectUnique(List<DoctorRatingDTO> pharmacies, DoctorRatingDTO dto) {
+		if (!pharmacies.isEmpty()) {
+			boolean contains = false;
+			for (DoctorRatingDTO d : pharmacies) {
+				if (d.getId() == dto.getId()) {
+					contains = true;
+				}
+			}
+			if (!contains) {
+				pharmacies.add(dto);
+			}
+		} else {
+			pharmacies.add(dto);
+		}
+
+		return pharmacies;
+	}
+
+	public List<DoctorRatingDTO> getRatedPharmacies(long patientId) {
+		List<Pharmacy> all = getAll();
+		List<Rating> allRatings = ratingService.getRatingsByPatientId(patientId);
+		List<DoctorRatingDTO> result = new ArrayList<DoctorRatingDTO>();
+
+		for (Pharmacy p : all) {
+			Set<Rating> allRatingsPharmacy = p.getRatings();
+
+			for (Rating r : allRatingsPharmacy) {
+				for (Rating r1 : allRatings) {
+					if (r.getId() == r1.getId()) {
+
+						DoctorRatingDTO dto = new DoctorRatingDTO(p.getId(), p.getId(), p.getName(), r.getRating());
+						result.add(dto);
+					}
+				}
+			}
+		}
+		return result;
+	}
 
 }

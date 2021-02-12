@@ -79,4 +79,6 @@ public interface IPharmacyService {
 
 	Rating savePharmacyRating(DoctorRatingDTO dto, long id);
 
+	List<DoctorRatingDTO> getPharmaciesForRating(long id);
+
 }

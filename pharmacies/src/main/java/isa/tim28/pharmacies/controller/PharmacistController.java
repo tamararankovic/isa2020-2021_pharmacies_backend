@@ -759,6 +759,7 @@ public class PharmacistController {
 		}
 		
 		List< ShowCounselingDTO> res = pharmacistAppointmentService.getAllIncomingCounsellings(loggedInUser.getId(), false);
+		res.addAll(dermatologistAppointmentService.getAllIncomingAppointments(loggedInUser.getId(), false));
 		return new ResponseEntity<>(res,HttpStatus.OK);
 	}
 	
@@ -846,23 +847,5 @@ public class PharmacistController {
 		return new ResponseEntity<>("sacuvano",HttpStatus.OK);
 	}
 	
-	@GetMapping(value = "pharmacy-rating")
-	public ResponseEntity<List<DoctorRatingDTO>> getAllPharmacyForRating(HttpSession session){
-		User loggedInUser = (User) session.getAttribute("loggedInUser");
-		if(loggedInUser == null) {
-			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No logged in user!");
-		}
-		if(loggedInUser.getRole() != Role.PATIENT) {
-			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only patinet can schedule appointments.");
-		}
-		
-		List<DoctorRatingDTO> res = new ArrayList<DoctorRatingDTO>();
-		try {
-			res = pharmacistService.getPharmaciesFromReservations(loggedInUser.getId());
-		} catch (PharmacyNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		return new ResponseEntity<>(res,HttpStatus.OK);
-	}
+	
 }
