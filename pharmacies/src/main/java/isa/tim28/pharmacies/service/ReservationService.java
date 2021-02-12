@@ -149,6 +149,7 @@ public class ReservationService implements IReservationService {
 	@Transactional(readOnly = false)
 	public List<ReservationDTO> cancelReservation(ReservationDTO dto, long id) {
 
+		Medicine m = medicineRepository.findMedicineByName(dto.getMedicine());
 		CancelledReservation cancelled = new CancelledReservation();
 		cancelled.setMedicine(dto.getMedicine());
 		cancelled.setPharmacy(dto.getPharmacy());
@@ -159,7 +160,7 @@ public class ReservationService implements IReservationService {
 			e.printStackTrace();
 		}
 		
-		Medicine m = medicineRepository.findMedicineByName(dto.getMedicine());
+		
 		Pharmacy pharmacy = pharmacyService.getByName(dto.getPharmacy());
 		for (MedicineQuantity mq : pharmacy.getMedicines()) {
 			if (m.getId() == mq.getMedicine().getId()) {
@@ -182,7 +183,7 @@ public class ReservationService implements IReservationService {
 
 		cancelledReservationRepository.save(cancelled);
 		reservationRepository.deleteById(dto.getId());
-		;
+		
 
 		return getReservationByPatient(id);
 	}
@@ -192,7 +193,8 @@ public class ReservationService implements IReservationService {
 	public Reservation makeReservation(ReservationDTO dto, User loggedInUser)
 			throws UserDoesNotExistException, MessagingException {
 		Reservation res = new Reservation();
-		res.setMedicine(medicineService.getByName(dto.getMedicine()));
+		Medicine m = medicineRepository.findMedicineByName(dto.getMedicine());
+		res.setMedicine(m);
 
 		res.setPatient(patientService.getPatientById(loggedInUser.getId()));
 
@@ -222,7 +224,7 @@ public class ReservationService implements IReservationService {
 
 			}
 		}
-		Medicine m = medicineRepository.findMedicineByName(dto.getMedicine());
+		
 		Pharmacy pharmacy = pharmacyService.getByName(dto.getPharmacy());
 		for (MedicineQuantity mq : pharmacy.getMedicines()) {
 			if (m.getId() == mq.getMedicine().getId()) {
