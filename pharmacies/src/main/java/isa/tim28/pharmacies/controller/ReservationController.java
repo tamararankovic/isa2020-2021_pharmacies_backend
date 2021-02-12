@@ -154,4 +154,19 @@ public class ReservationController {
 		}
 		return new ResponseEntity<>(res,HttpStatus.OK);
 	}
+	
+	@GetMapping(value = "penalties")
+	public ResponseEntity<Integer> getPenalties(HttpSession session){
+		User loggedInUser = (User) session.getAttribute("loggedInUser");
+		if(loggedInUser == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No logged in user!");
+		}
+		if(loggedInUser.getRole() != Role.PATIENT) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only patinet can schedule appointments.");
+		}
+		
+		int res = reservationService.getPenalties(loggedInUser.getId());
+		System.out.println(res);
+		return new ResponseEntity<>(res,HttpStatus.OK);
+	}
 }

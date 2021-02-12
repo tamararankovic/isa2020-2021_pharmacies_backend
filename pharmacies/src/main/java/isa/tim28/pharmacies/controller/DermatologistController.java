@@ -787,8 +787,8 @@ public class DermatologistController {
 	}
 		
 
-	@PostMapping(value = "schedule", produces = MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<String> scheduleApp(@RequestBody DermatologistExaminationForPatientDTO dto,HttpSession session){
+	@PostMapping(value = "/schedule")
+	public ResponseEntity<DermatologistExaminationForPatientDTO> scheduleApp(@RequestBody DermatologistExaminationForPatientDTO dto,HttpSession session){
 		
 		User loggedInUser = (User) session.getAttribute("loggedInUser");
 		if(loggedInUser == null) {
@@ -797,8 +797,8 @@ public class DermatologistController {
 		if(loggedInUser.getRole() != Role.PATIENT) {
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only patient can schedule an appointment.");
 		}
-		dermatologistAppointmentService.scheduleApp(dto.getId(), dto.getVersion(), loggedInUser);
-		return new ResponseEntity<>("zakazan",HttpStatus.OK);
+		DermatologistExaminationForPatientDTO res = dermatologistAppointmentService.scheduleApp(dto.getId(),dto.getVersion(),loggedInUser);
+		return new ResponseEntity<DermatologistExaminationForPatientDTO>(res,HttpStatus.OK);
 	}
 	
 	@GetMapping(value = "derm-rating")

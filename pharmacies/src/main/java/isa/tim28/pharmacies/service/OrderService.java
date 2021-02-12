@@ -163,10 +163,11 @@ public class OrderService implements IOrderService {
 	@Override
 	@Transactional(readOnly = false)
 	public void chooseWinningOffer(long orderid, long offerId, PharmacyAdmin admin) throws OrderNotFoundException, ForbiddenOperationException, MessagingException {
-		Optional<Order> orderOpt = orderRepository.findById(orderid);
-		if(orderOpt.isEmpty())
+		//Optional<Order> orderOpt = orderRepository.findById(orderid);
+		Order order = orderRepository.findOrderById(orderid);
+		/*if(orderOpt.isEmpty())
 			throw new OrderNotFoundException("You are trying to change order that does not exist!");
-		Order order = orderOpt.get();
+		Order order = orderOpt.get();*/
 		if(order.getAdminCreator().getId() != admin.getId())
 			throw new ForbiddenOperationException("You cann't change orders that you hadn't created!");
 		if(order.hasWinner())
