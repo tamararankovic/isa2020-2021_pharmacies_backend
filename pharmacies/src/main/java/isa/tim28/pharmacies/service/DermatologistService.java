@@ -253,7 +253,7 @@ public class DermatologistService implements IDermatologistService {
 		return fullName.trim().replaceAll(" +", " ").toLowerCase();
 	}
 
-	private Set<DermatologistDTO> search(Set<DermatologistDTO> dermatologists, String fullName) {
+	public Set<DermatologistDTO> search(Set<DermatologistDTO> dermatologists, String fullName) {
 		Set<DermatologistDTO> ret = new HashSet<DermatologistDTO>();
 		if(fullName.length() == 0) return dermatologists;
 		String[] tokens = formatFullName(fullName).split(" ");

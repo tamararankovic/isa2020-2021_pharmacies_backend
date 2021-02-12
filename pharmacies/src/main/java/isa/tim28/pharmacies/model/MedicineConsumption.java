@@ -46,6 +46,15 @@ public class MedicineConsumption {
 		this.dateCreated = LocalDate.now();
 	}
 
+	public MedicineConsumption(long id, Medicine medicine, Pharmacy pharmacy, int quantity, LocalDate dateCreated) {
+		super();
+		this.id = id;
+		this.medicine = medicine;
+		this.pharmacy = pharmacy;
+		this.quantity = quantity;
+		this.dateCreated = dateCreated;
+	}
+
 	public long getId() {
 		return id;
 	}
