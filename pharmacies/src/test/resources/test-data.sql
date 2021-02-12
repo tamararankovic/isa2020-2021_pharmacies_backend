@@ -1,11 +1,11 @@
-insert into users(id, name, surname, email, password, role, active, loged) values (1, 'Tamara', 'Rankovic', 'eminaturkovic600@gmail.com', '1234', 0, TRUE, TRUE);
-insert into users(id, name, surname, email, password, role, active, loged) values (2, 'Tamara', 'Rankovic', 'email2@gmail.com', '1234', 1, TRUE, TRUE);
-insert into users(id, name, surname, email, password, role, active, loged) values (3, 'Tamara', 'Turkovic', 'email3@gmail.com', '1234', 2, TRUE, TRUE);
-insert into users(id, name, surname, email, password, role, active, loged) values (4, 'Tamara', 'Rankovic', 'rankovictamaraa@gmail.com', '1234', 3, TRUE, FALSE);
-insert into users(id, name, surname, email, password, role, active, loged) values (5, 'Tamara', 'Rankovic', 'email5@gmail.com', '1234', 4, TRUE, TRUE);
-insert into users(id, name, surname, email, password, role, active, loged) values (6, 'Tamara', 'Rankovic', 'email6@gmail.com', '1234', 5, TRUE, TRUE);
-insert into users(id, name, surname, email, password, role, active, loged) values (7, 'Milijana', 'Djordjevic', 'rankovictamaraa+3@gmail.com', '1234', 0, TRUE, TRUE);
-insert into users(id, name, surname, email, password, role, active, loged) values (8, 'Milijana', 'Djordjevic', 'milijana.djordjevic1998+1@gmail.com', '1234', 0, TRUE, TRUE);
+insert into users(id, name, surname, email, password, role, active, loged) values (1, 'Tamara', 'Rankovic', 'isa.mejl.za.usere@gmail.com', '1234', 0, TRUE, TRUE);
+insert into users(id, name, surname, email, password, role, active, loged) values (2, 'Tamara', 'Rankovic', 'isa.mejl.za.usere+1@gmail.com', '1234', 1, TRUE, TRUE);
+insert into users(id, name, surname, email, password, role, active, loged) values (3, 'Tamara', 'Turkovic', 'isa.mejl.za.usere+2@gmail.com', '1234', 2, TRUE, TRUE);
+insert into users(id, name, surname, email, password, role, active, loged) values (4, 'Tamara', 'Rankovic', 'isa.mejl.za.usere+3@gmail.com', '1234', 3, TRUE, FALSE);
+insert into users(id, name, surname, email, password, role, active, loged) values (5, 'Tamara', 'Rankovic', 'isa.mejl.za.usere+4@gmail.com', '1234', 4, TRUE, TRUE);
+insert into users(id, name, surname, email, password, role, active, loged) values (6, 'Tamara', 'Rankovic', 'isa.mejl.za.usere+5@gmail.com', '1234', 5, TRUE, TRUE);
+insert into users(id, name, surname, email, password, role, active, loged) values (7, 'Milijana', 'Djordjevic', 'isa.mejl.za.usere+6@gmail.com', '1234', 0, TRUE, TRUE);
+insert into users(id, name, surname, email, password, role, active, loged) values (8, 'Milijana', 'Djordjevic', 'isa.mejl.za.usere+7@gmail.com', '1234', 0, TRUE, TRUE);
 
 insert into patient(id, address, category, city, country, penalties, phone, points, user_id) values (1, 'Podgoricka 2', 0, 'Novi Sad', 'Srbija', 0, '0655555555', 0, 1);
 insert into patient(id, address, category, city, country, penalties, phone, points, user_id) values (2, 'Podgoricka 2', 0, 'Novi Sad', 'Srbija', 0, '0655555555', 0, 7);

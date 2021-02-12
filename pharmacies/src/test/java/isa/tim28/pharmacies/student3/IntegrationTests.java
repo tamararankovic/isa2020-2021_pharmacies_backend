@@ -32,7 +32,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 public class IntegrationTests {
 
 	private static final String DERM_URL = "/derm";
-	private static final String DERM_EMAIL = "email3@gmail.com";
+	private static final String DERM_EMAIL = "isa.mejl.za.usere+2@gmail.com";
 	private static final String DERM_PASSWORD = "1234";
 	
 	private MediaType contentType = new MediaType(MediaType.APPLICATION_JSON.getType(),
