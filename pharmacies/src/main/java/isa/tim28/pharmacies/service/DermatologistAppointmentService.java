@@ -38,7 +38,6 @@ import isa.tim28.pharmacies.dtos.PharmAppDTO;
 import isa.tim28.pharmacies.dtos.ShowCounselingDTO;
 import isa.tim28.pharmacies.dtos.TherapyDTO;
 import isa.tim28.pharmacies.exceptions.ForbiddenOperationException;
-import isa.tim28.pharmacies.exceptions.UserDoesNotExistException;
 import isa.tim28.pharmacies.model.DailyEngagement;
 import isa.tim28.pharmacies.model.Dermatologist;
 import isa.tim28.pharmacies.model.DermatologistAppointment;
@@ -179,10 +178,8 @@ public class DermatologistAppointmentService implements IDermatologistAppointmen
 	}
 
 	@Override
-	public boolean checkAllergies(long patientId, long medicineId) throws UserDoesNotExistException {
+	public boolean checkAllergies(long patientId, long medicineId) {
 		Patient patient = patientRepository.findById(patientId).get();
-		if (patient == null)
-			throw new UserDoesNotExistException("Patient with given id doesn't exist.");
 		Set<Medicine> allergies = patient.getAllergies();
 		for (Medicine allergy : allergies)
 			if (allergy.getId() == medicineId)
@@ -381,28 +378,24 @@ public class DermatologistAppointmentService implements IDermatologistAppointmen
 		}
 	}
 
-	private boolean isDermatologistInPharmacy(Dermatologist dermatologist, LocalDateTime startDateTime,
-			Pharmacy pharmacy) {
+	private boolean isDermatologistInPharmacy(Dermatologist dermatologist, LocalDateTime startDateTime, Pharmacy pharmacy) {
 		DayOfWeek dayOfWeek = startDateTime.getDayOfWeek();
 		boolean isWorkingThatDay = false;
 		Set<EngagementInPharmacy> engagements = dermatologist.getEngegementInPharmacies();
-		if (engagements.isEmpty())
-			return false;
-
+		if (engagements.isEmpty()) return false;
+		
 		EngagementInPharmacy engagement = new EngagementInPharmacy();
 		for (EngagementInPharmacy e : engagements) {
-			if (e.getPharmacy().getId() == pharmacy.getId())
+			if (e.getPharmacy().getId() == pharmacy.getId()) 
 				engagement = e;
 		}
-		if (engagement == null || engagement.getDailyEngagements() == null
-				|| engagement.getDailyEngagements().isEmpty())
+		if (engagement == null || engagement.getDailyEngagements() == null || engagement.getDailyEngagements().isEmpty())
 			return false;
 
 		for (DailyEngagement dailyEngagement : engagement.getDailyEngagements()) {
 			if (dailyEngagement.getDayOfWeek().equals(dayOfWeek)) {
 				isWorkingThatDay = true;
-				if (!isTimeInInterval(startDateTime.toLocalTime(), 30, dailyEngagement.getStartTime(),
-						dailyEngagement.getEndTime()))
+				if (!isTimeInInterval(startDateTime.toLocalTime(), 30, dailyEngagement.getStartTime(), dailyEngagement.getEndTime()))
 					return false;
 			}
 		}
@@ -410,8 +403,7 @@ public class DermatologistAppointmentService implements IDermatologistAppointmen
 			return false;
 		for (DermatologistLeaveRequest request : dermatologistLeaveRequestRepository
 				.findAllByDermatologist_Id(dermatologist.getId())) {
-			if (isDateInInterval(startDateTime.toLocalDate(), request.getStartDate(), request.getEndDate())
-					&& request.getState() == LeaveRequestState.ACCEPTED)
+			if (isDateInInterval(startDateTime.toLocalDate(), request.getStartDate(), request.getEndDate()) && request.getState() == LeaveRequestState.ACCEPTED)
 				return false;
 		}
 		return true;
@@ -491,13 +483,10 @@ public class DermatologistAppointmentService implements IDermatologistAppointmen
 	public List<PharmAppDTO> getAppointmentsByWeek(PharmAppByWeekDTO dto, long pharmacyId, long userId) {
 		try {
 			Dermatologist dermatologist = dermatologistRepository.findOneByUser_Id(userId);
-			Set<DermatologistAppointment> dermAppointments = appointmentRepository
-					.findAllByDermatologist_Id(dermatologist.getId());
+			Set<DermatologistAppointment> dermAppointments = appointmentRepository.findAllByDermatologist_Id(dermatologist.getId());
 			List<PharmAppDTO> dtos = new ArrayList<PharmAppDTO>();
 			for (DermatologistAppointment app : dermAppointments) {
-				
 				if(isDateInInterval(app.getStartDateTime().toLocalDate(), dto.getStartDate(), dto.getEndDate()) && !app.isDone() && app.getPharmacy().getId() == pharmacyId) {
-
 					String startTime = app.getStartDateTime().format(DateTimeFormatter.ofPattern("HH:mm, dd.MM.yyyy."));
 					String patientName = "";
 					if (app.isScheduled())
@@ -621,16 +610,14 @@ public class DermatologistAppointmentService implements IDermatologistAppointmen
 		try {
 			Dermatologist dermatologist = dermatologistRepository.findOneByUser_Id(userId);
 			List<MyPatientDTO> dtos = new ArrayList<MyPatientDTO>();
-			Set<DermatologistAppointment> appointments = appointmentRepository
-					.findAllByDermatologist_Id(dermatologist.getId());
+			Set<DermatologistAppointment> appointments = appointmentRepository.findAllByDermatologist_Id(dermatologist.getId());
 			for (DermatologistAppointment app : appointments) {
 				if (app.isPatientWasPresent() && app.getPatient() != null && app.isDone()) {
 					MyPatientDTO dto = new MyPatientDTO();
 					dto.setPatientId(app.getPatient().getId());
 					dto.setName(app.getPatient().getUser().getName());
 					dto.setSurname(app.getPatient().getUser().getSurname());
-					dto.setAppointmentDate(
-							app.getStartDateTime().toLocalDate().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
+					dto.setAppointmentDate(app.getStartDateTime().toLocalDate().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
 					dto.setTime(app.getStartDateTime().format(DateTimeFormatter.ofPattern("HH:mm")));
 					dtos.add(dto);
 				}

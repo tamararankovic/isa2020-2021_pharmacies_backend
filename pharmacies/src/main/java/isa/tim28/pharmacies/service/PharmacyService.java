@@ -225,6 +225,35 @@ public class PharmacyService implements IPharmacyService {
 	}
 
 	@Override
+	public List<AllComplaintsDTO> getAllDermatologistComplaints(){
+		List<DermatologistComplaint> dermatologists = dermatologistComplaintRepository.findAll();
+		
+		List<AllComplaintsDTO> result = new ArrayList<AllComplaintsDTO>();
+	
+		for(DermatologistComplaint pc : dermatologists) {
+			AllComplaintsDTO dto = new AllComplaintsDTO(pc.getId(), pc.getText(), String.join(" ", pc.getDermatologist().getUser().getName(), pc.getDermatologist().getUser().getSurname()), String.join(" ",pc.getPatient().getUser().getName(), pc.getPatient().getUser().getSurname()), "DERMATOLOGIST");
+			result.add(dto);
+		}
+		
+		return result;
+	}
+
+	@Override
+	public List<AllComplaintsDTO> getAllPharmacistComplaints(){
+		List<PharmacistComplaint> pharmacists= pharmacistComplaintRepository.findAll();
+		
+		List<AllComplaintsDTO> result = new ArrayList<AllComplaintsDTO>();
+		
+		for(PharmacistComplaint pc : pharmacists) {
+			AllComplaintsDTO dto = new AllComplaintsDTO(pc.getId(), pc.getText(), String.join(" ", pc.getPharmacist().getUser().getName(), pc.getPharmacist().getUser().getSurname()), String.join(" ",pc.getPatient().getUser().getName(), pc.getPatient().getUser().getSurname()), "PHARMACIST");
+			result.add(dto);
+		}
+		
+		
+		return result;
+	}
+
+	@Override
 	@Transactional(readOnly = false)
 	public boolean createComplaint(Patient patient, ComplaintDTO dto)
 			throws InvalidComplaintException, UserDoesNotExistException {
@@ -511,7 +540,7 @@ public class PharmacyService implements IPharmacyService {
 		return ret;
 	}
 
-	private List<Pharmacy> findAllPharmaciesWithCriteria(String name, String address) {
+	public List<Pharmacy> findAllPharmaciesWithCriteria(String name, String address) {
 		List<Pharmacy> ret = new ArrayList<Pharmacy>();
 		for (Pharmacy p : pharmacyRepository.findAll()) {
 			if (p.getName().toLowerCase().contains(name.toLowerCase())

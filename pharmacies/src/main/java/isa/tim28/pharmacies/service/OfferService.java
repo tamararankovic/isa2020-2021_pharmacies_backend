@@ -126,6 +126,11 @@ public class OfferService implements IOfferService{
 		offerRepository.save(foundOffer);
 	}
 	
+	@Override
+	public Offer getOfferById(long offerId) {
+		return offerRepository.findById(offerId).get();
+	}
+
 	
 		
 	

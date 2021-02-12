@@ -26,7 +26,6 @@ import isa.tim28.pharmacies.dtos.PharmaciesCounselingDTO;
 import isa.tim28.pharmacies.dtos.PharmacistAppointmentDTO;
 import isa.tim28.pharmacies.dtos.DealPromotionDTO;
 import isa.tim28.pharmacies.dtos.DoctorRatingDTO;
-import isa.tim28.pharmacies.dtos.MedicineInfoDTO;
 import isa.tim28.pharmacies.dtos.PharmacyBasicInfoDTO;
 import isa.tim28.pharmacies.dtos.PharmacyInfoForPatientDTO;
 import isa.tim28.pharmacies.dtos.PriceListDTO;

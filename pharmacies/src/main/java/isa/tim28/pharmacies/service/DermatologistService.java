@@ -42,7 +42,6 @@ import isa.tim28.pharmacies.model.PharmacyAdmin;
 import isa.tim28.pharmacies.model.Rating;
 import isa.tim28.pharmacies.repository.EngagementInPharmacyRepository;
 import isa.tim28.pharmacies.model.Patient;
-import isa.tim28.pharmacies.model.Pharmacist;
 import isa.tim28.pharmacies.model.User;
 import isa.tim28.pharmacies.repository.DermatologistAppointmentRepository;
 import isa.tim28.pharmacies.repository.DermatologistComplaintRepository;
@@ -254,7 +253,7 @@ public class DermatologistService implements IDermatologistService {
 		return fullName.trim().replaceAll(" +", " ").toLowerCase();
 	}
 
-	private Set<DermatologistDTO> search(Set<DermatologistDTO> dermatologists, String fullName) {
+	public Set<DermatologistDTO> search(Set<DermatologistDTO> dermatologists, String fullName) {
 		Set<DermatologistDTO> ret = new HashSet<DermatologistDTO>();
 		if(fullName.length() == 0) return dermatologists;
 		String[] tokens = formatFullName(fullName).split(" ");

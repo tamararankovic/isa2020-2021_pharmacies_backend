@@ -81,4 +81,8 @@ public interface IPharmacyService {
 	void updatePriceLists(PriceListDTO dto, Pharmacy pharmacy)
 			throws MedicineDoesNotExistException, ForbiddenOperationException, PriceInvalidException;
 
+	List<AllComplaintsDTO> getAllDermatologistComplaints();
+
+	List<AllComplaintsDTO> getAllPharmacistComplaints();
+
 }
