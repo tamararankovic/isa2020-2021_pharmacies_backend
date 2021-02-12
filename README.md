@@ -13,7 +13,7 @@ Korišćene tehnologije:
 Pokretanje projekta (Eclipse):
 
   - importovati projekat u workspace: Import -> Maven -> Existing Maven Project
-  - instalirati sve dependency-je iz pom.xml (desni klik na projekat -> maven clean, desni klik na projekat -> maven isntall)
+  - instalirati sve dependency-je iz pom.xml (desni klik na projekat -> maven clean, desni klik na projekat -> maven install)
   - desni klik na projekat -> Run as -> Java Application
 
 Napomene:
