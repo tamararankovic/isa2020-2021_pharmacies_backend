@@ -54,6 +54,7 @@ import isa.tim28.pharmacies.repository.PharmacistComplaintRepository;
 import isa.tim28.pharmacies.repository.PatientRepository;
 import isa.tim28.pharmacies.repository.PharmacistRepository;
 import isa.tim28.pharmacies.repository.PharmacyRepository;
+import isa.tim28.pharmacies.repository.RatingRepository;
 import isa.tim28.pharmacies.repository.UserRepository;
 import isa.tim28.pharmacies.service.interfaces.IPatientService;
 import isa.tim28.pharmacies.service.interfaces.IPharmacistAppointmentService;
@@ -73,6 +74,7 @@ public class PharmacistService implements IPharmacistService {
 	private IRatingService ratingService;
 	private PatientRepository patientRepository;
 	private PharmacyRepository pharmacyRepository;
+	private RatingRepository ratingRepository;
 
 	
 	@Autowired
@@ -366,7 +368,7 @@ public class PharmacistService implements IPharmacistService {
 	@Override
 	public List<Rating> getRatingsByPharmacist(long pharmId, long patientId) throws UserDoesNotExistException {
 
-		List<Rating> allRatings = ratingService.getRatingsByPatientId(patientId);
+		List<Rating> allRatings = ratingRepository.findByPatient_Id(patientId);
 		List<Rating> result = new ArrayList<Rating>();
 
 		Pharmacist pharmacist = getPharmacistById(pharmId);
@@ -381,6 +383,8 @@ public class PharmacistService implements IPharmacistService {
 		}
 		return result;
 	}
+	
+	
 
 	@Override
 	public List<DoctorRatingDTO> getAllDoctorsForRating(long id) {
@@ -463,6 +467,12 @@ public class PharmacistService implements IPharmacistService {
 			}
 		}
 		return res;
+	}
+	
+	@Override
+	public Pharmacist getPharmacistByPharmacistId(long id) {
+		Pharmacist pharmacist  = pharmacistRepository.findById(id).get();
+		return pharmacist;
 	}
 
 }
