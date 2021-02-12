@@ -229,11 +229,7 @@ public class PatientController {
 
 	}
 	
-	/*
-	 url: POST localhost:8081/derm/changePassword
-	 HTTP request for changing dermatologist password
-	 returns ResponseEntity object
-	*/
+	
 	@PostMapping(value="changePassword", produces = MediaType.APPLICATION_JSON_VALUE,consumes = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<String> changePassword(@RequestBody PasswordChangeDTO dto, HttpSession session) {
 		User loggedInUser = (User) session.getAttribute("loggedInUser");
