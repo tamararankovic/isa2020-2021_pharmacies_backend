@@ -42,7 +42,6 @@ import isa.tim28.pharmacies.model.PharmacyAdmin;
 import isa.tim28.pharmacies.model.Rating;
 import isa.tim28.pharmacies.repository.EngagementInPharmacyRepository;
 import isa.tim28.pharmacies.model.Patient;
-import isa.tim28.pharmacies.model.Pharmacist;
 import isa.tim28.pharmacies.model.User;
 import isa.tim28.pharmacies.repository.DermatologistAppointmentRepository;
 import isa.tim28.pharmacies.repository.DermatologistComplaintRepository;
