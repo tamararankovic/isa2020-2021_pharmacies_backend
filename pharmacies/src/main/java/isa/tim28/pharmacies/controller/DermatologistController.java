@@ -530,7 +530,7 @@ public class DermatologistController {
 	 returns ResponseEntity object
 	*/
 	@GetMapping(value = "/saveExistingAppointment/{lastAppointmentId}/{newAppointmentId}", produces = MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<String> existingAppointments(@PathVariable Long lastAppointmentId, @PathVariable Long newAppointmentId, HttpSession session){
+	public ResponseEntity<String> saveExistingAppointment(@PathVariable Long lastAppointmentId, @PathVariable Long newAppointmentId, HttpSession session){
 		
 		
 		User loggedInUser = (User) session.getAttribute("loggedInUser");
@@ -756,7 +756,7 @@ public class DermatologistController {
 	 returns ResponseEntity object
 	*/
 	@GetMapping(value = "/isDermatologistInAppointment", produces = MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<CurrentlyHasAppointmentDTO> startAppointmentForPatient(HttpSession session){
+	public ResponseEntity<CurrentlyHasAppointmentDTO> startAppointmentCheck(HttpSession session){
 		User loggedInUser = (User) session.getAttribute("loggedInUser");
 		if(loggedInUser == null) {
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No logged in user!");
