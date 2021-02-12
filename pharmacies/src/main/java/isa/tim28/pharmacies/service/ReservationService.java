@@ -14,6 +14,7 @@ import javax.mail.MessagingException;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import isa.tim28.pharmacies.dtos.DoctorRatingDTO;
 import isa.tim28.pharmacies.dtos.ReservationDTO;
@@ -51,6 +52,7 @@ import isa.tim28.pharmacies.service.interfaces.IRatingService;
 import isa.tim28.pharmacies.service.interfaces.IReservationService;
 
 @Service
+@Transactional(readOnly = false)
 public class ReservationService implements IReservationService {
 
 	private ReservationRepository reservationRepository;
@@ -144,6 +146,7 @@ public class ReservationService implements IReservationService {
 	}
 
 	@Override
+	@Transactional(readOnly = false)
 	public List<ReservationDTO> cancelReservation(ReservationDTO dto, long id) {
 
 		CancelledReservation cancelled = new CancelledReservation();
@@ -154,6 +157,18 @@ public class ReservationService implements IReservationService {
 		} catch (UserDoesNotExistException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		}
+		
+		Medicine m = medicineRepository.findMedicineByName(dto.getMedicine());
+		Pharmacy pharmacy = pharmacyService.getByName(dto.getPharmacy());
+		for (MedicineQuantity mq : pharmacy.getMedicines()) {
+			if (m.getId() == mq.getMedicine().getId()) {
+				
+				
+				mq.setQuantity(mq.getQuantity() + 1);
+				medicineQuantityRepository.save(mq);
+				break;
+			}
 		}
 
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm");
@@ -173,6 +188,7 @@ public class ReservationService implements IReservationService {
 	}
 
 	@Override
+	@Transactional(readOnly = false)
 	public Reservation makeReservation(ReservationDTO dto, User loggedInUser)
 			throws UserDoesNotExistException, MessagingException {
 		Reservation res = new Reservation();
@@ -206,13 +222,16 @@ public class ReservationService implements IReservationService {
 
 			}
 		}
-		Medicine m = medicineService.getByName(dto.getMedicine());
+		Medicine m = medicineRepository.findMedicineByName(dto.getMedicine());
 		Pharmacy pharmacy = pharmacyService.getByName(dto.getPharmacy());
 		for (MedicineQuantity mq : pharmacy.getMedicines()) {
 			if (m.getId() == mq.getMedicine().getId()) {
+				if(mq.getQuantity() > 0) {
+				
 				mq.setQuantity(mq.getQuantity() - 1);
 				medicineQuantityRepository.save(mq);
 				break;
+				}
 			}
 		}
 
@@ -252,6 +271,7 @@ public class ReservationService implements IReservationService {
 	}
 
 	@Override
+	@Transactional(readOnly = false)
 	public void deleteMedicine(Pharmacy pharmacy, long medicineId)
 			throws MedicineDoesNotExistException, ForbiddenOperationException {
 		Medicine medicine = medicineService.findById(medicineId);
@@ -369,6 +389,7 @@ public class ReservationService implements IReservationService {
 	}
 
 	@Override
+	@Transactional(readOnly = false)
 	public Rating saveMedicineRating(DoctorRatingDTO dto, long id) {
 		Medicine medicine = medicineRepository.findById(dto.getId()).get();
 
@@ -419,6 +440,7 @@ public class ReservationService implements IReservationService {
 	}
 
 	@Override
+	@Transactional(readOnly = false)
 	public int getPenalties(long id) {
 		List<Reservation> all = reservationRepository.findAll();
 		LocalDateTime today = LocalDateTime.now();
